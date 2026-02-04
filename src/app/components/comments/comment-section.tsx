@@ -6,6 +6,7 @@ import { Comment } from '~app/types';
 import { CommentItem } from './comment-item';
 import { CommentInput } from './comment-input';
 import { Loader2, AlignLeft } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '~components/dropdown-menu';
 
 interface CommentSectionProps {
 	videoId: string;
@@ -16,13 +17,14 @@ interface CommentSectionProps {
 export const CommentSection = ({ videoId, videoOwnerId, currentUserId }: CommentSectionProps) => {
 	const [comments, setComments] = useState<Comment[]>([]);
 	const [loading, setLoading] = useState(true);
+	const [sort, setSort] = useState<'top' | 'newest'>('top');
 
 	const isVideoOwner = videoOwnerId === currentUserId;
 
 	useEffect(() => {
 		const fetchComments = async () => {
 			try {
-				const res = await axios.get(`/api/videos/${videoId}/comments`);
+				const res = await axios.get(`/api/videos/${videoId}/comments?sort=${sort}`);
 				setComments(res.data);
 			} catch (error) {
 				console.error('Failed to fetch comments', error);
@@ -34,7 +36,7 @@ export const CommentSection = ({ videoId, videoOwnerId, currentUserId }: Comment
 		if (videoId) {
 			fetchComments();
 		}
-	}, [videoId]);
+	}, [videoId, sort]);
 
 	const handleCommentAdded = (newComment: Comment) => {
 		setComments((prev) => [newComment, ...prev]);
@@ -56,10 +58,22 @@ export const CommentSection = ({ videoId, videoOwnerId, currentUserId }: Comment
 		<div className="w-full max-w-6xl mt-6">
 			<div className="flex items-center gap-8 mb-6">
 				<h3 className="text-xl font-bold">{comments.length} Comments</h3>
-				<div className="flex items-center gap-2 font-semibold text-sm cursor-pointer hover:bg-secondary/50 px-2 py-1 rounded">
-					<AlignLeft className="h-5 w-5" />
-					<span>Sort by</span>
-				</div>
+				<DropdownMenu>
+					<DropdownMenuTrigger asChild>
+						<div className="flex items-center gap-2 font-semibold text-sm cursor-pointer hover:bg-secondary/50 px-2 py-1 rounded">
+							<AlignLeft className="h-5 w-5" />
+							<span>Sort by</span>
+						</div>
+					</DropdownMenuTrigger>
+					<DropdownMenuContent align="start">
+						<DropdownMenuItem onClick={() => setSort('top')} className={sort === 'top' ? 'bg-secondary' : ''}>
+							Top comments
+						</DropdownMenuItem>
+						<DropdownMenuItem onClick={() => setSort('newest')} className={sort === 'newest' ? 'bg-secondary' : ''}>
+							Newest first
+						</DropdownMenuItem>
+					</DropdownMenuContent>
+				</DropdownMenu>
 			</div>
 
 			<div className="mb-8">

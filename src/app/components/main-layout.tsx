@@ -5,6 +5,7 @@ import { Sidebar } from './sidebar';
 import { useEffect } from 'react';
 import { Navbar } from './navbar';
 import { cn } from '~lib/utils';
+import '~lib/dayjs-config';
 
 const MainLayout = ({ children }: { children: React.ReactNode }) => {
 	const { isSidebarOpen, closeSidebar } = useAppStore();

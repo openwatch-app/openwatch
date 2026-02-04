@@ -2,12 +2,9 @@ import { Avatar, AvatarFallback, AvatarImage } from './avatar';
 import { MoreVertical } from 'lucide-react';
 import { Button } from './button';
 import { Video } from '../types';
-import Link from 'next/link';
 import Image from 'next/image';
+import Link from 'next/link';
 import dayjs from 'dayjs';
-import relativeTime from 'dayjs/plugin/relativeTime';
-
-dayjs.extend(relativeTime);
 
 interface SearchResultCardProps {
 	video: Video;
@@ -58,9 +55,7 @@ const SearchResultCard = ({ video }: SearchResultCardProps) => {
 					</Link>
 				</div>
 
-				<p className="text-xs text-muted-foreground line-clamp-2 hidden md:block">
-					{video.description}
-				</p>
+				<p className="text-xs text-muted-foreground line-clamp-2 hidden md:block">{video.description}</p>
 			</div>
 		</div>
 	);

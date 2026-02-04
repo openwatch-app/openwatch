@@ -1,19 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import axios from 'axios';
-import { Video } from '~app/types';
+import { Search, Trash2, PauseCircle, PlayCircle, MoreVertical, Loader2 } from 'lucide-react';
 import { Button } from '~components/button';
-import { Input } from '~components/input';
-import { Search, Trash2, PauseCircle, PlayCircle, Settings, MessageSquare, FileText, MessagesSquare, MoreVertical, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { cn } from '~lib/utils';
-import dayjs from 'dayjs';
-import relativeTime from 'dayjs/plugin/relativeTime';
+import { useEffect, useState } from 'react';
+import { Input } from '~components/input';
+import { Video } from '~app/types';
+import axios from 'axios';
 
-dayjs.extend(relativeTime);
-
-export default function HistoryPage() {
+const Page = () => {
 	const [videos, setVideos] = useState<Video[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [searchQuery, setSearchQuery] = useState('');
@@ -70,9 +65,7 @@ export default function HistoryPage() {
 		}
 	};
 
-	const filteredVideos = videos.filter(
-		(v) => v.title.toLowerCase().includes(searchQuery.toLowerCase()) || (v.channel?.name && v.channel.name.toLowerCase().includes(searchQuery.toLowerCase()))
-	);
+	const filteredVideos = videos.filter((v) => v.title.toLowerCase().includes(searchQuery.toLowerCase()) || (v.channel?.name && v.channel.name.toLowerCase().includes(searchQuery.toLowerCase())));
 
 	return (
 		<div className="flex flex-col md:flex-row gap-8 p-6 max-w-[1600px] mx-auto min-h-screen">
@@ -170,4 +163,6 @@ export default function HistoryPage() {
 			</div>
 		</div>
 	);
-}
+};
+
+export default Page;

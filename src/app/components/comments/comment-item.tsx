@@ -1,19 +1,16 @@
 'use client';
 
-import { useState } from 'react';
-import axios from 'axios';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '~components/dropdown-menu';
+import { ThumbsUp, ThumbsDown, MoreVertical, Heart, Pin, ChevronDown, Trash2 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '~components/avatar';
+import { authClient } from '~lib/auth-client';
+import { CommentInput } from './comment-input';
 import { Button } from '~components/button';
 import { Comment } from '~app/types';
-import { ThumbsUp, ThumbsDown, MoreVertical, Heart, Pin, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
+import { useState } from 'react';
 import { cn } from '~lib/utils';
-import { authClient } from '~lib/auth-client';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '~components/dropdown-menu';
-import { CommentInput } from './comment-input';
+import axios from 'axios';
 import dayjs from 'dayjs';
-import relativeTime from 'dayjs/plugin/relativeTime';
-
-dayjs.extend(relativeTime);
 
 interface CommentItemProps {
 	comment: Comment;

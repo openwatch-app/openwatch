@@ -4,6 +4,7 @@ import StudioSidebar from '~components/studio-sidebar';
 import StudioNavbar from '~components/studio-navbar';
 import { useAppStore } from '~lib/store';
 import { useEffect } from 'react';
+import '~lib/dayjs-config';
 
 const StudioLayout = ({ children }: { children: React.ReactNode }) => {
 	const { closeSidebar } = useAppStore();

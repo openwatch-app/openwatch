@@ -3,6 +3,7 @@
 import { Play, Pause, Volume2, VolumeX, Volume1, Settings, Maximize, Minimize, PictureInPicture, Check, Volume } from 'lucide-react';
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Button } from '~components/button';
+import { useAppStore } from '~lib/store';
 import { cn } from '~lib/utils';
 import Hls from 'hls.js';
 import {
@@ -32,8 +33,7 @@ export const VideoPlayer = ({ videoId, videoUrl, autoPlay = false }: VideoPlayer
 	const [isPlaying, setIsPlaying] = useState(false);
 	const [currentTime, setCurrentTime] = useState(0);
 	const [duration, setDuration] = useState(0);
-	const [volume, setVolume] = useState(1);
-	const [isMuted, setIsMuted] = useState(false);
+	const { volume, setVolume, isMuted, setIsMuted } = useAppStore();
 	const [isFullscreen, setIsFullscreen] = useState(false);
 	const [showControls, setShowControls] = useState(true);
 	const controlsTimeoutRef = useRef<NodeJS.Timeout>(null);
@@ -43,6 +43,21 @@ export const VideoPlayer = ({ videoId, videoUrl, autoPlay = false }: VideoPlayer
 	const [currentLevel, setCurrentLevel] = useState(-1); // -1 = Auto
 	const [playbackRate, setPlaybackRate] = useState(1);
 	const [isProcessing, setIsProcessing] = useState(false);
+
+	// Sync playback rate with video element
+	useEffect(() => {
+		if (videoRef.current) {
+			videoRef.current.playbackRate = playbackRate;
+		}
+	}, [playbackRate]);
+
+	// Sync volume with video element
+	useEffect(() => {
+		if (videoRef.current) {
+			videoRef.current.volume = volume;
+			videoRef.current.muted = isMuted;
+		}
+	}, [volume, isMuted]);
 
 	// Initial HLS setup
 	useEffect(() => {
@@ -183,21 +198,19 @@ export const VideoPlayer = ({ videoId, videoUrl, autoPlay = false }: VideoPlayer
 	const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const vol = parseFloat(e.target.value);
 		setVolume(vol);
-		if (videoRef.current) {
-			videoRef.current.volume = vol;
-			setIsMuted(vol === 0);
+		if (vol === 0) {
+			setIsMuted(true);
+		} else if (isMuted) {
+			setIsMuted(false);
 		}
 	};
 
 	const toggleMute = () => {
-		if (videoRef.current) {
-			if (isMuted) {
-				videoRef.current.volume = volume || 1;
-				setIsMuted(false);
-			} else {
-				videoRef.current.volume = 0;
-				setIsMuted(true);
-			}
+		if (isMuted) {
+			if (volume === 0) setVolume(1);
+			setIsMuted(false);
+		} else {
+			setIsMuted(true);
 		}
 	};
 
@@ -241,10 +254,7 @@ export const VideoPlayer = ({ videoId, videoUrl, autoPlay = false }: VideoPlayer
 	};
 
 	const handleSpeedChange = (speed: number) => {
-		if (videoRef.current) {
-			videoRef.current.playbackRate = speed;
-			setPlaybackRate(speed);
-		}
+		setPlaybackRate(speed);
 	};
 
 	const formatTime = (seconds: number) => {
@@ -329,12 +339,12 @@ export const VideoPlayer = ({ videoId, videoUrl, autoPlay = false }: VideoPlayer
 				<div className="flex items-center justify-between">
 					{/* Left Controls */}
 					<div className="flex items-center gap-4">
-						<Button variant="ghost" size="icon" className="text-white hover:bg-white/10 w-8 h-8 rounded-none" onClick={togglePlay}>
+						<Button variant="ghost" size="icon" className="text-white hover:bg-white/10 w-8 h-8 rounded-full" onClick={togglePlay}>
 							{isPlaying ? <Pause className="fill-white w-5 h-5" /> : <Play className="fill-white w-5 h-5" />}
 						</Button>
 
 						<div className="flex items-center gap-2 group/volume">
-							<Button variant="ghost" size="icon" className="text-white hover:bg-white/10 w-8 h-8 rounded-none" onClick={toggleMute}>
+							<Button variant="ghost" size="icon" className="text-white hover:bg-white/10 w-8 h-8 rounded-full" onClick={toggleMute}>
 								{isMuted || volume === 0 ? <VolumeX className="w-5 h-5" /> : volume < 0.5 ? <Volume1 className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
 							</Button>
 							<input
@@ -358,29 +368,29 @@ export const VideoPlayer = ({ videoId, videoUrl, autoPlay = false }: VideoPlayer
 						{/* Settings Menu */}
 						<DropdownMenu>
 							<DropdownMenuTrigger asChild>
-								<Button variant="ghost" size="icon" className="text-white hover:bg-white/10 w-8 h-8 relative rounded-none">
+								<Button variant="ghost" size="icon" className="text-white hover:bg-white/10 w-8 h-8 relative rounded-full">
 									<Settings className={cn('w-5 h-5 transition-transform duration-300', showControls ? 'rotate-0' : 'rotate-90')} />
 									{currentLevel !== -1 && <span className="absolute -top-0.5 -right-0.5 bg-orange-600 text-[10px] px-0.5 rounded-sm leading-tight">HD</span>}
 								</Button>
 							</DropdownMenuTrigger>
-							<DropdownMenuContent side="top" align="end" className="w-64 bg-black/90 border-white/10 text-white backdrop-blur-md">
+							<DropdownMenuContent side="top" align="end" className="w-64 bg-[#0f0f0f]/95 border-white/10 text-white backdrop-blur-md p-1.5 shadow-xl rounded-xl">
 								<DropdownMenuSub>
-									<DropdownMenuSubTrigger className="hover:bg-white/10 cursor-pointer focus:bg-white/10 focus:text-white">
+									<DropdownMenuSubTrigger className="flex items-center gap-3 px-3 py-2.5 text-sm hover:bg-white/10 focus:bg-white/10 cursor-pointer rounded-lg transition-colors outline-none">
 										<div className="flex items-center gap-2 w-full">
 											<span>Playback speed</span>
 											<span className="text-white/50 text-sm ml-auto">{playbackRate === 1 ? 'Normal' : `${playbackRate}x`}</span>
 										</div>
 									</DropdownMenuSubTrigger>
 									<DropdownMenuPortal>
-										<DropdownMenuSubContent className="bg-black/90 border-white/10 text-white max-h-60 overflow-y-auto">
+										<DropdownMenuSubContent className="w-48 bg-[#0f0f0f]/95 border-white/10 text-white backdrop-blur-md p-1.5 shadow-xl rounded-xl max-h-[300px] overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
 											{speeds.map((speed) => (
 												<DropdownMenuItem
 													key={speed}
-													className="hover:bg-white/10 cursor-pointer gap-2 focus:bg-white/10 focus:text-white"
+													className="flex items-center gap-3 px-3 py-2.5 text-sm hover:bg-white/10 focus:bg-white/10 cursor-pointer rounded-lg transition-colors outline-none"
 													onClick={() => handleSpeedChange(speed)}
 												>
-													{playbackRate === speed && <Check className="w-4 h-4" />}
-													<span className={playbackRate === speed ? 'ml-0' : 'ml-6'}>{speed === 1 ? 'Normal' : speed}</span>
+													<div className="w-4 h-4 flex items-center justify-center shrink-0">{playbackRate === speed && <Check className="w-3.5 h-3.5" />}</div>
+													<span>{speed === 1 ? 'Normal' : speed}</span>
 												</DropdownMenuItem>
 											))}
 										</DropdownMenuSubContent>
@@ -388,7 +398,7 @@ export const VideoPlayer = ({ videoId, videoUrl, autoPlay = false }: VideoPlayer
 								</DropdownMenuSub>
 
 								<DropdownMenuSub>
-									<DropdownMenuSubTrigger className="hover:bg-white/10 cursor-pointer focus:bg-white/10 focus:text-white">
+									<DropdownMenuSubTrigger className="flex items-center gap-3 px-3 py-2.5 text-sm hover:bg-white/10 focus:bg-white/10 cursor-pointer rounded-lg transition-colors outline-none">
 										<div className="flex items-center gap-2 w-full">
 											<span>Quality</span>
 											<span className="text-white/50 text-sm ml-auto">
@@ -397,19 +407,22 @@ export const VideoPlayer = ({ videoId, videoUrl, autoPlay = false }: VideoPlayer
 										</div>
 									</DropdownMenuSubTrigger>
 									<DropdownMenuPortal>
-										<DropdownMenuSubContent className="bg-black/90 border-white/10 text-white max-h-60 overflow-y-auto">
-											<DropdownMenuItem className="hover:bg-white/10 cursor-pointer gap-2 focus:bg-white/10 focus:text-white" onClick={() => handleQualityChange(-1)}>
-												{currentLevel === -1 && <Check className="w-4 h-4" />}
-												<span className={currentLevel === -1 ? 'ml-0' : 'ml-6'}>Auto</span>
+										<DropdownMenuSubContent className="w-48 bg-[#0f0f0f]/95 border-white/10 text-white backdrop-blur-md p-1.5 shadow-xl rounded-xl max-h-[300px] overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
+											<DropdownMenuItem
+												className="flex items-center gap-3 px-3 py-2.5 text-sm hover:bg-white/10 focus:bg-white/10 cursor-pointer rounded-lg transition-colors outline-none"
+												onClick={() => handleQualityChange(-1)}
+											>
+												<div className="w-4 h-4 flex items-center justify-center shrink-0">{currentLevel === -1 && <Check className="w-3.5 h-3.5" />}</div>
+												<span>Auto</span>
 											</DropdownMenuItem>
 											{levels.map((level, index) => (
 												<DropdownMenuItem
 													key={index}
-													className="hover:bg-white/10 cursor-pointer gap-2 focus:bg-white/10 focus:text-white"
+													className="flex items-center gap-3 px-3 py-2.5 text-sm hover:bg-white/10 focus:bg-white/10 cursor-pointer rounded-lg transition-colors outline-none"
 													onClick={() => handleQualityChange(index)}
 												>
-													{currentLevel === index && <Check className="w-4 h-4" />}
-													<span className={currentLevel === index ? 'ml-0' : 'ml-6'}>
+													<div className="w-4 h-4 flex items-center justify-center shrink-0">{currentLevel === index && <Check className="w-3.5 h-3.5" />}</div>
+													<span>
 														{level.height}p {level.height >= 720 && <sup className="text-[10px] ml-0.5">HD</sup>}
 														{level.height >= 2160 && <sup className="text-[10px] ml-0.5">4K</sup>}
 													</span>
@@ -421,11 +434,11 @@ export const VideoPlayer = ({ videoId, videoUrl, autoPlay = false }: VideoPlayer
 							</DropdownMenuContent>
 						</DropdownMenu>
 
-						<Button variant="ghost" size="icon" className="text-white hover:bg-white/10 w-8 h-8 rounded-none" onClick={togglePiP}>
+						<Button variant="ghost" size="icon" className="text-white hover:bg-white/10 w-8 h-8 rounded-full" onClick={togglePiP}>
 							<PictureInPicture className="w-5 h-5" />
 						</Button>
 
-						<Button variant="ghost" size="icon" className="text-white hover:bg-white/10 w-8 h-8 rounded-none" onClick={toggleFullscreen}>
+						<Button variant="ghost" size="icon" className="text-white hover:bg-white/10 w-8 h-8 rounded-full" onClick={toggleFullscreen}>
 							{isFullscreen ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}
 						</Button>
 					</div>

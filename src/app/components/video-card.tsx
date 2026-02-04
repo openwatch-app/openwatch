@@ -6,9 +6,6 @@ import { Video } from '../types';
 import Link from 'next/link';
 import Image from 'next/image';
 import dayjs from 'dayjs';
-import relativeTime from 'dayjs/plugin/relativeTime';
-
-dayjs.extend(relativeTime);
 
 interface VideoCardProps {
 	video: Video;

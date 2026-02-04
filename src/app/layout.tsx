@@ -1,5 +1,11 @@
+import relativeTime from 'dayjs/plugin/relativeTime';
+import duration from 'dayjs/plugin/duration';
 import type { Metadata } from 'next';
+import dayjs from 'dayjs';
 import './globals.css';
+
+dayjs.extend(duration);
+dayjs.extend(relativeTime);
 
 export const metadata: Metadata = {
 	title: 'OpenWatch',

@@ -1,36 +1,24 @@
 'use client';
 
-import { ThumbsUp, ThumbsDown, Share2, ListPlus, MoreVertical, Loader2 } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, Share2, MoreVertical, Loader2, Check } from 'lucide-react';
+import { CommentSection } from '~app/components/comments/comment-section';
 import { Avatar, AvatarFallback, AvatarImage } from '~components/avatar';
 import { VideoPlayer } from '~components/video-player/video-player';
 import { useRouter, useParams } from 'next/navigation';
 import { authClient } from '~lib/auth-client';
-import { useEffect, useState } from 'react';
-import { Video, Comment } from '~app/types';
 import { Button } from '~components/button';
-import { Input } from '~components/input';
+import { useEffect, useState } from 'react';
+import { Video } from '~app/types';
 import { cn } from '~lib/utils';
 import axios from 'axios';
-
 import dayjs from 'dayjs';
-import relativeTime from 'dayjs/plugin/relativeTime';
-
-dayjs.extend(relativeTime);
-
-import { CommentSection } from '~app/components/comments/comment-section';
+import '~lib/dayjs-config';
 
 const Page = () => {
 	const router = useRouter();
 	const params = useParams();
 	const id = params.id as string;
 	const { data: session } = authClient.useSession();
-
-	const currentUser = session?.user || {
-		id: 'guest',
-		name: 'Guest',
-		image: '',
-		handle: 'guest'
-	};
 
 	const [video, setVideo] = useState<Video | null>(null);
 	const [recommendedVideos, setRecommendedVideos] = useState<Video[]>([]);
@@ -39,8 +27,38 @@ const Page = () => {
 	const [isSubscribing, setIsSubscribing] = useState(false);
 	const [selectedTab, setSelectedTab] = useState<'all' | 'channel' | 'related'>('all');
 	const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+	const [isCopied, setIsCopied] = useState(false);
 
 	const isOwner = session?.user?.id === video?.channel.id;
+
+	const handleShare = async () => {
+		try {
+			const url = window.location.href;
+			if (navigator.clipboard && navigator.clipboard.writeText) {
+				await navigator.clipboard.writeText(url);
+			} else {
+				// Fallback for older browsers or non-secure contexts
+				const textArea = document.createElement('textarea');
+				textArea.value = url;
+				textArea.style.position = 'fixed';
+				textArea.style.left = '-9999px';
+				textArea.style.top = '0';
+				document.body.appendChild(textArea);
+				textArea.focus();
+				textArea.select();
+				try {
+					document.execCommand('copy');
+				} catch (err) {
+					console.error('Fallback copy failed', err);
+				}
+				document.body.removeChild(textArea);
+			}
+			setIsCopied(true);
+			setTimeout(() => setIsCopied(false), 2000);
+		} catch (err) {
+			console.error('Failed to copy: ', err);
+		}
+	};
 
 	const handleSubscribe = async () => {
 		if (!session) {
@@ -52,9 +70,7 @@ const Page = () => {
 
 		try {
 			setIsSubscribing(true);
-			const response = await axios.post('/api/channel/subscribe', {
-				channelId: video.channel.id
-			});
+			const response = await axios.post('/api/channel/subscribe', { channelId: video.channel.id });
 
 			setVideo((prev) => {
 				if (!prev) return null;
@@ -146,10 +162,6 @@ const Page = () => {
 			return v.channel.id === video?.channel.id;
 		}
 		if (selectedTab === 'related') {
-			// In a real app, 'related' might be a specific API call.
-			// Here, the default list IS related, but maybe we want to exclude same-channel videos for variety?
-			// Or just keep it as 'all' for now since 'All' and 'Related' are often similar in this context.
-			// Let's make 'Related' exclude same-channel videos to differentiate it from 'From Channel'.
 			return v.channel.id !== video?.channel.id;
 		}
 		return true;
@@ -223,13 +235,13 @@ const Page = () => {
 								onClick={() => handleReaction('DISLIKE')}
 							>
 								<ThumbsDown className={cn('h-4 w-4', video.userReaction === 'DISLIKE' && 'fill-current')} />
-								{video.dislikes && parseInt(video.dislikes) > 0 && <span>{video.dislikes}</span>}
+								<span>{video.dislikes || '0'}</span>
 							</Button>
 						</div>
 
-						<Button variant="secondary" className="rounded-full gap-2">
-							<Share2 className="h-4 w-4" />
-							<span>Share</span>
+						<Button variant="secondary" className="rounded-full gap-2" onClick={handleShare}>
+							{isCopied ? <Check className="h-4 w-4" /> : <Share2 className="h-4 w-4" />}
+							<span>{isCopied ? 'Copied' : 'Share'}</span>
 						</Button>
 					</div>
 				</div>
@@ -245,9 +257,9 @@ const Page = () => {
 					<div className="whitespace-pre-wrap text-muted-foreground">
 						{isDescriptionExpanded
 							? video.description || 'No description provided.'
-							: (video.description?.slice(0, 150) || 'No description provided.') + (video.description && video.description.length > 150 ? '...' : '')}
+							: (video.description?.slice(0, 10) || 'No description provided.') + (video.description && video.description.length > 150 ? '...' : '')}
 					</div>
-					{video.description && video.description.length > 150 && (
+					{video.description && video.description.length > 10 && (
 						<div
 							className="mt-2 font-medium cursor-pointer w-fit"
 							onClick={(e) => {

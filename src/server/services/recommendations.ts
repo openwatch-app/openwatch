@@ -1,6 +1,6 @@
+import { videos, videoViews, subscription, user } from '~server/db/schema';
+import { desc, eq, and, not, sql, or, ilike } from 'drizzle-orm';
 import { db } from '~server/db';
-import { videos, videoViews, videoReactions, subscription, user } from '~server/db/schema';
-import { desc, eq, inArray, and, not, sql, or, ilike } from 'drizzle-orm';
 
 // Helper to calculate similarity score between two strings (titles)
 function calculateTextSimilarity(text1: string | null, text2: string | null): number {

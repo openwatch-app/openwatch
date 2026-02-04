@@ -8,6 +8,8 @@ import { generateId } from 'better-auth';
 export const GET = async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
 	try {
 		const { id } = await params;
+		const { searchParams } = new URL(req.url);
+		const sort = searchParams.get('sort') || 'top';
 		const session = await auth.api.getSession({
 			headers: req.headers
 		});
@@ -60,6 +62,22 @@ export const GET = async (req: NextRequest, { params }: { params: Promise<{ id: 
 				commentMap.get(c.parentId).replies.push(c);
 			} else {
 				roots.push(c);
+			}
+		});
+
+		// Sort roots based on the sort parameter
+		roots.sort((a, b) => {
+			// Always keep pinned comments at the top
+			if (a.isPinned && !b.isPinned) return -1;
+			if (!a.isPinned && b.isPinned) return 1;
+
+			if (sort === 'newest') {
+				return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+			} else {
+				// Top comments: sort by likes
+				const diff = b.likes - a.likes;
+				if (diff !== 0) return diff;
+				return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
 			}
 		});
 

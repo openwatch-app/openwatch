@@ -4,11 +4,30 @@ OpenWatch is a modern video streaming platform built with Next.js, designed for 
 
 ## Features
 
-- 📹 **Video Streaming**: HLS streaming support with adaptive bitrate.
-- 🔐 **Authentication**: Secure user authentication via Better Auth.
-- 💾 **Database**: Robust data management using Drizzle ORM and PostgreSQL.
-- 🎨 **UI/UX**: Modern interface built with Tailwind CSS v4 and Radix UI.
-- 🛠️ **Video Processing**: Server-side video processing using FFmpeg.
+### Core Experience
+
+- **Home Feed**: Personalized feed with filters (All, Recently uploaded, Watched)
+- **Video Player**: Adaptive streaming with multiple quality support
+- **Search**: Full-text search for videos and channels
+- **History**: Watch history tracking with pause functionality
+
+### Interaction
+
+- **Comments**: Nested replies, pinning, hearting, and like/dislike reactions
+- **Reactions**: Like and Dislike videos
+- **Subscriptions**: Subscribe to channels and manage subscriptions
+
+### Creator Studio
+
+- **Dashboard**: Overview of channel content and performance
+- **Content Management**: Upload, edit, and manage videos
+- **Customization**: Update channel banner, avatar, and description
+
+### Admin Console
+
+- **User Management**: Manage users and bans
+- **System Settings**: Configure global application settings
+- **Statistics**: Platform-wide metrics for users, videos, and engagement
 
 ## Tech Stack
 

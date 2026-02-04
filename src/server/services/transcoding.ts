@@ -1,11 +1,11 @@
-import ffmpeg from 'fluent-ffmpeg';
-import ffmpegPath from 'ffmpeg-static';
-import path from 'path';
-import fs from 'fs/promises';
-import { existsSync } from 'fs';
-import { db } from '~server/db';
 import { videos } from '~server/db/schema';
+import ffmpegPath from 'ffmpeg-static';
+import ffmpeg from 'fluent-ffmpeg';
+import { existsSync } from 'fs';
 import { eq } from 'drizzle-orm';
+import { db } from '~server/db';
+import fs from 'fs/promises';
+import path from 'path';
 
 let correctFfmpegPath = ffmpegPath;
 
