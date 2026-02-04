@@ -37,6 +37,8 @@ export const mapVideoToFrontend = (video: any): FrontendVideo => {
 		visibility: video.visibility as any,
 		likes: video.likes?.toString() || '0',
 		dislikes: video.dislikes?.toString() || '0',
+		savedProgress: video.savedProgress,
+		durationInSeconds: video.duration || 0,
 		channel: {
 			id: video.user.id,
 			name: video.user.name,

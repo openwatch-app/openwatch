@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '~server/auth';
 import { db } from '~server/db';
-import { videoViews } from '~server/db/schema';
+import { videoViews, watchHistory } from '~server/db/schema';
 import { eq } from 'drizzle-orm';
 
 export const DELETE = async (req: NextRequest) => {
@@ -11,7 +11,10 @@ export const DELETE = async (req: NextRequest) => {
 			return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 		}
 
-		await db.delete(videoViews).where(eq(videoViews.userId, session.user.id));
+		await db.transaction(async (tx) => {
+			await tx.delete(watchHistory).where(eq(watchHistory.userId, session.user.id));
+			await tx.delete(videoViews).where(eq(videoViews.userId, session.user.id));
+		});
 
 		return NextResponse.json({ success: true });
 	} catch (error) {

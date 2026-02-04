@@ -1,5 +1,5 @@
-import { videos, videoViews, subscription, user } from '~server/db/schema';
-import { desc, eq, and, not, sql, or, ilike } from 'drizzle-orm';
+import { videos, videoViews, subscription, user, watchHistory } from '~server/db/schema';
+import { desc, eq, and, not, sql, or, ilike, inArray } from 'drizzle-orm';
 import { db } from '~server/db';
 
 // Helper to calculate similarity score between two strings (titles)
@@ -29,9 +29,9 @@ export class RecommendationService {
 	static async getHomeFeed(userId?: string, limit: number = 20, offset: number = 0, filter?: string) {
 		// Handle special filters
 		if (filter === 'watched' && userId) {
-			const history = await db.query.videoViews.findMany({
-				where: eq(videoViews.userId, userId),
-				orderBy: [desc(videoViews.createdAt)],
+			const history = await db.query.watchHistory.findMany({
+				where: eq(watchHistory.userId, userId),
+				orderBy: [desc(watchHistory.lastViewedAt)],
 				limit,
 				offset,
 				with: {
@@ -42,7 +42,12 @@ export class RecommendationService {
 			});
 			// Filter out null videos (deleted) and deduplicate by videoId if needed
 			// (simple approach: just map)
-			return history.map((h) => h.video).filter((v) => !!v);
+			return history
+				.filter((h) => !!h.video)
+				.map((h) => ({
+					...h.video,
+					savedProgress: h.progress
+				}));
 		}
 
 		if (filter === 'recently-uploaded') {
@@ -126,11 +131,26 @@ export class RecommendationService {
 		// Sort by score
 		scoredCandidates.sort((a, b) => b.score - a.score);
 
-		return scoredCandidates.slice(offset, offset + limit).map((c) => c.video);
+		let finalVideos = scoredCandidates.slice(offset, offset + limit).map((c) => c.video);
+
+		// Populate watch progress if user is logged in
+		if (userId && finalVideos.length > 0) {
+			const videoIds = finalVideos.map((v) => v.id);
+			const history = await db.query.watchHistory.findMany({
+				where: and(eq(watchHistory.userId, userId), inArray(watchHistory.videoId, videoIds))
+			});
+			const historyMap = new Map(history.map((h) => [h.videoId, h.progress]));
+			finalVideos = finalVideos.map((v) => ({
+				...v,
+				savedProgress: historyMap.get(v.id)
+			}));
+		}
+
+		return finalVideos;
 	}
 
-	static async search(query: string, limit: number = 20, offset: number = 0) {
-		const videoResults = await db.query.videos.findMany({
+	static async search(query: string, limit: number = 20, offset: number = 0, userId?: string) {
+		let videoResults = await db.query.videos.findMany({
 			where: and(eq(videos.visibility, 'public'), or(ilike(videos.title, `%${query}%`), ilike(videos.description, `%${query}%`))),
 			limit,
 			offset,
@@ -139,6 +159,19 @@ export class RecommendationService {
 				user: true
 			}
 		});
+
+		// Populate watch progress if user is logged in
+		if (userId && videoResults.length > 0) {
+			const videoIds = videoResults.map((v) => v.id);
+			const history = await db.query.watchHistory.findMany({
+				where: and(eq(watchHistory.userId, userId), inArray(watchHistory.videoId, videoIds))
+			});
+			const historyMap = new Map(history.map((h) => [h.videoId, h.progress]));
+			videoResults = videoResults.map((v) => ({
+				...v,
+				savedProgress: historyMap.get(v.id)
+			}));
+		}
 
 		// Only search channels on the first page
 		let channelResults: any[] = [];
@@ -243,6 +276,21 @@ export class RecommendationService {
 		// Sort
 		scored.sort((a, b) => b.score - a.score);
 
-		return scored.slice(0, limit).map((s) => s.video);
+		let finalRelatedVideos = scored.slice(0, limit).map((s) => s.video);
+
+		// Populate watch progress if user is logged in
+		if (userId && finalRelatedVideos.length > 0) {
+			const videoIds = finalRelatedVideos.map((v) => v.id);
+			const history = await db.query.watchHistory.findMany({
+				where: and(eq(watchHistory.userId, userId), inArray(watchHistory.videoId, videoIds))
+			});
+			const historyMap = new Map(history.map((h) => [h.videoId, h.progress]));
+			finalRelatedVideos = finalRelatedVideos.map((v) => ({
+				...v,
+				savedProgress: historyMap.get(v.id)
+			}));
+		}
+
+		return finalRelatedVideos;
 	}
 }

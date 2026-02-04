@@ -6,6 +6,7 @@ import { Button } from '~components/button';
 import { useAppStore } from '~lib/store';
 import { cn } from '~lib/utils';
 import Hls from 'hls.js';
+import axios from 'axios';
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -21,17 +22,18 @@ interface VideoPlayerProps {
 	videoId: string;
 	videoUrl?: string;
 	autoPlay?: boolean;
+	initialTime?: number;
 }
 
 const speeds = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
 
-export const VideoPlayer = ({ videoId, videoUrl, autoPlay = false }: VideoPlayerProps) => {
+export const VideoPlayer = ({ videoId, videoUrl, autoPlay = false, initialTime = 0 }: VideoPlayerProps) => {
 	const videoRef = useRef<HTMLVideoElement>(null);
 	const containerRef = useRef<HTMLDivElement>(null);
 	const hlsRef = useRef<Hls | null>(null);
 
 	const [isPlaying, setIsPlaying] = useState(false);
-	const [currentTime, setCurrentTime] = useState(0);
+	const [currentTime, setCurrentTime] = useState(initialTime);
 	const [duration, setDuration] = useState(0);
 	const { volume, setVolume, isMuted, setIsMuted } = useAppStore();
 	const [isFullscreen, setIsFullscreen] = useState(false);
@@ -43,6 +45,56 @@ export const VideoPlayer = ({ videoId, videoUrl, autoPlay = false }: VideoPlayer
 	const [currentLevel, setCurrentLevel] = useState(-1); // -1 = Auto
 	const [playbackRate, setPlaybackRate] = useState(1);
 	const [isProcessing, setIsProcessing] = useState(false);
+
+	const lastSavedTimeRef = useRef(initialTime);
+	const hasInitialSeeked = useRef(false);
+	const hasMarkedCompleted = useRef(false);
+
+	const saveProgress = useCallback(
+		async (time: number, completed: boolean = false) => {
+			if (Math.abs(time - lastSavedTimeRef.current) > 10 || completed) {
+				try {
+					await axios.post(`/api/videos/${videoId}/progress`, {
+						progress: Math.floor(time),
+						completed
+					});
+					lastSavedTimeRef.current = time;
+				} catch (error) {
+					console.error('Failed to save progress', error);
+				}
+			}
+		},
+		[videoId]
+	);
+
+	// Save progress on unmount or page leave
+	useEffect(() => {
+		const currentVideo = videoRef.current;
+		const handleUnload = () => {
+			if (currentVideo) {
+				// We use sendBeacon for reliability on page unload
+				const blob = new Blob(
+					[
+						JSON.stringify({
+							progress: Math.floor(currentVideo.currentTime),
+							completed: false
+						})
+					],
+					{ type: 'application/json' }
+				);
+				navigator.sendBeacon(`/api/videos/${videoId}/progress`, blob);
+			}
+		};
+
+		window.addEventListener('beforeunload', handleUnload);
+		return () => {
+			window.removeEventListener('beforeunload', handleUnload);
+			// Also try to save on component unmount
+			if (currentVideo) {
+				saveProgress(currentVideo.currentTime);
+			}
+		};
+	}, [videoId, saveProgress]);
 
 	// Sync playback rate with video element
 	useEffect(() => {
@@ -63,6 +115,9 @@ export const VideoPlayer = ({ videoId, videoUrl, autoPlay = false }: VideoPlayer
 	useEffect(() => {
 		const video = videoRef.current;
 		if (!video) return;
+
+		// Reset completion status for new video
+		hasMarkedCompleted.current = false;
 
 		// Add cache busting to URL
 		const hlsSrc = `/api/stream/${videoId}/master.m3u8?t=${Date.now()}`;
@@ -130,10 +185,18 @@ export const VideoPlayer = ({ videoId, videoUrl, autoPlay = false }: VideoPlayer
 				hls.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
 					setLevels(hls?.levels || []);
 					setIsProcessing(false);
+					if (initialTime > 0 && !hasInitialSeeked.current && video) {
+						video.currentTime = initialTime;
+						hasInitialSeeked.current = true;
+					}
 					if (autoPlay) safePlay();
 				});
 			} else if (video.canPlayType('application/vnd.apple.mpegurl')) {
 				video.src = hlsSrc;
+				if (initialTime > 0 && !hasInitialSeeked.current) {
+					video.currentTime = initialTime;
+					hasInitialSeeked.current = true;
+				}
 				if (autoPlay) safePlay();
 			}
 		};
@@ -145,7 +208,7 @@ export const VideoPlayer = ({ videoId, videoUrl, autoPlay = false }: VideoPlayer
 				hls.destroy();
 			}
 		};
-	}, [videoId, videoUrl, autoPlay]);
+	}, [videoId, videoUrl, autoPlay, initialTime]);
 
 	const togglePlay = useCallback(() => {
 		if (videoRef.current) {
@@ -158,15 +221,30 @@ export const VideoPlayer = ({ videoId, videoUrl, autoPlay = false }: VideoPlayer
 				}
 			} else {
 				videoRef.current.pause();
+				// Save progress on pause
+				saveProgress(videoRef.current.currentTime);
 			}
 		}
-	}, []);
+	}, [saveProgress]);
 
 	const handleTimeUpdate = () => {
 		if (videoRef.current) {
-			setCurrentTime(videoRef.current.currentTime);
+			const time = videoRef.current.currentTime;
+			setCurrentTime(time);
+
+			// Save progress periodically
+			saveProgress(time);
+
 			if (!isNaN(videoRef.current.duration) && videoRef.current.duration !== Infinity) {
 				setDuration(videoRef.current.duration);
+
+				// Mark as completed if near end (e.g., 95%)
+				if (time > videoRef.current.duration * 0.95) {
+					if (!hasMarkedCompleted.current) {
+						saveProgress(time, true);
+						hasMarkedCompleted.current = true;
+					}
+				}
 			}
 
 			if (videoRef.current.buffered.length > 0) {
@@ -182,8 +260,15 @@ export const VideoPlayer = ({ videoId, videoUrl, autoPlay = false }: VideoPlayer
 	};
 
 	const handleLoadedMetadata = () => {
-		if (videoRef.current && !isNaN(videoRef.current.duration) && videoRef.current.duration !== Infinity) {
-			setDuration(videoRef.current.duration);
+		if (videoRef.current) {
+			if (!isNaN(videoRef.current.duration) && videoRef.current.duration !== Infinity) {
+				setDuration(videoRef.current.duration);
+			}
+			// Fallback seek if HLS didn't handle it (e.g. native playback)
+			if (initialTime > 0 && !hasInitialSeeked.current) {
+				videoRef.current.currentTime = initialTime;
+				hasInitialSeeked.current = true;
+			}
 		}
 	};
 
@@ -192,6 +277,7 @@ export const VideoPlayer = ({ videoId, videoUrl, autoPlay = false }: VideoPlayer
 		if (videoRef.current) {
 			videoRef.current.currentTime = time;
 			setCurrentTime(time);
+			hasMarkedCompleted.current = false;
 		}
 	};
 

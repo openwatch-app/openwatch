@@ -1,5 +1,5 @@
 import { db } from '~server/db';
-import { videos, user, subscription, videoReactions, videoViews } from '~server/db/schema';
+import { videos, user, subscription, videoReactions, videoViews, watchHistory } from '~server/db/schema';
 import { eq, count, and, gt, or, sql } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '~server/auth';
@@ -107,6 +107,7 @@ export const GET = async (req: NextRequest, { params }: { params: Promise<{ id: 
 		// Check if current user is subscribed and their reaction
 		let isSubscribed = false;
 		let userReaction: string | null = null;
+		let savedProgress = 0;
 
 		if (session?.user) {
 			const sub = await db.query.subscription.findFirst({
@@ -119,6 +120,13 @@ export const GET = async (req: NextRequest, { params }: { params: Promise<{ id: 
 			});
 			if (reaction) {
 				userReaction = reaction.type;
+			}
+
+			const history = await db.query.watchHistory.findFirst({
+				where: and(eq(watchHistory.userId, session.user.id), eq(watchHistory.videoId, videoData.id))
+			});
+			if (history) {
+				savedProgress = history.progress;
 			}
 		}
 
@@ -140,6 +148,7 @@ export const GET = async (req: NextRequest, { params }: { params: Promise<{ id: 
 			likes: likesCount.toString(),
 			dislikes: dislikesCount.toString(),
 			userReaction,
+			savedProgress,
 			status: videoData.status,
 			visibility: videoData.visibility,
 			restrictions: videoData.restrictions,

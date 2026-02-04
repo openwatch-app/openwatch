@@ -196,6 +196,41 @@ export const videoViews = pgTable(
 	(table) => [index('video_views_video_id_idx').on(table.videoId), index('video_views_user_id_idx').on(table.userId)]
 );
 
+export const watchHistory = pgTable(
+	'watch_history',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		userId: text('user_id')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
+		videoId: text('video_id')
+			.notNull()
+			.references(() => videos.id, { onDelete: 'cascade' }),
+		progress: integer('progress').default(0).notNull(), // in seconds
+		lastViewedAt: timestamp('last_viewed_at').defaultNow().notNull(),
+		completed: boolean('completed').default(false).notNull()
+	},
+	(table) => [
+		index('watch_history_user_id_idx').on(table.userId),
+		index('watch_history_video_id_idx').on(table.videoId),
+		unique('watch_history_user_video_unique').on(table.userId, table.videoId)
+	]
+);
+
+export const watchHistoryRelations = relations(watchHistory, ({ one }) => ({
+	user: one(user, {
+		fields: [watchHistory.userId],
+		references: [user.id]
+	}),
+	video: one(videos, {
+		fields: [watchHistory.videoId],
+		references: [videos.id]
+	})
+}));
+
+
 export const videoViewsRelations = relations(videoViews, ({ one }) => ({
 	user: one(user, {
 		fields: [videoViews.userId],

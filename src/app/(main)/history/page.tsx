@@ -87,10 +87,14 @@ const Page = () => {
 								<div className="relative w-40 sm:w-60 aspect-video rounded-xl overflow-hidden shrink-0">
 									<img src={video.thumbnail} alt={video.title} className="object-cover w-full h-full" />
 									<div className="absolute bottom-1 right-1 bg-black/80 text-white text-xs px-1 py-0.5 rounded font-medium">{video.duration}</div>
-									{/* Progress Bar Mockup */}
-									<div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-600">
-										<div className="h-full bg-orange-600 w-[80%]"></div>
-									</div>
+									{video.savedProgress !== undefined && video.savedProgress > 0 && video.durationInSeconds && video.durationInSeconds > 0 && (
+										<div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-600/50 z-10">
+											<div
+												className="h-full bg-orange-600"
+												style={{ width: `${Math.min((video.savedProgress / video.durationInSeconds) * 100, 100)}%` }}
+											/>
+										</div>
+									)}
 								</div>
 
 								{/* Info */}

@@ -33,6 +33,8 @@ export interface Video {
 	status?: 'processing' | 'ready' | 'failed';
 	visibility?: 'public' | 'private' | 'unlisted' | 'draft';
 	restrictions?: string;
+	savedProgress?: number;
+	durationInSeconds?: number;
 }
 
 export interface Comment {

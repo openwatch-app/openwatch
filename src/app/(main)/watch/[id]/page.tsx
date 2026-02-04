@@ -185,7 +185,7 @@ const Page = () => {
 			<div className="flex-1 min-w-0">
 				{/* Video Player */}
 				<div className="aspect-video bg-black rounded-xl overflow-hidden mb-4 relative group">
-					<VideoPlayer videoId={id} videoUrl={video.videoUrl} autoPlay />
+					<VideoPlayer videoId={id} videoUrl={video.videoUrl} autoPlay initialTime={video.savedProgress} />
 				</div>
 
 				{/* Title */}
