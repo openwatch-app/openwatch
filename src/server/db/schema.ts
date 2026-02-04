@@ -103,6 +103,7 @@ export const subscription = pgTable(
 		subscribedToId: text('subscribed_to_id')
 			.notNull()
 			.references(() => user.id, { onDelete: 'cascade' }),
+		notify: boolean('notify').default(false).notNull(),
 		createdAt: timestamp('created_at').defaultNow().notNull()
 	},
 	(table) => [
@@ -112,11 +113,47 @@ export const subscription = pgTable(
 	]
 );
 
+export const notifications = pgTable(
+	'notifications',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		recipientId: text('recipient_id')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
+		senderId: text('sender_id')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
+		type: text('type', { enum: ['VIDEO_UPLOAD', 'COMMENT_REPLY', 'COMMENT_HEART'] }).notNull(),
+		resourceId: text('resource_id').notNull(),
+		relatedCommentId: text('related_comment_id'),
+		read: boolean('read').default(false).notNull(),
+		createdAt: timestamp('created_at').defaultNow().notNull()
+	},
+	(table) => [index('notifications_recipient_id_idx').on(table.recipientId), index('notifications_read_idx').on(table.read)]
+);
+
+export const notificationsRelations = relations(notifications, ({ one }) => ({
+	recipient: one(user, {
+		fields: [notifications.recipientId],
+		references: [user.id],
+		relationName: 'recipient'
+	}),
+	sender: one(user, {
+		fields: [notifications.senderId],
+		references: [user.id],
+		relationName: 'sender'
+	})
+}));
+
 export const userRelations = relations(user, ({ many }) => ({
 	sessions: many(session),
 	accounts: many(account),
 	subscriptions: many(subscription, { relationName: 'subscriber' }),
-	subscribers: many(subscription, { relationName: 'subscribedTo' })
+	subscribers: many(subscription, { relationName: 'subscribedTo' }),
+	notificationsReceived: many(notifications, { relationName: 'recipient' }),
+	notificationsSent: many(notifications, { relationName: 'sender' })
 }));
 
 export const subscriptionRelations = relations(subscription, ({ one }) => ({

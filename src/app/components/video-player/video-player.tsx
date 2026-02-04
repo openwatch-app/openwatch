@@ -106,7 +106,9 @@ export const VideoPlayer = ({ videoId, videoUrl, autoPlay = false, initialTime =
 	// Sync volume with video element
 	useEffect(() => {
 		if (videoRef.current) {
-			videoRef.current.volume = volume;
+			// Ensure volume is between 0 and 1 to prevent IndexSizeError
+			const safeVolume = Math.min(Math.max(volume, 0), 1);
+			videoRef.current.volume = safeVolume;
 			videoRef.current.muted = isMuted;
 		}
 	}, [volume, isMuted]);

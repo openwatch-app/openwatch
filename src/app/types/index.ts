@@ -12,6 +12,7 @@ export interface Channel {
 	verified: boolean;
 	links?: { title: string; url: string }[];
 	isSubscribed?: boolean;
+	notify?: boolean;
 	type?: 'channel';
 }
 

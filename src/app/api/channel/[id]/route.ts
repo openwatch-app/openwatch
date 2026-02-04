@@ -43,11 +43,15 @@ export const GET = async (req: NextRequest, { params }: { params: Promise<{ id: 
 
 		// Check if current user is subscribed
 		let isSubscribed = false;
+		let notify = false;
 		if (session?.user) {
 			const sub = await db.query.subscription.findFirst({
 				where: and(eq(subscription.subscriberId, session.user.id), eq(subscription.subscribedToId, result.id))
 			});
-			isSubscribed = !!sub;
+			if (sub) {
+				isSubscribed = true;
+				notify = sub.notify;
+			}
 		}
 
 		// Map user fields to match the expected Channel interface in frontend
@@ -56,7 +60,8 @@ export const GET = async (req: NextRequest, { params }: { params: Promise<{ id: 
 			avatar: result.image, // frontend expects 'avatar'
 			subscribers: subscriberCount.toString(),
 			videosCount: videoCount.toString(),
-			isSubscribed
+			isSubscribed,
+			notify
 		};
 
 		return NextResponse.json(channelData);

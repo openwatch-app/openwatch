@@ -12,6 +12,7 @@ import { Video } from '~app/types';
 import { cn } from '~lib/utils';
 import axios from 'axios';
 import dayjs from 'dayjs';
+import { SubscribeButton } from '~components/subscribe-button';
 import '~lib/dayjs-config';
 
 const Page = () => {
@@ -24,7 +25,6 @@ const Page = () => {
 	const [recommendedVideos, setRecommendedVideos] = useState<Video[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
-	const [isSubscribing, setIsSubscribing] = useState(false);
 	const [selectedTab, setSelectedTab] = useState<'all' | 'channel' | 'related'>('all');
 	const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 	const [isCopied, setIsCopied] = useState(false);
@@ -57,40 +57,6 @@ const Page = () => {
 			setTimeout(() => setIsCopied(false), 2000);
 		} catch (err) {
 			console.error('Failed to copy: ', err);
-		}
-	};
-
-	const handleSubscribe = async () => {
-		if (!session) {
-			router.push('/auth');
-			return;
-		}
-
-		if (!video || isOwner) return;
-
-		try {
-			setIsSubscribing(true);
-			const response = await axios.post('/api/channel/subscribe', { channelId: video.channel.id });
-
-			setVideo((prev) => {
-				if (!prev) return null;
-				const isSubscribed = response.data.subscribed;
-				const currentCount = parseInt(prev.channel.subscribers || '0');
-				const newCount = isSubscribed ? currentCount + 1 : Math.max(0, currentCount - 1);
-
-				return {
-					...prev,
-					channel: {
-						...prev.channel,
-						isSubscribed,
-						subscribers: newCount.toString()
-					}
-				};
-			});
-		} catch (err) {
-			console.error('Error toggling subscription:', err);
-		} finally {
-			setIsSubscribing(false);
 		}
 	};
 
@@ -205,17 +171,28 @@ const Page = () => {
 							<p className="text-xs text-muted-foreground">{video.channel.subscribers} subscribers</p>
 						</div>
 						{!isOwner && (
-							<Button
-								className={cn(
-									'ml-4 rounded-full font-medium transition-colors',
-									video.channel.isSubscribed ? 'bg-secondary text-secondary-foreground hover:bg-secondary/80' : 'bg-foreground text-background hover:bg-foreground/90'
-								)}
-								onClick={handleSubscribe}
-								disabled={isSubscribing}
-							>
-								{isSubscribing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-								{video.channel.isSubscribed ? 'Subscribed' : 'Subscribe'}
-							</Button>
+							<SubscribeButton
+								channelId={video.channel.id}
+								initialIsSubscribed={video.channel.isSubscribed}
+								initialNotify={video.channel.notify}
+								className="ml-4"
+								onSubscriptionChange={(subscribed) => {
+									setVideo((prev) => {
+										if (!prev) return null;
+										const currentCount = parseInt(prev.channel.subscribers || '0');
+										const newCount = subscribed ? currentCount + 1 : Math.max(0, currentCount - 1);
+
+										return {
+											...prev,
+											channel: {
+												...prev.channel,
+												isSubscribed: subscribed,
+												subscribers: newCount.toString()
+											}
+										};
+									});
+								}}
+							/>
 						)}
 					</div>
 

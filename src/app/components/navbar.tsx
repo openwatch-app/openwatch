@@ -1,9 +1,10 @@
 'use client';
 
-import { Menu, Search, Video, Bell, User } from 'lucide-react';
+import { Menu, Search, Video, User } from 'lucide-react';
 import { authClient } from '~lib/auth-client';
 import { useRouter } from 'next/navigation';
 import { useAppStore } from '../lib/store';
+import { NotificationCenter } from '~components/notification-center';
 import UserDropdown from './user-dropdown';
 import { Button } from './button';
 import { Badge } from './badge';
@@ -53,12 +54,7 @@ export function Navbar() {
 			<div className="flex items-center gap-2">
 				{session?.user ? (
 					<>
-						<Button variant="ghost" size="icon" className="hidden sm:flex">
-							<Video className="h-5 w-5" />
-						</Button>
-						<Button variant="ghost" size="icon" className="hidden sm:flex">
-							<Bell className="h-5 w-5" />
-						</Button>
+						<NotificationCenter />
 						<UserDropdown user={session.user} />
 					</>
 				) : (

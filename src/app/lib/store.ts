@@ -15,7 +15,7 @@ export const useAppStore = create<AppState>()(
 	persist(
 		(set, get) => ({
 			isSidebarOpen: true,
-			volume: 100,
+			volume: 1,
 			setVolume: (volume: number) => set({ volume }),
 			isMuted: false,
 			setIsMuted: (isMuted: boolean) => set({ isMuted }),

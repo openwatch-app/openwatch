@@ -12,6 +12,7 @@ import { Search, Loader2 } from 'lucide-react';
 import { cn } from '~lib/utils';
 import { authClient } from '~lib/auth-client';
 import Image from 'next/image';
+import { SubscribeButton } from '~components/subscribe-button';
 
 const ChannelPage = () => {
 	const params = useParams();
@@ -23,39 +24,8 @@ const ChannelPage = () => {
 	const [videos, setVideos] = useState<Video[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [activeTab, setActiveTab] = useState('videos');
-	const [isSubscribing, setIsSubscribing] = useState(false);
 
 	const isOwner = session?.user?.id === channel?.id;
-
-	const handleSubscribe = async () => {
-		if (!session?.user) {
-			router.push('/auth');
-			return;
-		}
-		if (!channel) return;
-
-		setIsSubscribing(true);
-		try {
-			const res = await axios.post('/api/channel/subscribe', { channelId: channel.id });
-			const { subscribed } = res.data;
-
-			setChannel((prev) => {
-				if (!prev) return null;
-				const currentSubscribers = parseInt(prev.subscribers.replace(/,/g, '') || '0');
-				const newSubCount = subscribed ? currentSubscribers + 1 : Math.max(0, currentSubscribers - 1);
-
-				return {
-					...prev,
-					isSubscribed: subscribed,
-					subscribers: newSubCount.toString()
-				};
-			});
-		} catch (error) {
-			console.error('Failed to subscribe', error);
-		} finally {
-			setIsSubscribing(false);
-		}
-	};
 
 	useEffect(() => {
 		const fetchChannelData = async () => {
@@ -150,16 +120,24 @@ const ChannelPage = () => {
 									</Button>
 								</>
 							) : (
-								<Button
-									className={cn(
-										'rounded-full font-medium px-6 h-9',
-										channel.isSubscribed ? 'bg-secondary hover:bg-secondary/80 text-foreground' : 'bg-foreground text-background hover:bg-foreground/90'
-									)}
-									onClick={handleSubscribe}
-									disabled={isSubscribing}
-								>
-									{isSubscribing ? <Loader2 className="h-4 w-4 animate-spin" /> : channel.isSubscribed ? 'Subscribed' : 'Subscribe'}
-								</Button>
+								<SubscribeButton
+									channelId={channel.id}
+									initialIsSubscribed={channel.isSubscribed}
+									initialNotify={channel.notify}
+									className="h-9"
+									onSubscriptionChange={(subscribed) => {
+										setChannel((prev) => {
+											if (!prev) return null;
+											const currentSubscribers = parseInt(prev.subscribers.replace(/,/g, '') || '0');
+											const newSubCount = subscribed ? currentSubscribers + 1 : Math.max(0, currentSubscribers - 1);
+											return {
+												...prev,
+												isSubscribed: subscribed,
+												subscribers: newSubCount.toString()
+											};
+										});
+									}}
+								/>
 							)}
 						</div>
 					</div>

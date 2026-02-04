@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '~server/db';
-import { comments } from '~server/db/schema';
+import { comments, notifications } from '~server/db/schema';
 import { eq, desc, and } from 'drizzle-orm';
 import { auth } from '~server/auth';
 import { generateId } from 'better-auth';
@@ -105,6 +105,8 @@ export const POST = async (req: NextRequest, { params }: { params: Promise<{ id:
 			return NextResponse.json({ error: 'Content is required' }, { status: 400 });
 		}
 
+		let parentCommentAuthorId: string | null = null;
+
 		if (parentId) {
 			const parent = await db.query.comments.findFirst({
 				where: and(eq(comments.id, parentId), eq(comments.videoId, id))
@@ -112,6 +114,7 @@ export const POST = async (req: NextRequest, { params }: { params: Promise<{ id:
 			if (!parent) {
 				return NextResponse.json({ error: 'Parent comment not found' }, { status: 404 });
 			}
+			parentCommentAuthorId = parent.userId;
 		}
 
 		const newComment = await db
@@ -135,6 +138,18 @@ export const POST = async (req: NextRequest, { params }: { params: Promise<{ id:
 
 		if (!commentWithUser) {
 			return NextResponse.json({ error: 'Failed to create comment' }, { status: 500 });
+		}
+
+		// Create notification if this is a reply
+		if (parentId && parentCommentAuthorId && parentCommentAuthorId !== session.user.id) {
+			await db.insert(notifications).values({
+				recipientId: parentCommentAuthorId,
+				senderId: session.user.id,
+				type: 'COMMENT_REPLY',
+				resourceId: id,
+				relatedCommentId: newComment[0].id,
+				read: false
+			});
 		}
 
 		const formattedComment = {

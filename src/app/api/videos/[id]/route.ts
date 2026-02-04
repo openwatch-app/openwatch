@@ -1,14 +1,14 @@
-import { db } from '~server/db';
-import { videos, user, subscription, videoReactions, videoViews, watchHistory } from '~server/db/schema';
+import { videos, user, subscription, videoReactions, videoViews, watchHistory, notifications } from '~server/db/schema';
 import { eq, count, and, gt, or, sql } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '~server/auth';
-import { unlink, rm } from 'fs/promises';
-import { join } from 'path';
-import { existsSync } from 'fs';
-import dayjs from 'dayjs';
-import duration from 'dayjs/plugin/duration';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import duration from 'dayjs/plugin/duration';
+import { unlink, rm } from 'fs/promises';
+import { auth } from '~server/auth';
+import { db } from '~server/db';
+import { existsSync } from 'fs';
+import { join } from 'path';
+import dayjs from 'dayjs';
 
 dayjs.extend(duration);
 dayjs.extend(relativeTime);
@@ -106,6 +106,7 @@ export const GET = async (req: NextRequest, { params }: { params: Promise<{ id: 
 
 		// Check if current user is subscribed and their reaction
 		let isSubscribed = false;
+		let notify = false;
 		let userReaction: string | null = null;
 		let savedProgress = 0;
 
@@ -113,7 +114,10 @@ export const GET = async (req: NextRequest, { params }: { params: Promise<{ id: 
 			const sub = await db.query.subscription.findFirst({
 				where: and(eq(subscription.subscriberId, session.user.id), eq(subscription.subscribedToId, videoData.userId))
 			});
-			isSubscribed = !!sub;
+			if (sub) {
+				isSubscribed = true;
+				notify = sub.notify;
+			}
 
 			const reaction = await db.query.videoReactions.findFirst({
 				where: and(eq(videoReactions.videoId, videoData.id), eq(videoReactions.userId, session.user.id))
@@ -160,7 +164,8 @@ export const GET = async (req: NextRequest, { params }: { params: Promise<{ id: 
 				subscribers: subscriberCount.toString(),
 				videosCount: '0', // Not fetching count here for performance
 				verified: videoData.user.verified,
-				isSubscribed
+				isSubscribed,
+				notify
 			}
 		};
 
@@ -211,6 +216,31 @@ export const PATCH = async (req: NextRequest, { params }: { params: Promise<{ id
 		if (Object.keys(updateData).length > 0) {
 			updateData.updatedAt = new Date();
 			await db.update(videos).set(updateData).where(eq(videos.id, id));
+
+			// Check for notification trigger: transitioning from non-public to public
+			if (visibility === 'public' && video.visibility !== 'public') {
+				try {
+					// Fetch subscribers who want notifications
+					const subscribersToNotify = await db.query.subscription.findMany({
+						where: and(eq(subscription.subscribedToId, video.userId), eq(subscription.notify, true))
+					});
+
+					if (subscribersToNotify.length > 0) {
+						const notificationsToInsert = subscribersToNotify.map((sub) => ({
+							recipientId: sub.subscriberId,
+							senderId: video.userId,
+							type: 'VIDEO_UPLOAD' as const,
+							resourceId: video.id,
+							read: false
+						}));
+
+						// Insert notifications
+						await db.insert(notifications).values(notificationsToInsert);
+					}
+				} catch (notificationError) {
+					console.error('Error creating notifications:', notificationError);
+				}
+			}
 		}
 
 		return NextResponse.json({ success: true });

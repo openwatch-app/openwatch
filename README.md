@@ -1,5 +1,7 @@
 # OpenWatch (W.I.P)
 
+![OpenWatch](./public/images/logo-full.png)
+
 OpenWatch is a modern video streaming platform built with Next.js, designed for high-performance video playback and management.
 
 ## Features
@@ -15,7 +17,8 @@ OpenWatch is a modern video streaming platform built with Next.js, designed for 
 
 - **Comments**: Nested replies, pinning, hearting, and like/dislike reactions
 - **Reactions**: Like and Dislike videos
-- **Subscriptions**: Subscribe to channels and manage subscriptions
+- **Subscriptions**: Subscribe to channels and customize notification settings
+- **Notifications**: Real-time alerts for uploads, replies, and hearts with deep linking and management
 
 ### Creator Studio
 
@@ -52,8 +55,8 @@ Follow these steps to set up the project locally for development:
 1. **Clone the repository**:
 
     ```bash
-    git clone <repository-url>
-    cd opentube
+    git clone https://github.com/openwatch-app/openwatch.git
+    cd openwatch
     ```
 
 2. **Install dependencies**:
