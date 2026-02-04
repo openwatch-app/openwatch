@@ -20,6 +20,12 @@ export const CommentSection = ({ videoId, videoOwnerId, currentUserId }: Comment
 	const [sort, setSort] = useState<'top' | 'newest'>('top');
 
 	const isVideoOwner = videoOwnerId === currentUserId;
+	const countComments = (items: Comment[]): number => {
+		return items.reduce((total, item) => {
+			const repliesCount = item.replies ? countComments(item.replies) : 0;
+			return total + 1 + repliesCount;
+		}, 0);
+	};
 
 	useEffect(() => {
 		const fetchComments = async () => {
@@ -57,7 +63,7 @@ export const CommentSection = ({ videoId, videoOwnerId, currentUserId }: Comment
 	return (
 		<div className="w-full max-w-6xl mt-6">
 			<div className="flex items-center gap-8 mb-6">
-				<h3 className="text-xl font-bold">{comments.length} Comments</h3>
+				<h3 className="text-xl font-bold">{countComments(comments)} Comments</h3>
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>
 						<div className="flex items-center gap-2 font-semibold text-sm cursor-pointer hover:bg-secondary/50 px-2 py-1 rounded">

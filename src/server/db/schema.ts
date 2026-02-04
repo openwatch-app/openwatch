@@ -184,7 +184,7 @@ export const videos = pgTable('videos', {
 	description: text('description'),
 	duration: integer('duration'),
 	thumbnailUrl: text('thumbnail_url'),
-	uploadDate: timestamp('upload_date').defaultNow().notNull(),
+	uploadDate: timestamp('upload_date', { withTimezone: true }).defaultNow().notNull(),
 	status: text('status').default('processing').notNull(),
 	visibility: text('visibility').default('private').notNull(),
 	restrictions: text('restrictions').default('None').notNull(),
@@ -193,8 +193,8 @@ export const videos = pgTable('videos', {
 	dislikes: integer('dislikes').default(0).notNull(),
 	category: text('category').default('General').notNull(),
 	tags: text('tags').array(),
-	createdAt: timestamp('created_at').defaultNow().notNull(),
-	updatedAt: timestamp('updated_at')
+	createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+	updatedAt: timestamp('updated_at', { withTimezone: true })
 		.defaultNow()
 		.$onUpdate(() => /* @__PURE__ */ new Date())
 		.notNull()

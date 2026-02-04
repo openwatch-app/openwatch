@@ -3,8 +3,8 @@
 import { useAppStore } from '~lib/store';
 import { Sidebar } from './sidebar';
 import { useEffect } from 'react';
-import { Navbar } from './navbar';
 import { cn } from '~lib/utils';
+import Navbar from './navbar';
 import '~lib/dayjs-config';
 
 const MainLayout = ({ children }: { children: React.ReactNode }) => {

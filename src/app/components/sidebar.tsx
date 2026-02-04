@@ -1,17 +1,17 @@
 'use client';
 
 import { Avatar, AvatarFallback, AvatarImage } from './avatar';
-import { useAppStore } from '~lib/store';
 import { usePathname } from 'next/navigation';
 import { Home, History } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { ScrollArea } from './scroll-area';
+import { useAppStore } from '~lib/store';
 import { Separator } from './separator';
+import { Channel } from '~app/types';
 import { Button } from './button';
 import { cn } from '~lib/utils';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Channel } from '~app/types';
 
 interface SidebarItemProps {
 	icon: React.ElementType;
@@ -25,7 +25,7 @@ const SidebarItem = ({ icon: Icon, label, href, isActive, isCollapsed }: Sidebar
 	return (
 		<Link href={href} className="w-full">
 			<Button variant={isActive ? 'secondary' : 'ghost'} className={cn('w-full justify-start gap-4 px-3 mb-1', isCollapsed ? 'flex-col h-auto py-4 gap-1 px-0' : '')}>
-				<Icon className={cn('h-5 w-5', isActive ? 'fill-current' : '')} />
+				<Icon className="h-5 w-5" />
 				<span className={cn('text-sm truncate', isCollapsed ? 'text-[10px]' : '')}>{label}</span>
 			</Button>
 		</Link>

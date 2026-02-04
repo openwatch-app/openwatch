@@ -11,6 +11,14 @@ interface VideoCardProps {
 	video: Video;
 }
 
+const safeFromNow = (input: string | Date) => {
+	const ts = dayjs(input);
+	if (!ts.isValid()) return '';
+	const now = dayjs();
+	const futureOffset = ts.diff(now);
+	return ts.subtract(futureOffset > 0 ? futureOffset : 0, 'ms').fromNow();
+};
+
 const VideoCard = ({ video }: VideoCardProps) => {
 	return (
 		<Card className="border-0 bg-transparent shadow-none">
@@ -18,7 +26,7 @@ const VideoCard = ({ video }: VideoCardProps) => {
 				{/* Thumbnail Container */}
 				<Link href={`/watch/${video.id}`} className="relative aspect-video rounded-xl overflow-hidden mb-2 group block w-full">
 					<Image
-						src={video.thumbnail || '/placeholder.jpg'}
+						src={video.thumbnail || '/images/no-video.jpg'}
 						alt={video.title}
 						fill
 						className="object-cover transition-transform duration-300 group-hover:scale-105"
@@ -59,7 +67,7 @@ const VideoCard = ({ video }: VideoCardProps) => {
 							<div className="flex items-center">
 								<span>{video.views} views</span>
 								<span className="mx-1">•</span>
-								<span>{dayjs(video.uploadedAt).fromNow()}</span>
+								<span>{safeFromNow(video.uploadedAt)}</span>
 							</div>
 						</div>
 					</div>

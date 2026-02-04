@@ -1,10 +1,10 @@
 'use client';
 
+import { NotificationCenter } from '~components/notification-center';
 import { Menu, Search, Video, User } from 'lucide-react';
 import { authClient } from '~lib/auth-client';
 import { useRouter } from 'next/navigation';
 import { useAppStore } from '../lib/store';
-import { NotificationCenter } from '~components/notification-center';
 import UserDropdown from './user-dropdown';
 import { Button } from './button';
 import { Badge } from './badge';
@@ -12,7 +12,7 @@ import { useState } from 'react';
 import { Input } from './input';
 import Link from 'next/link';
 
-export function Navbar() {
+const Navbar = () => {
 	const { toggleSidebar } = useAppStore();
 	const { data: session } = authClient.useSession();
 	const [searchInput, setSearchInput] = useState('');
@@ -68,4 +68,6 @@ export function Navbar() {
 			</div>
 		</nav>
 	);
-}
+};
+
+export default Navbar;

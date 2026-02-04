@@ -145,7 +145,7 @@ export const GET = async (req: NextRequest, { params }: { params: Promise<{ id: 
 			videoUrl: `/api/uploads/${videoData.filename}`, // Serve via API route
 			duration: videoData.duration ? formattedDuration : '00:00',
 			views: videoData.views.toString(),
-			uploadedAt: dayjs(videoData.createdAt).fromNow(),
+			uploadedAt: videoData.createdAt.toISOString(),
 			description: videoData.description,
 			category: 'General', // Default category
 			type: 'video',

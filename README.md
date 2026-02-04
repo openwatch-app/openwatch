@@ -92,6 +92,8 @@ The application will be available at `http://localhost:8634`.
 - `npm run build` - Build for production
 - `npm run start` - Start production server
 - `npm run db:studio` - Open Drizzle Studio to view database
+- `npm run db:generate` - Generate database migrations
+- `npm run db:push` - Push schema to database
 
 ## Contributing
 
