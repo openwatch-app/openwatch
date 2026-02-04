@@ -1,0 +1,18 @@
+OpenWatch License
+
+Copyright (c) 2026 Ge0rg3e
+
+1. Grant of License
+   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to use the Software for personal and commercial purposes, subject to the conditions listed below.
+
+2. Restrictions
+   The following actions are strictly prohibited without the express written permission of the copyright holder, EXCEPT as provided in Section 4 (Contributor Exception):
+   a) Cloning, copying, or duplicating the source code for redistribution or modification.
+   b) Modifying, altering, adapting, or creating derivative works of the Software.
+   c) Redistributing, sublicensing, or selling copies of the Software or modified versions of the Software.
+
+4. Contributor Exception
+   Notwithstanding the restrictions in Section 2, permission is hereby granted to modify, alter, adapt, and create derivative works of the Software for the sole purpose of contributing to the OpenWatch project (e.g., submitting pull requests, bug fixes, or features). Contributors are authorized to fork the repository and modify the code as necessary to facilitate such contributions.
+
+3. No Warranty
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.

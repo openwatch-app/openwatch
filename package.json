@@ -1,0 +1,67 @@
+{
+	"name": "open-watch",
+	"author": "Ge0rg3e",
+	"license": "SEE LICENSE IN LICENSE",
+	"version": "0.0.1",
+	"private": true,
+	"scripts": {
+		"db:generate": "drizzle-kit generate",
+		"db:studio": "drizzle-kit studio",
+		"db:push": "drizzle-kit push",
+		"dev": "next dev --port 8634",
+		"build": "next build",
+		"start": "next start"
+	},
+	"dependencies": {
+		"axios": "^1.13.4",
+		"better-auth": "^1.4.18",
+		"class-variance-authority": "^0.7.1",
+		"clsx": "^2.1.1",
+		"date-fns": "^4.1.0",
+		"dayjs": "^1.11.19",
+		"drizzle-orm": "^0.45.1",
+		"ffmpeg-static": "^5.3.0",
+		"fluent-ffmpeg": "^2.1.3",
+		"hls.js": "^1.6.15",
+		"lucide-react": "^0.563.0",
+		"next": "16.1.6",
+		"postgres": "^3.4.8",
+		"radix-ui": "^1.4.3",
+		"react": "19.2.3",
+		"react-dom": "19.2.3",
+		"tailwind-merge": "^3.4.0",
+		"zustand": "^5.0.11"
+	},
+	"devDependencies": {
+		"@tailwindcss/postcss": "^4",
+		"@types/fluent-ffmpeg": "^2.1.28",
+		"@types/node": "^20",
+		"@types/react": "^19",
+		"@types/react-dom": "^19",
+		"babel-plugin-react-compiler": "1.0.0",
+		"drizzle-kit": "^0.31.8",
+		"tailwindcss": "^4",
+		"tw-animate-css": "^1.4.0",
+		"typescript": "^5"
+	},
+	"prettier": {
+		"$schema": "http://json.schemastore.org/prettierrc",
+		"endOfLine": "lf",
+		"printWidth": 200,
+		"quoteProps": "as-needed",
+		"semi": true,
+		"singleQuote": true,
+		"tabWidth": 4,
+		"trailingComma": "none",
+		"useTabs": true,
+		"overrides": [
+			{
+				"files": "*.yml",
+				"options": {
+					"tabWidth": 2,
+					"useTabs": false
+				}
+			}
+		]
+	}
+}
