@@ -124,30 +124,30 @@ export const CommentItem = ({ comment, videoId, isVideoOwner, onDelete, onUpdate
 					{/* Action Bar */}
 					<div className="flex items-center gap-2">
 						<div className="flex items-center">
-							<Button variant="ghost" size="icon" className="h-8 w-8 rounded-full hover:bg-zinc-800" onClick={() => handleReaction('LIKE')}>
-								<ThumbsUp className={cn('h-4 w-4', comment.userReaction === 'LIKE' && 'fill-white')} />
+							<Button variant="ghost" size="icon" className="h-8 w-8 rounded-full hover:bg-secondary" onClick={() => handleReaction('LIKE')}>
+								<ThumbsUp className={cn('h-4 w-4', comment.userReaction === 'LIKE' && 'fill-foreground')} />
 							</Button>
 							<span className="text-xs text-muted-foreground w-6">{comment.likes > 0 ? comment.likes : ''}</span>
 						</div>
 						<div className="flex items-center">
-							<Button variant="ghost" size="icon" className="h-8 w-8 rounded-full hover:bg-zinc-800" onClick={() => handleReaction('DISLIKE')}>
-								<ThumbsDown className={cn('h-4 w-4', comment.userReaction === 'DISLIKE' && 'fill-white')} />
+							<Button variant="ghost" size="icon" className="h-8 w-8 rounded-full hover:bg-secondary" onClick={() => handleReaction('DISLIKE')}>
+								<ThumbsDown className={cn('h-4 w-4', comment.userReaction === 'DISLIKE' && 'fill-foreground')} />
 							</Button>
 							<span className="text-xs text-muted-foreground w-2">{comment.dislikes > 0 ? comment.dislikes : ''}</span>
 						</div>
 						{comment.isHearted && (
-							<div className="flex items-center gap-1 text-orange-600 ml-2" title="Hearted by creator">
+							<div className="flex items-center gap-1 text-primary ml-2" title="Hearted by creator">
 								<div className="relative">
 									<Avatar className="h-5 w-5 border border-background">
 										<AvatarImage src={comment.user.avatar} />
 										<AvatarFallback>{comment.user.name[0]}</AvatarFallback>
 									</Avatar>
-									<Heart className="h-3 w-3 fill-orange-600 text-orange-600 absolute -bottom-1 -right-1" />
+									<Heart className="h-3 w-3 fill-primary text-primary absolute -bottom-1 -right-1" />
 								</div>
 							</div>
 						)}
 
-						<Button variant="ghost" size="sm" className="h-8 rounded-full text-xs hover:bg-zinc-800 ml-2" onClick={() => setIsReplying(!isReplying)}>
+						<Button variant="ghost" size="sm" className="h-8 rounded-full text-xs hover:bg-secondary ml-2" onClick={() => setIsReplying(!isReplying)}>
 							Reply
 						</Button>
 
@@ -165,12 +165,12 @@ export const CommentItem = ({ comment, videoId, isVideoOwner, onDelete, onUpdate
 												<Pin className="mr-2 h-4 w-4" /> {comment.isPinned ? 'Unpin' : 'Pin'}
 											</DropdownMenuItem>
 											<DropdownMenuItem onClick={handleHeart}>
-												<Heart className={cn('mr-2 h-4 w-4', comment.isHearted && 'fill-orange-600 text-orange-600')} />
+												<Heart className={cn('mr-2 h-4 w-4', comment.isHearted && 'fill-primary text-primary')} />
 												{comment.isHearted ? 'Unheart' : 'Heart'}
 											</DropdownMenuItem>
 										</>
 									)}
-									<DropdownMenuItem onClick={handleDelete} className="text-orange-600 focus:text-orange-600">
+									<DropdownMenuItem onClick={handleDelete} className="text-primary focus:text-primary">
 										<Trash2 className="mr-2 h-4 w-4" /> Delete
 									</DropdownMenuItem>
 								</DropdownMenuContent>
@@ -190,7 +190,7 @@ export const CommentItem = ({ comment, videoId, isVideoOwner, onDelete, onUpdate
 						<Button
 							variant="ghost"
 							size="sm"
-							className="text-blue-400 hover:text-blue-300 h-9 p-0 hover:bg-blue-400/10 px-3 rounded-full mt-2 font-medium"
+							className="text-blue-600 dark:text-blue-400 hover:text-blue-500 h-9 p-0 hover:bg-blue-400/10 px-3 rounded-full mt-2 font-medium"
 							onClick={() => setShowReplies(true)}
 						>
 							<ChevronDown className="h-5 w-5 mr-2" />

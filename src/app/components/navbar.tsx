@@ -26,13 +26,13 @@ const Navbar = () => {
 	};
 
 	return (
-		<nav className="fixed top-0 left-0 right-0 h-14 bg-background border-b z-50 flex items-center justify-between px-4">
+		<nav className="fixed top-0 left-0 right-0 h-14 bg-background z-50 flex items-center justify-between px-4">
 			<div className="flex items-center gap-4">
 				<Button variant="ghost" size="icon" onClick={toggleSidebar} className="shrink-0">
 					<Menu className="h-5 w-5" />
 				</Button>
 				<Link href="/" className="flex items-center gap-1">
-					<div className="bg-orange-600 text-white p-1 rounded-lg">
+					<div className="bg-primary text-primary-foreground p-1 rounded-lg">
 						<Video className="h-4 w-4 fill-current" />
 					</div>
 					<span className="text-xl font-bold tracking-tighter">OpenWatch</span>
@@ -43,9 +43,14 @@ const Navbar = () => {
 			</div>
 
 			<form onSubmit={handleSearch} className="hidden md:flex items-center flex-1 max-w-2xl mx-4">
-				<div className="flex w-full items-center">
-					<Input placeholder="Search" className="rounded-r-none focus-visible:ring-0 border-r-0" value={searchInput} onChange={(e) => setSearchInput(e.target.value)} />
-					<Button type="submit" variant="secondary" className="rounded-l-none border border-l-0 px-5">
+				<div className="flex w-full items-center ml-10">
+					<Input
+						placeholder="Search"
+						className="rounded-l-full rounded-r-none focus-visible:ring-0 border-r-0 shadow-none pl-4"
+						value={searchInput}
+						onChange={(e) => setSearchInput(e.target.value)}
+					/>
+					<Button type="submit" variant="secondary" className="rounded-r-full rounded-l-none border border-l-0 px-5 bg-secondary/50 hover:bg-secondary/70 shadow-none">
 						<Search className="h-4 w-4" />
 					</Button>
 				</div>

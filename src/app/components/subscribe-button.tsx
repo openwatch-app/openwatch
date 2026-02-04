@@ -81,9 +81,10 @@ export const SubscribeButton = ({ channelId, initialIsSubscribed = false, initia
 	return (
 		<div className={cn('flex items-center gap-2', className)}>
 			<Button
+				variant={isSubscribed ? 'secondary' : 'default'}
 				className={cn(
 					'rounded-full font-medium transition-colors',
-					isSubscribed ? 'bg-secondary text-secondary-foreground hover:bg-secondary/80' : 'bg-foreground text-background hover:bg-foreground/90'
+					!isSubscribed && 'bg-foreground text-background hover:bg-foreground/90 border-none'
 				)}
 				onClick={handleSubscribe}
 				disabled={isLoading}

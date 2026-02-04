@@ -9,7 +9,7 @@ dayjs.extend(relativeTime);
 
 export const metadata: Metadata = {
 	title: 'OpenWatch',
-	description: 'A YouTube clone built with Next.js and shadcn/ui'
+	description: 'An open-source alternative to YouTube.'
 };
 
 const RootLayout = ({ children }: Readonly<{ children: React.ReactNode }>) => {

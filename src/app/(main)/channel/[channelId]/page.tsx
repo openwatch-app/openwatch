@@ -110,12 +110,13 @@ const ChannelPage = () => {
 							{isOwner ? (
 								<>
 									<Button
-										className="rounded-full bg-secondary hover:bg-secondary/80 text-foreground font-medium h-9 px-4 text-sm"
+										variant="secondary"
+										className="font-medium"
 										onClick={() => router.push('/studio/customization')}
 									>
 										Customize channel
 									</Button>
-									<Button className="rounded-full bg-secondary hover:bg-secondary/80 text-foreground font-medium h-9 px-4 text-sm" onClick={() => router.push('/studio')}>
+									<Button variant="secondary" className="font-medium" onClick={() => router.push('/studio')}>
 										Manage videos
 									</Button>
 								</>

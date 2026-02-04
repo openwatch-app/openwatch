@@ -56,7 +56,7 @@ export const CommentInput = ({ videoId, parentId, onCommentAdded, onCancel, auto
 						value={content}
 						onChange={(e) => setContent(e.target.value)}
 						onFocus={() => setIsFocused(true)}
-						className="w-full bg-transparent border-b border-border py-2 text-sm outline-none focus:border-white transition-colors pb-1"
+						className="w-full bg-transparent border-b border-border py-2 text-sm outline-none focus:border-foreground transition-colors pb-1"
 						autoFocus={autoFocus}
 					/>
 				</div>
@@ -83,7 +83,7 @@ export const CommentInput = ({ videoId, parentId, onCommentAdded, onCancel, auto
 								size="sm"
 								onClick={handleSubmit}
 								disabled={!content.trim() || loading}
-								className="rounded-full bg-blue-500 hover:bg-blue-600 text-white disabled:bg-zinc-700 disabled:text-zinc-500"
+								className="rounded-full bg-[#065fd4] hover:bg-[#065fd4]/90 text-white disabled:bg-zinc-200 disabled:text-zinc-500 dark:disabled:bg-zinc-700"
 							>
 								{loading ? 'Posting...' : parentId ? 'Reply' : 'Comment'}
 							</Button>

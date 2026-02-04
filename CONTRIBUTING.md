@@ -57,7 +57,6 @@ To maintain code quality and consistency, please adhere to the following guideli
 
 ### UI/UX & Styling
 
-- **Shadcn UI**: Use `shadcn/ui` components whenever possible.
 - **Tailwind CSS**: Use utility classes for styling.
 - **Design Accuracy**: If implementing a design, aim for pixel-perfect precision.
 

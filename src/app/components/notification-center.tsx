@@ -118,7 +118,7 @@ export const NotificationCenter = () => {
 			case 'COMMENT_HEART':
 				return (
 					<>
-						Your comment got a <Heart className="inline w-3 h-3 text-red-500 fill-current mx-0.5" /> from <span className="font-semibold">{n.sender.name}</span>
+						Your comment got a <Heart className="inline w-3 h-3 text-primary fill-current mx-0.5" /> from <span className="font-semibold">{n.sender.name}</span>
 					</>
 				);
 			default:
@@ -131,7 +131,7 @@ export const NotificationCenter = () => {
 			<DropdownMenuTrigger asChild>
 				<Button variant="ghost" size="icon" className="relative hidden sm:flex">
 					<Bell className="h-5 w-5" />
-					{unreadCount > 0 && <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-red-600 border border-background" />}
+					{unreadCount > 0 && <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-primary border border-background" />}
 				</Button>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="end" className="w-[480px] p-0 bg-popover border text-popover-foreground shadow-xl rounded-xl overflow-hidden">
@@ -182,7 +182,7 @@ export const NotificationCenter = () => {
 											<Button
 												variant="ghost"
 												size="icon"
-												className="h-8 w-8 bg-background/80 backdrop-blur-sm shadow-sm hover:bg-background hover:text-red-500"
+												className="h-8 w-8 bg-background/80 backdrop-blur-sm shadow-sm hover:bg-background hover:text-primary"
 												onClick={(e) => handleDelete(e, notification.id)}
 											>
 												<X className="h-4 w-4" />
