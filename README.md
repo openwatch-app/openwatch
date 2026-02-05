@@ -2,7 +2,9 @@
 
 ![OpenWatch](./public/images/logo-full.png)
 
-OpenWatch is a modern video streaming platform built with Next.js, designed for high-performance video playback and management.
+OpenWatch is the modern, self-hosted video streaming platform built for performance, freedom, and community.
+
+<video src="./.github/preview.mp4" controls width=800></video>
 
 ## Features
 
