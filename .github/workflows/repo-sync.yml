@@ -56,13 +56,33 @@ jobs:
             echo "Merging changes from source/main..."
             git fetch source
             # Merge source main into the current branch (assumed main)
-            if git merge source/main --allow-unrelated-histories --no-edit; then
-              echo "Merge successful."
-            else
-              echo "::error::Merge conflict detected. Manual intervention required."
+            # Use --no-commit to allow restoring protected files before committing
+            git merge source/main --allow-unrelated-histories --no-commit || true
+
+            # List of files/paths to exclude from sync (preserve private repo versions)
+            IGNORED_PATHS=".github/workflows README.md compose.yml CONTRIBUTING.md"
+
+            echo "Restoring protected files from target (HEAD)..."
+            for path in $IGNORED_PATHS; do
+              # Restore from HEAD if exists, otherwise remove (skip addition)
+              if git checkout HEAD -- "$path" 2>/dev/null; then
+                echo "Restored $path from HEAD."
+              else
+                echo "$path not found in HEAD. Removing from merge..."
+                git rm -rf "$path" 2>/dev/null || true
+              fi
+            done
+
+            # Check for remaining conflicts in non-ignored files
+            if git ls-files -u | grep -q .; then
+              echo "::error::Merge conflict detected in non-ignored files. Manual intervention required."
               git status
               exit 1
             fi
+
+            # Commit the merge
+            git commit -m "Sync from source (skipping protected files)" || echo "No changes to commit."
+            echo "Merge successful."
           fi
 
           echo "Pushing changes to target repository..."
