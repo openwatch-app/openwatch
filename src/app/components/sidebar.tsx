@@ -75,7 +75,7 @@ const ExpandedSidebarContent = () => {
 			</ScrollArea>
 			<div className="py-4 px-2 text-xs text-muted-foreground text-center whitespace-nowrap">
 				Developed with ☕ and ❤️ by{' '}
-				<a href="https://github.com/ge0rg3e" target="_blank" rel="noreferrer" className="hover:underline text-orange-500">
+				<a href="https://github.com/ge0rg3e" target="_blank" rel="noreferrer" className="underline">
 					Ge0rg3e
 				</a>
 			</div>

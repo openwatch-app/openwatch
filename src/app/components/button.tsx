@@ -1,16 +1,15 @@
-import * as React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
-import { Slot } from 'radix-ui';
-
 import { cn } from '~app/lib/utils';
+import { Slot } from 'radix-ui';
+import * as React from 'react';
 
 const buttonVariants = cva(
-	"inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0",
+	"inline-flex cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-full text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0",
 	{
 		variants: {
 			variant: {
-				default: 'bg-white text-black border border-zinc-200 hover:bg-zinc-100 shadow-sm',
-				destructive: 'bg-white text-red-600 border border-zinc-200 hover:bg-red-50 shadow-sm',
+				default: 'bg-white text-black border border-transparent hover:bg-zinc-100 shadow-sm',
+				destructive: 'bg-white text-red-600 border border-transparent hover:bg-red-50 shadow-sm',
 				outline: 'border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground',
 				secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
 				ghost: 'hover:bg-accent hover:text-accent-foreground',

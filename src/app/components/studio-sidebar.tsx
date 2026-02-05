@@ -1,15 +1,11 @@
 'use client';
 
-import { LayoutDashboard, PlaySquare, BarChart2, MessageSquare, Captions, Copyright, DollarSign, Wand2, Music, Settings, MessageCircle } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from './avatar';
-import { useAppStore } from '~lib/store';
+import { LayoutDashboard, Wand2 } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { ScrollArea } from './scroll-area';
-import { Separator } from './separator';
-import { Button } from './button';
+import { useAppStore } from '~lib/store';
 import { cn } from '~lib/utils';
 import Link from 'next/link';
-import { useState } from 'react';
 
 interface SidebarItemProps {
 	icon: React.ElementType;
@@ -30,6 +26,7 @@ const SidebarItem = ({ icon: Icon, label, href, isActive }: SidebarItemProps) =>
 };
 
 import { authClient } from '~lib/auth-client';
+import { Button } from './button';
 
 const StudioSidebarContent = () => {
 	const { data: session } = authClient.useSession();
@@ -39,7 +36,7 @@ const StudioSidebarContent = () => {
 
 	return (
 		<>
-			<ScrollArea className="flex-1 px-0 pt-5">
+			<ScrollArea className="flex-1 px-3 pt-5">
 				<div className="space-y-0.5">
 					<SidebarItem icon={LayoutDashboard} label="Dashboard" href="/studio" isActive={pathname === '/studio'} />
 					<SidebarItem icon={Wand2} label="Customization" href="/studio/customization" isActive={pathname === '/studio/customization'} />
@@ -47,7 +44,7 @@ const StudioSidebarContent = () => {
 			</ScrollArea>
 			<div className="py-4 px-2 text-xs text-muted-foreground text-center whitespace-nowrap">
 				Developed with ☕ and ❤️ by{' '}
-				<a href="https://github.com/ge0rg3e" target="_blank" rel="noreferrer" className="hover:underline text-orange-500">
+				<a href="https://github.com/ge0rg3e" target="_blank" rel="noreferrer" className="underline">
 					Ge0rg3e
 				</a>
 			</div>

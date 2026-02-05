@@ -200,7 +200,7 @@ const Page = () => {
 						<div className="flex items-center bg-secondary rounded-full">
 							<Button
 								variant="ghost"
-								className={cn('rounded-l-full px-4 border-r border-border/50 gap-2 hover:bg-secondary/80', video.userReaction === 'LIKE' && 'text-primary')}
+								className={cn('rounded-r-none px-4 border-r border-border/50 gap-2 hover:bg-secondary/80', video.userReaction === 'LIKE' && 'text-primary')}
 								onClick={() => handleReaction('LIKE')}
 							>
 								<ThumbsUp className={cn('h-4 w-4', video.userReaction === 'LIKE' && 'fill-current')} />

@@ -73,7 +73,14 @@ const Page = () => {
 									<TableCell>
 										<div className="flex gap-4 items-start">
 											<div className="relative w-28 aspect-video bg-muted rounded overflow-hidden shrink-0">
-												<img src={video.thumbnail} alt="" className="object-cover w-full h-full" />
+												<img
+													src={video.thumbnail || '/images/no-thumbnail.jpg'}
+													alt={`Thumbnail for ${video.title}`}
+													onError={(e) => {
+														(e.target as HTMLImageElement).src = '/images/no-thumbnail.jpg';
+													}}
+													className="object-cover w-full h-full"
+												/>{' '}
 												<div className="absolute bottom-1 right-1 bg-black/80 text-white text-[10px] px-1 rounded">{video.duration}</div>
 											</div>
 											<div className="flex flex-col gap-1">

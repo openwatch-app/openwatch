@@ -245,7 +245,14 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
 						<div className="flex flex-col gap-4">
 							<input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
 							<div className="w-40 aspect-video border-2 border-primary rounded-lg overflow-hidden relative cursor-pointer group" onClick={handleThumbnailClick}>
-								<img src={video.thumbnail} alt="Current thumbnail" className="w-full h-full object-cover" />
+								<img
+									src={video.thumbnail || '/images/no-thumbnail.jpg'}
+									onError={(e) => {
+										(e.target as HTMLImageElement).src = '/images/no-thumbnail.jpg';
+									}}
+									alt="Current thumbnail"
+									className="w-full h-full object-cover"
+								/>
 								<div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
 									<span className="text-white text-xs font-medium">{uploadingThumbnail ? 'Uploading...' : 'Change'}</span>
 								</div>

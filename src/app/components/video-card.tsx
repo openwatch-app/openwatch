@@ -26,12 +26,15 @@ const VideoCard = ({ video }: VideoCardProps) => {
 				{/* Thumbnail Container */}
 				<Link href={`/watch/${video.id}`} className="relative aspect-video rounded-xl overflow-hidden mb-2 group block w-full">
 					<Image
-						src={video.thumbnail || '/images/no-video.jpg'}
+						src={video.thumbnail || '/images/no-thumbnail.jpg'}
 						alt={video.title}
 						fill
 						className="object-cover transition-transform duration-300 group-hover:scale-105"
 						sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
 						priority={false}
+						onError={(e) => {
+							(e.target as HTMLImageElement).src = '/images/no-thumbnail.jpg';
+						}}
 					/>
 					<div className="absolute bottom-1 right-1 bg-black/80 text-white text-xs px-1 py-0.5 rounded font-medium z-10">{video.duration}</div>
 					{video.savedProgress !== undefined && video.savedProgress > 0 && video.durationInSeconds && video.durationInSeconds > 0 && (
