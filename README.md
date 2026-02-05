@@ -2,7 +2,8 @@
 
 ![OpenWatch](./public/images/logo-full.png)
 
-OpenWatch is the modern, self-hosted video streaming platform built for performance, freedom, and community.
+An open-source alternative to YouTube, perfect for anyone wanting to store videos or content creators looking to back up their content on their own platform.
+
 
 <img src="./.github/preview.png" alt="OpenWatch Preview" width="800" />
 
@@ -158,3 +159,7 @@ We welcome contributions! Please check our [Contributing Guidelines](CONTRIBUTIN
 ## License
 
 See [LICENSE](LICENSE) for full details.
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=openwatch-app/openwatch&type=date&legend=top-left)](https://www.star-history.com/#openwatch-app/openwatch&type=date&legend=top-left)
