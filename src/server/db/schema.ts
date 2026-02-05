@@ -68,10 +68,10 @@ export const account = pgTable(
 		refreshTokenExpiresAt: timestamp('refresh_token_expires_at'),
 		scope: text('scope'),
 		password: text('password'),
+		createdAt: timestamp('created_at').defaultNow().notNull(),
 		updatedAt: timestamp('updated_at')
 			.defaultNow()
 			.$onUpdate(() => /* @__PURE__ */ new Date())
-			.notNull()
 			.notNull()
 	},
 	(table) => [index('account_userId_idx').on(table.userId)]
@@ -249,11 +249,7 @@ export const watchHistory = pgTable(
 		lastViewedAt: timestamp('last_viewed_at').defaultNow().notNull(),
 		completed: boolean('completed').default(false).notNull()
 	},
-	(table) => [
-		index('watch_history_user_id_idx').on(table.userId),
-		index('watch_history_video_id_idx').on(table.videoId),
-		unique('watch_history_user_video_unique').on(table.userId, table.videoId)
-	]
+	(table) => [index('watch_history_user_id_idx').on(table.userId), index('watch_history_video_id_idx').on(table.videoId), unique('watch_history_user_video_unique').on(table.userId, table.videoId)]
 );
 
 export const watchHistoryRelations = relations(watchHistory, ({ one }) => ({
@@ -266,7 +262,6 @@ export const watchHistoryRelations = relations(watchHistory, ({ one }) => ({
 		references: [videos.id]
 	})
 }));
-
 
 export const videoViewsRelations = relations(videoViews, ({ one }) => ({
 	user: one(user, {

@@ -1,14 +1,15 @@
 'use client';
 
+import ChannelResultCard from '~components/channel-result-card';
+import SearchResultCard from '~components/search-result-card';
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import axios from 'axios';
 import { Video, Channel } from '~app/types';
-import SearchResultCard from '~components/search-result-card';
-import ChannelResultCard from '~components/channel-result-card';
 import { Loader2 } from 'lucide-react';
+import { Suspense } from 'react';
+import axios from 'axios';
 
-const ResultsPage = () => {
+const Content = () => {
 	const searchParams = useSearchParams();
 	const query = searchParams.get('query');
 	const [results, setResults] = useState<(Video | Channel)[]>([]);
@@ -64,4 +65,12 @@ const ResultsPage = () => {
 	);
 };
 
-export default ResultsPage;
+const Page = () => {
+	return (
+		<Suspense fallback={<div>Loading results...</div>}>
+			<Content />
+		</Suspense>
+	);
+};
+
+export default Page;

@@ -13,17 +13,10 @@ export const GET = async (req: NextRequest, { params }: { params: Promise<{ vide
 	}
 
 	// Construct file path
-	// public/videos/[videoId]/...pathParts
 	const filePath = join(process.cwd(), '.storage', 'streams', videoId, ...pathParts);
 
 	if (!existsSync(filePath)) {
-		console.warn('File not found:', filePath);
-		return NextResponse.json(
-			{
-				error: 'File not found'
-			},
-			{ status: 404 }
-		);
+		return NextResponse.json({ error: 'File not found' }, { status: 404 });
 	}
 
 	try {

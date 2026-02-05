@@ -120,7 +120,7 @@ const AuthPage = () => {
 					<form onSubmit={handleEmailNext} className="space-y-4">
 						<h1 className="text-2xl font-semibold text-foreground">Sign in</h1>
 						<p className="text-muted-foreground">to continue to OpenWatch</p>
-						<Input type="email" placeholder="Email or phone" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full" />
+						<Input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full" />
 						<Link href="#" className="text-sm text-blue-500 hover:underline">
 							Forgot email?
 						</Link>
