@@ -4,7 +4,7 @@
 
 OpenWatch is the modern, self-hosted video streaming platform built for performance, freedom, and community.
 
-<video src="./.github/preview.mp4" controls width=800></video>
+<img src="./.github/preview.png" alt="OpenWatch Preview" width="800" />
 
 ## Features
 
