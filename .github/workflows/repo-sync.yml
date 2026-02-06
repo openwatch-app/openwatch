@@ -59,6 +59,15 @@ jobs:
             # Use --no-commit to allow restoring protected files before committing
             git merge source/main --allow-unrelated-histories --no-commit || true
 
+            # Resolve package.json/lock conflicts by accepting source version
+            # This ensures dependencies and scripts match the source of truth
+            for file in package.json package-lock.json; do
+              if git ls-files -u "$file" | grep -q .; then
+                echo "Conflict in $file detected. Resolving using source version..."
+                git checkout source/main -- "$file"
+              fi
+            done
+
             # List of files/paths to exclude from sync (preserve private repo versions)
             IGNORED_PATHS=".github/workflows README.md compose.yml CONTRIBUTING.md"
 
