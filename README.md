@@ -51,7 +51,6 @@ postgres_data:
 
 </details>
 
-
 ## Features
 
 ### Core Experience
@@ -60,6 +59,7 @@ postgres_data:
 - **Video Player**: Adaptive streaming with multiple quality support
 - **Search**: Full-text search for videos and channels
 - **History**: Watch history tracking with pause functionality
+- **Playlists**: Create and manage personal playlists with visibility controls and autoplay support
 
 ### Interaction
 
