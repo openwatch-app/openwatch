@@ -1,20 +1,19 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import axios from 'axios';
-import { Button } from '~components/button';
-import { Input } from '~components/input';
-import { Textarea } from '~components/textarea';
-import { Label } from '~components/label';
-import { VideoPlayer } from '~components/video-player/video-player';
-import { Loader2, ArrowLeft, ExternalLink, Copy, Check, ChevronDown, MoreVertical, Trash2, AlertCircle } from 'lucide-react';
-import Link from 'next/link';
-import { cn } from '~lib/utils';
-import { Video } from '~app/types';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '~components/dropdown-menu';
+import { Loader2, ArrowLeft, Copy, Check, ChevronDown, MoreVertical, Trash2, AlertCircle } from 'lucide-react';
+import { VideoPlayer } from '~components/video-player/video-player';
+import React, { useEffect, useState } from 'react';
+import { Textarea } from '~components/textarea';
+import { Button } from '~components/button';
+import { useRouter } from 'next/navigation';
+import { Label } from '~components/label';
+import { Input } from '~components/input';
+import { Video } from '~app/types';
+import Link from 'next/link';
+import axios from 'axios';
 
-export default function Page({ params }: { params: Promise<{ id: string }> }) {
+const Page = ({ params }: { params: Promise<{ id: string }> }) => {
 	const router = useRouter();
 	const [video, setVideo] = useState<Video | null>(null);
 	const [loading, setLoading] = useState(true);
@@ -352,4 +351,6 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
 			</div>
 		</div>
 	);
-}
+};
+
+export default Page;

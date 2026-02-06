@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import axios from 'axios';
-import { Button } from '~components/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~components/card';
+import { useEffect, useState } from 'react';
+import { Button } from '~components/button';
 import { Loader2 } from 'lucide-react';
+import axios from 'axios';
 
-export default function SettingsPage() {
+const Page = () => {
 	const [settings, setSettings] = useState<Record<string, string>>({});
 	const [loading, setLoading] = useState(true);
 
@@ -87,4 +87,6 @@ export default function SettingsPage() {
 			</Card>
 		</div>
 	);
-}
+};
+
+export default Page;

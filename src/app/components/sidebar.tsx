@@ -2,7 +2,7 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from './avatar';
 import { usePathname } from 'next/navigation';
-import { Home, History } from 'lucide-react';
+import { Home, History, ListVideo } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { ScrollArea } from './scroll-area';
 import { useAppStore } from '~lib/store';
@@ -53,7 +53,8 @@ const ExpandedSidebarContent = () => {
 			<ScrollArea className="flex-1 px-3 py-2">
 				<div className="space-y-1">
 					<SidebarItem icon={Home} label="Home" href="/" isActive={pathname === '/'} />
-					<SidebarItem icon={History} label="History" href="/history" />
+					<SidebarItem icon={History} label="History" href="/history" isActive={pathname === '/history'} />
+					<SidebarItem icon={ListVideo} label="Playlists" href="/playlists" isActive={pathname === '/playlists'} />
 				</div>
 
 				<Separator className="my-3" />
@@ -90,6 +91,7 @@ const CollapsedSidebarContent = () => {
 		<div className="flex flex-col items-center py-2 w-full">
 			<SidebarItem icon={Home} label="Home" href="/" isActive={pathname === '/'} isCollapsed />
 			<SidebarItem icon={History} label="History" href="/history" isActive={pathname === '/history'} isCollapsed />
+			<SidebarItem icon={ListVideo} label="Playlists" href="/playlists" isActive={pathname === '/playlists'} isCollapsed />
 		</div>
 	);
 };

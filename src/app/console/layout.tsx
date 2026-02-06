@@ -1,15 +1,13 @@
-import { auth } from '~server/auth';
-import { headers } from 'next/headers';
-import { redirect } from 'next/navigation';
-import ConsoleNavbar from '~components/console-navbar';
 import ConsoleSidebar from '~components/console-sidebar';
+import ConsoleNavbar from '~components/console-navbar';
+import { redirect } from 'next/navigation';
+import { headers } from 'next/headers';
+import { auth } from '~server/auth';
 
-export default async function ConsoleLayout({ children }: { children: React.ReactNode }) {
-	const session = await auth.api.getSession({
-		headers: await headers()
-	});
+const ConsoleLayout = async ({ children }: { children: React.ReactNode }) => {
+	const session = await auth.api.getSession({ headers: await headers() });
 
-	if (!session || (session.user as any).role !== 'admin') {
+	if (!session || session.user.role !== 'admin') {
 		redirect('/');
 	}
 
@@ -22,4 +20,6 @@ export default async function ConsoleLayout({ children }: { children: React.Reac
 			</div>
 		</div>
 	);
-}
+};
+
+export default ConsoleLayout;

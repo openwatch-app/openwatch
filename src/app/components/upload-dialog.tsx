@@ -1,18 +1,18 @@
 'use client';
 
-import { useState } from 'react';
 import { Upload, X, Loader2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { Button } from './button';
+import { useState } from 'react';
 import { Input } from './input';
 import axios from 'axios';
-import { useRouter } from 'next/navigation';
 
 interface UploadDialogProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 }
 
-export function UploadDialog({ open, onOpenChange }: UploadDialogProps) {
+export const UploadDialog = ({ open, onOpenChange }: UploadDialogProps) => {
 	const router = useRouter();
 	const [file, setFile] = useState<File | null>(null);
 	const [title, setTitle] = useState('');
@@ -116,4 +116,4 @@ export function UploadDialog({ open, onOpenChange }: UploadDialogProps) {
 			</div>
 		</div>
 	);
-}
+};

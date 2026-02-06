@@ -200,6 +200,41 @@ export const videos = pgTable('videos', {
 		.notNull()
 });
 
+export const playlists = pgTable('playlists', {
+	id: text('id')
+		.primaryKey()
+		.$defaultFn(() => crypto.randomUUID()),
+	userId: text('user_id')
+		.notNull()
+		.references(() => user.id, { onDelete: 'cascade' }),
+	title: text('title').notNull(),
+	description: text('description'),
+	visibility: text('visibility').default('public').notNull(),
+	createdAt: timestamp('created_at').defaultNow().notNull(),
+	updatedAt: timestamp('updated_at')
+		.defaultNow()
+		.$onUpdate(() => /* @__PURE__ */ new Date())
+		.notNull()
+});
+
+export const playlistItems = pgTable(
+	'playlist_items',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		playlistId: text('playlist_id')
+			.notNull()
+			.references(() => playlists.id, { onDelete: 'cascade' }),
+		videoId: text('video_id')
+			.notNull()
+			.references(() => videos.id, { onDelete: 'cascade' }),
+		order: integer('order').notNull(),
+		addedAt: timestamp('added_at').defaultNow().notNull()
+	},
+	(table) => [index('playlist_items_playlist_id_idx').on(table.playlistId), unique('playlist_items_unique').on(table.playlistId, table.videoId)]
+);
+
 export const videoQualities = pgTable(
 	'video_qualities',
 	{
@@ -281,7 +316,27 @@ export const videosRelations = relations(videos, ({ one, many }) => ({
 	}),
 	qualities: many(videoQualities),
 	reactions: many(videoReactions),
-	views: many(videoViews)
+	views: many(videoViews),
+	playlistItems: many(playlistItems)
+}));
+
+export const playlistsRelations = relations(playlists, ({ one, many }) => ({
+	user: one(user, {
+		fields: [playlists.userId],
+		references: [user.id]
+	}),
+	items: many(playlistItems)
+}));
+
+export const playlistItemsRelations = relations(playlistItems, ({ one }) => ({
+	playlist: one(playlists, {
+		fields: [playlistItems.playlistId],
+		references: [playlists.id]
+	}),
+	video: one(videos, {
+		fields: [playlistItems.videoId],
+		references: [videos.id]
+	})
 }));
 
 export const videoQualitiesRelations = relations(videoQualities, ({ one }) => ({

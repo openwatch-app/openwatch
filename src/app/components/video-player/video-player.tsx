@@ -23,11 +23,16 @@ interface VideoPlayerProps {
 	videoUrl?: string;
 	autoPlay?: boolean;
 	initialTime?: number;
+	onEnded?: () => void;
+	children?: React.ReactNode;
+	showAutoplayToggle?: boolean;
+	autoplayEnabled?: boolean;
+	onAutoplayChange?: (enabled: boolean) => void;
 }
 
 const speeds = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
 
-export const VideoPlayer = ({ videoId, videoUrl, autoPlay = false, initialTime = 0 }: VideoPlayerProps) => {
+export const VideoPlayer = ({ videoId, videoUrl, autoPlay = false, initialTime = 0, onEnded, children, showAutoplayToggle, autoplayEnabled, onAutoplayChange }: VideoPlayerProps) => {
 	const videoRef = useRef<HTMLVideoElement>(null);
 	const containerRef = useRef<HTMLDivElement>(null);
 	const hlsRef = useRef<Hls | null>(null);
@@ -377,7 +382,14 @@ export const VideoPlayer = ({ videoId, videoUrl, autoPlay = false, initialTime =
 				onLoadedMetadata={handleLoadedMetadata}
 				onClick={togglePlay}
 				onDoubleClick={toggleFullscreen}
+				onEnded={() => {
+					setIsPlaying(false);
+					onEnded?.();
+				}}
 			/>
+
+			{/* Custom Overlay Children (e.g. Up Next) */}
+			{children}
 
 			{/* Processing Overlay */}
 			{isProcessing && (
@@ -396,7 +408,7 @@ export const VideoPlayer = ({ videoId, videoUrl, autoPlay = false, initialTime =
 			{/* Gradient Overlay */}
 			<div
 				className={cn(
-					'absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent transition-opacity duration-300 pointer-events-none',
+					'absolute inset-0 bg-linear-to-t from-black/80 via-transparent to-transparent transition-opacity duration-300 pointer-events-none',
 					showControls ? 'opacity-100' : 'opacity-0'
 				)}
 			/>
@@ -453,6 +465,19 @@ export const VideoPlayer = ({ videoId, videoUrl, autoPlay = false, initialTime =
 
 					{/* Right Controls */}
 					<div className="flex items-center gap-2">
+						{showAutoplayToggle && (
+							<div className="flex items-center gap-2 mr-2 group/autoplay relative">
+								<label className="relative inline-flex items-center cursor-pointer">
+									<input type="checkbox" className="sr-only peer" checked={!!autoplayEnabled} onChange={(e) => onAutoplayChange?.(e.target.checked)} />
+									<div className="w-9 h-5 bg-white/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-orange-600"></div>
+								</label>
+								{/* Tooltip */}
+								<div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 px-2 py-1 bg-black/90 text-white text-xs rounded opacity-0 group-hover/autoplay:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+									Autoplay is {autoplayEnabled ? 'on' : 'off'}
+								</div>
+							</div>
+						)}
+
 						{/* Settings Menu */}
 						<DropdownMenu>
 							<DropdownMenuTrigger asChild>
