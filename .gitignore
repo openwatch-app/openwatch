@@ -1,3 +1,4 @@
+compose.local.yml
 npm-debug.log*
 /node_modules
 /.storage
