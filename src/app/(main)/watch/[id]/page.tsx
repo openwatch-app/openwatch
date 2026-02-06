@@ -1,35 +1,101 @@
 'use client';
 
-import { ThumbsUp, ThumbsDown, Share2, MoreVertical, Loader2, Check } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, Share2, MoreVertical, Loader2, Check, ListPlus } from 'lucide-react';
+import { SaveToPlaylist } from '~app/components/playlists/save-to-playlist-dialog';
 import { CommentSection } from '~app/components/comments/comment-section';
 import { Avatar, AvatarFallback, AvatarImage } from '~components/avatar';
+import { UpNextOverlay } from '~components/video-player/up-next-overlay';
+import { PlaylistSidebar } from '~app/components/watch/playlist-sidebar';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { VideoPlayer } from '~components/video-player/video-player';
-import { useRouter, useParams } from 'next/navigation';
+import { SubscribeButton } from '~components/subscribe-button';
 import { authClient } from '~lib/auth-client';
-import { Button } from '~components/button';
 import { useEffect, useState } from 'react';
+import { Button } from '~components/button';
 import { Video } from '~app/types';
 import { cn } from '~lib/utils';
 import axios from 'axios';
 import dayjs from 'dayjs';
-import { SubscribeButton } from '~components/subscribe-button';
 import '~lib/dayjs-config';
 
 const Page = () => {
 	const router = useRouter();
 	const params = useParams();
+	const searchParams = useSearchParams();
 	const id = params.id as string;
+	const playlistId = searchParams.get('list');
 	const { data: session } = authClient.useSession();
 
 	const [video, setVideo] = useState<Video | null>(null);
 	const [recommendedVideos, setRecommendedVideos] = useState<Video[]>([]);
+	const [playlist, setPlaylist] = useState<any | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [selectedTab, setSelectedTab] = useState<'all' | 'channel' | 'related'>('all');
 	const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 	const [isCopied, setIsCopied] = useState(false);
+	const [showUpNext, setShowUpNext] = useState(false);
+	const [nextVideo, setNextVideo] = useState<Video | null>(null);
+	const [autoplay, setAutoplay] = useState(true);
 
 	const isOwner = session?.user?.id === video?.channel.id;
+
+	// Load autoplay preference
+	useEffect(() => {
+		try {
+			const stored = localStorage.getItem('openwatch-autoplay');
+			if (stored !== null) {
+				setAutoplay(stored === 'true');
+			}
+		} catch (error) {
+			console.warn('Failed to read autoplay preference from localStorage:', error);
+			// Default to true if storage access fails
+			setAutoplay(true);
+		}
+	}, []);
+
+	// Save autoplay preference
+	const handleAutoplayChange = (checked: boolean) => {
+		setAutoplay(checked);
+		try {
+			localStorage.setItem('openwatch-autoplay', String(checked));
+		} catch (error) {
+			console.warn('Failed to save autoplay preference to localStorage:', error);
+		}
+	};
+
+	const handleVideoEnded = () => {
+		let next: Video | null = null;
+
+		if (playlist && playlist.videos) {
+			// Find current video index
+			const currentIndex = playlist.videos.findIndex((v: any) => v.id === id);
+			if (currentIndex !== -1 && currentIndex < playlist.videos.length - 1) {
+				next = playlist.videos[currentIndex + 1];
+			}
+		} else if (recommendedVideos.length > 0) {
+			// Get first recommended video that isn't from the same channel if possible?
+			// Or just the first one as per YouTube logic (usually related)
+			// The current filter logic in render might hide some, so we should pick from recommendedVideos directly
+			// but we should probably respect the 'related' tab logic if we want to be consistent?
+			// YouTube just picks the top recommendation.
+			next = recommendedVideos[0];
+		}
+
+		if (next) {
+			setNextVideo(next);
+			setShowUpNext(true);
+		}
+	};
+
+	const handlePlayNext = () => {
+		if (!nextVideo) return;
+
+		const url = playlist ? `/watch/${nextVideo.id}?list=${playlist.id}` : `/watch/${nextVideo.id}`;
+
+		router.push(url);
+		setShowUpNext(false);
+	};
 
 	const handleShare = async () => {
 		try {
@@ -107,9 +173,21 @@ const Page = () => {
 		const fetchData = async () => {
 			try {
 				setLoading(true);
-				const [videoResponse, recResponse] = await Promise.all([axios.get(`/api/videos/${id}`), axios.get(`/api/videos/${id}/recommendations`)]);
+				setShowUpNext(false);
+				setNextVideo(null);
+				const promises: Promise<any>[] = [axios.get(`/api/videos/${id}`), axios.get(`/api/videos/${id}/recommendations`)];
+
+				if (playlistId) {
+					promises.push(axios.get(`/api/playlists/${playlistId}`).catch(() => ({ data: null })));
+				}
+
+				const [videoResponse, recResponse, playlistResponse] = await Promise.all(promises);
+
 				setVideo(videoResponse.data);
 				setRecommendedVideos(recResponse.data);
+				if (playlistResponse?.data && !playlistResponse.data.error) {
+					setPlaylist(playlistResponse.data);
+				}
 			} catch (err: any) {
 				console.error('Error fetching video data:', err);
 				setError(err.response?.data?.error || 'Failed to load video');
@@ -121,7 +199,7 @@ const Page = () => {
 		if (id) {
 			fetchData();
 		}
-	}, [id]);
+	}, [id, playlistId]);
 
 	const filteredRecommendations = recommendedVideos.filter((v) => {
 		if (selectedTab === 'channel') {
@@ -151,7 +229,18 @@ const Page = () => {
 			<div className="flex-1 min-w-0">
 				{/* Video Player */}
 				<div className="aspect-video bg-black rounded-xl overflow-hidden mb-4 relative group">
-					<VideoPlayer videoId={id} videoUrl={video.videoUrl} autoPlay initialTime={video.savedProgress} />
+					<VideoPlayer
+						videoId={id}
+						videoUrl={video.videoUrl}
+						autoPlay
+						initialTime={video.savedProgress}
+						onEnded={handleVideoEnded}
+						showAutoplayToggle={true}
+						autoplayEnabled={autoplay}
+						onAutoplayChange={handleAutoplayChange}
+					>
+						{showUpNext && nextVideo && <UpNextOverlay nextVideo={nextVideo} autoPlayEnabled={autoplay} onCancel={() => setShowUpNext(false)} onPlayNow={handlePlayNext} />}
+					</VideoPlayer>
 				</div>
 
 				{/* Title */}
@@ -220,6 +309,13 @@ const Page = () => {
 							{isCopied ? <Check className="h-4 w-4" /> : <Share2 className="h-4 w-4" />}
 							<span>{isCopied ? 'Copied' : 'Share'}</span>
 						</Button>
+
+						<SaveToPlaylist videoId={id}>
+							<Button variant="secondary" className="rounded-full gap-2">
+								<ListPlus className="h-4 w-4" />
+								<span>Save</span>
+							</Button>
+						</SaveToPlaylist>
 					</div>
 				</div>
 
@@ -255,32 +351,52 @@ const Page = () => {
 
 			{/* Sidebar Recommendations */}
 			<div className="lg:w-[400px] shrink-0">
-				<div className="flex gap-2 overflow-x-auto pb-4 mb-2 no-scrollbar">
-					<Button
-						variant={selectedTab === 'all' ? 'default' : 'secondary'}
-						size="sm"
-						className={cn('rounded-lg whitespace-nowrap', selectedTab === 'all' ? 'bg-foreground text-background hover:bg-foreground/90' : '')}
-						onClick={() => setSelectedTab('all')}
-					>
-						All
-					</Button>
-					<Button
-						variant={selectedTab === 'channel' ? 'default' : 'secondary'}
-						size="sm"
-						className={cn('rounded-lg whitespace-nowrap', selectedTab === 'channel' ? 'bg-foreground text-background hover:bg-foreground/90' : '')}
-						onClick={() => setSelectedTab('channel')}
-					>
-						From {video.channel.name}
-					</Button>
-					<Button
-						variant={selectedTab === 'related' ? 'default' : 'secondary'}
-						size="sm"
-						className={cn('rounded-lg whitespace-nowrap', selectedTab === 'related' ? 'bg-foreground text-background hover:bg-foreground/90' : '')}
-						onClick={() => setSelectedTab('related')}
-					>
-						Related
-					</Button>
-				</div>
+				{playlist && (
+					<div className="mb-4">
+						<PlaylistSidebar
+							playlist={playlist}
+							currentVideoId={id}
+							onClose={() => {
+								const newParams = new URLSearchParams(searchParams.toString());
+								newParams.delete('list');
+								const qs = newParams.toString();
+								router.push(qs ? `/watch/${id}?${qs}` : `/watch/${id}`);
+								setPlaylist(null);
+							}}
+						/>
+					</div>
+				)}
+
+				{!playlist && (
+					<div className="flex flex-col gap-4 mb-4">
+						<div className="flex gap-2 overflow-x-auto pb-4 mb-2 no-scrollbar">
+							<Button
+								variant={selectedTab === 'all' ? 'default' : 'secondary'}
+								size="sm"
+								className={cn('rounded-lg whitespace-nowrap', selectedTab === 'all' ? 'bg-foreground text-background hover:bg-foreground/90' : '')}
+								onClick={() => setSelectedTab('all')}
+							>
+								All
+							</Button>
+							<Button
+								variant={selectedTab === 'channel' ? 'default' : 'secondary'}
+								size="sm"
+								className={cn('rounded-lg whitespace-nowrap', selectedTab === 'channel' ? 'bg-foreground text-background hover:bg-foreground/90' : '')}
+								onClick={() => setSelectedTab('channel')}
+							>
+								From {video.channel.name}
+							</Button>
+							<Button
+								variant={selectedTab === 'related' ? 'default' : 'secondary'}
+								size="sm"
+								className={cn('rounded-lg whitespace-nowrap', selectedTab === 'related' ? 'bg-foreground text-background hover:bg-foreground/90' : '')}
+								onClick={() => setSelectedTab('related')}
+							>
+								Related
+							</Button>
+						</div>
+					</div>
+				)}
 
 				<div className="space-y-3">
 					{filteredRecommendations.map((recVideo) => (

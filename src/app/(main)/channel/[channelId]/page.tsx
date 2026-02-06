@@ -13,6 +13,7 @@ import { cn } from '~lib/utils';
 import { authClient } from '~lib/auth-client';
 import Image from 'next/image';
 import { SubscribeButton } from '~components/subscribe-button';
+import { PlaylistCard } from '~app/components/playlists/playlist-card';
 
 const ChannelPage = () => {
 	const params = useParams();
@@ -22,6 +23,7 @@ const ChannelPage = () => {
 
 	const [channel, setChannel] = useState<Channel | null>(null);
 	const [videos, setVideos] = useState<Video[]>([]);
+	const [playlists, setPlaylists] = useState<any[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [activeTab, setActiveTab] = useState('videos');
 
@@ -38,6 +40,10 @@ const ChannelPage = () => {
 				// Fetch channel videos
 				const videosRes = await axios.get(`/api/channel/${channelId}/videos`);
 				setVideos(videosRes.data);
+
+				// Fetch channel playlists
+				const playlistsRes = await axios.get(`/api/channel/${channelId}/playlists`);
+				setPlaylists(playlistsRes.data);
 			} catch (error) {
 				console.error('Error fetching channel data:', error);
 			} finally {
@@ -109,11 +115,7 @@ const ChannelPage = () => {
 						<div className="flex flex-wrap gap-2 mt-3">
 							{isOwner ? (
 								<>
-									<Button
-										variant="secondary"
-										className="font-medium"
-										onClick={() => router.push('/studio/customization')}
-									>
+									<Button variant="secondary" className="font-medium" onClick={() => router.push('/studio/customization')}>
 										Customize channel
 									</Button>
 									<Button variant="secondary" className="font-medium" onClick={() => router.push('/studio')}>
@@ -145,18 +147,49 @@ const ChannelPage = () => {
 				</div>
 
 				{/* Videos Grid */}
-				<div className="border-t border-border/40 mt-4 pt-6">
-					<h2 className="text-lg font-bold mb-4">Videos</h2>
-					<div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 pb-10">
-						{videos.map((video) => (
-							<VideoCard key={video.id} video={video} />
-						))}
-					</div>
-					{videos.length === 0 && (
-						<div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
-							<p className="text-lg">No videos available</p>
-						</div>
-					)}
+				<div className="mt-4">
+					<Tabs defaultValue="videos" value={activeTab} onValueChange={setActiveTab} className="w-full">
+						<TabsList className="w-full justify-start border-b border-border/40 rounded-none h-auto p-0 bg-transparent gap-8">
+							<TabsTrigger
+								value="videos"
+								className="rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent px-0 py-3 font-semibold text-muted-foreground data-[state=active]:text-foreground shadow-none transition-colors text-sm tracking-wide"
+							>
+								Videos
+							</TabsTrigger>
+							<TabsTrigger
+								value="playlists"
+								className="rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent px-0 py-3 font-semibold text-muted-foreground data-[state=active]:text-foreground shadow-none transition-colors text-sm tracking-wide"
+							>
+								Playlists
+							</TabsTrigger>
+						</TabsList>
+
+						<TabsContent value="videos" className="mt-6">
+							<div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 pb-10">
+								{videos.map((video) => (
+									<VideoCard key={video.id} video={video} />
+								))}
+							</div>
+							{videos.length === 0 && (
+								<div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+									<p className="text-lg">No videos available</p>
+								</div>
+							)}
+						</TabsContent>
+
+						<TabsContent value="playlists" className="mt-6">
+							<div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 pb-10">
+								{playlists.map((playlist) => (
+									<PlaylistCard key={playlist.id} playlist={playlist} />
+								))}
+							</div>
+							{playlists.length === 0 && (
+								<div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+									<p className="text-lg">No playlists created</p>
+								</div>
+							)}
+						</TabsContent>
+					</Tabs>
 				</div>
 			</div>
 		</div>

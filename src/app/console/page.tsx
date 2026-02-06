@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import axios from 'axios';
 import { Card, CardContent, CardHeader, CardTitle } from '~components/card';
 import { Users, Video, MessageSquare, Eye } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import axios from 'axios';
 
-export default function AdminDashboard() {
+const Page = () => {
 	const [stats, setStats] = useState<any>(null);
 	const [loading, setLoading] = useState(true);
 
@@ -47,9 +47,7 @@ export default function AdminDashboard() {
 					</CardHeader>
 					<CardContent>
 						<div className="text-2xl font-bold">{stats.users.total}</div>
-						<p className="text-xs text-muted-foreground">
-							{stats.users.active} active recently
-						</p>
+						<p className="text-xs text-muted-foreground">{stats.users.active} active recently</p>
 					</CardContent>
 				</Card>
 				<Card>
@@ -59,9 +57,7 @@ export default function AdminDashboard() {
 					</CardHeader>
 					<CardContent>
 						<div className="text-2xl font-bold">{stats.videos.total}</div>
-						<p className="text-xs text-muted-foreground">
-							{stats.videos.public} public videos
-						</p>
+						<p className="text-xs text-muted-foreground">{stats.videos.public} public videos</p>
 					</CardContent>
 				</Card>
 				<Card>
@@ -71,9 +67,7 @@ export default function AdminDashboard() {
 					</CardHeader>
 					<CardContent>
 						<div className="text-2xl font-bold">{stats.views}</div>
-						<p className="text-xs text-muted-foreground">
-							Across all videos
-						</p>
+						<p className="text-xs text-muted-foreground">Across all videos</p>
 					</CardContent>
 				</Card>
 				<Card>
@@ -88,4 +82,6 @@ export default function AdminDashboard() {
 			</div>
 		</div>
 	);
-}
+};
+
+export default Page;

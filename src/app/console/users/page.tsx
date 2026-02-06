@@ -6,7 +6,7 @@ import { Button } from '~components/button';
 import { Loader2, Upload, Ban, Shield, ShieldAlert } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
-export default function UsersPage() {
+const Page = () => {
 	const [users, setUsers] = useState<any[]>([]);
 	const [loading, setLoading] = useState(true);
 
@@ -131,4 +131,6 @@ export default function UsersPage() {
 			</div>
 		</div>
 	);
-}
+};
+
+export default Page;
