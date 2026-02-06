@@ -3,6 +3,7 @@ npm-debug.log*
 /node_modules
 /.storage
 /drizzle
+scripts
 /.trae
 /.next
 .env
