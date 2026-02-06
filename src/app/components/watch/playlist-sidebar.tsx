@@ -23,7 +23,7 @@ interface PlaylistSidebarProps {
 
 export const PlaylistSidebar = ({ playlist, currentVideoId, onClose }: PlaylistSidebarProps) => {
 	const currentIndex = playlist.videos.findIndex((v) => v.id === currentVideoId);
-	const displayIndex = currentIndex >= 0 ? currentIndex + 1 : 0;
+	const displayIndex = currentIndex >= 0 ? currentIndex + 1 : null;
 
 	return (
 		<div className="border border-border/50 rounded-xl overflow-hidden bg-background flex flex-col max-h-[600px]">
@@ -33,7 +33,7 @@ export const PlaylistSidebar = ({ playlist, currentVideoId, onClose }: PlaylistS
 					<div>
 						<h3 className="font-bold text-lg leading-tight line-clamp-2">{playlist.title}</h3>
 						<div className="text-xs text-muted-foreground mt-1">
-							{playlist.user.name} • {displayIndex} / {playlist.videos.length}
+							{playlist.user.name} • {displayIndex ?? '–'} / {playlist.videos.length}
 						</div>
 					</div>
 					<Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={onClose}>
