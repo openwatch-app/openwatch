@@ -76,6 +76,7 @@ jobs:
               # Restore from HEAD if exists, otherwise remove (skip addition)
               if git checkout HEAD -- "$path" 2>/dev/null; then
                 echo "Restored $path from HEAD."
+                git add "$path"
               else
                 echo "$path not found in HEAD. Removing from merge..."
                 git rm -rf "$path" 2>/dev/null || true
