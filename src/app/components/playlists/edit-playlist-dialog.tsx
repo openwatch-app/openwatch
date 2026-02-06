@@ -2,11 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { X, Loader2 } from 'lucide-react';
+import { Textarea } from '../textarea';
 import { Button } from '../button';
 import { Input } from '../input';
-import { Textarea } from '../textarea';
 import axios from 'axios';
-import { useRouter } from 'next/navigation';
 
 interface EditPlaylistDialogProps {
 	playlist: {
@@ -20,7 +19,7 @@ interface EditPlaylistDialogProps {
 	onUpdate: (updatedPlaylist: any) => void;
 }
 
-export function EditPlaylistDialog({ playlist, open, onOpenChange, onUpdate }: EditPlaylistDialogProps) {
+export const EditPlaylistDialog = ({ playlist, open, onOpenChange, onUpdate }: EditPlaylistDialogProps) => {
 	const [title, setTitle] = useState(playlist.title);
 	const [description, setDescription] = useState(playlist.description || '');
 	const [visibility, setVisibility] = useState(playlist.visibility);
@@ -119,4 +118,4 @@ export function EditPlaylistDialog({ playlist, open, onOpenChange, onUpdate }: E
 			</div>
 		</div>
 	);
-}
+};

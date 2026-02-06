@@ -3,7 +3,7 @@ import { desc, eq, and, not, sql, or, ilike, inArray } from 'drizzle-orm';
 import { db } from '~server/db';
 
 // Helper to calculate similarity score between two strings (titles)
-function calculateTextSimilarity(text1: string | null, text2: string | null): number {
+const calculateTextSimilarity = (text1: string | null, text2: string | null): number => {
 	if (!text1 || !text2) return 0;
 	const words1 = new Set(
 		text1
@@ -22,7 +22,7 @@ function calculateTextSimilarity(text1: string | null, text2: string | null): nu
 		if (words2.has(w)) intersection++;
 	});
 	return intersection; // Return number of matching words
-}
+};
 
 export class RecommendationService {
 	// Get personalized home feed

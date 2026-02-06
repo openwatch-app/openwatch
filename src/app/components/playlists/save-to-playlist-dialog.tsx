@@ -19,7 +19,7 @@ interface SaveToPlaylistProps {
 	children: React.ReactNode;
 }
 
-export function SaveToPlaylist({ videoId, children }: SaveToPlaylistProps) {
+export const SaveToPlaylist = ({ videoId, children }: SaveToPlaylistProps) => {
 	const [newPlaylistVisibility, setNewPlaylistVisibility] = useState<'public' | 'private' | 'unlisted'>('public');
 	const [newPlaylistTitle, setNewPlaylistTitle] = useState('');
 	const [showCreateForm, setShowCreateForm] = useState(false);
@@ -192,4 +192,4 @@ export function SaveToPlaylist({ videoId, children }: SaveToPlaylistProps) {
 			</PopoverContent>
 		</Popover>
 	);
-}
+};
