@@ -59,7 +59,7 @@ jobs:
             git merge source/main --allow-unrelated-histories --no-commit || true
 
             # List of files/paths to exclude from sync
-            IGNORED_PATHS=".github package.json package-lock.json README.md compose.yml CONTRIBUTING.md LICENSE"
+            IGNORED_PATHS=".github package.json package-lock.json README.md compose.yml CONTRIBUTING.md LICENSE install.sh"
 
             echo "Restoring protected files from target (HEAD)..."
             for path in $IGNORED_PATHS; do

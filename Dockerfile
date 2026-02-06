@@ -35,7 +35,9 @@ RUN chown -R nextjs:nodejs /app
 
 USER nextjs
 
-EXPOSE 3000
+EXPOSE 8634
+
+ENV PORT=8634
 
 COPY --from=builder /app/package.json ./package.json
 

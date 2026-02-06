@@ -4,7 +4,6 @@
 
 An open-source alternative to YouTube, perfect for anyone wanting to store videos or content creators looking to back up their content on their own platform.
 
-
 <img src="./.github/preview.png" alt="OpenWatch Preview" width="800" />
 
 ## Features
@@ -45,57 +44,48 @@ An open-source alternative to YouTube, perfect for anyone wanting to store video
 
 ### Quick Start
 
-1. **Create a directory for your OpenWatch instance**:
+```bash
+curl -fsSL https://openwatch.ge0rg3e.rest/install.sh | sh
+```
 
-    ```bash
-    mkdir openwatch && cd openwatch
-    ```
+<details>
+<summary>or use compose.yml file:</summary>
 
-2. **Create compose.yml**:
+```yml
+services:
+    app:
+        image: ghcr.io/openwatch-app/openwatch:latest
+        container_name: openwatch
+        restart: unless-stopped
+        ports:
+            - 8634:8634
+        environment:
+            - DATABASE_URL=postgres://postgres:{STRONG_PASSWORD}@db:5432/openwatch
+            - NEXT_PUBLIC_BASE_URL=http://localhost:8634
+            - AUTH_SECRET={STRONG_SECRET}
+        volumes:
+            - ./data/.storage:/app/.storage
+        depends_on:
+            - db
 
-    ```yml
-    services:
-        app:
-            image: ghcr.io/openwatch-app/openwatch:latest
-            container_name: openwatch
-            restart: unless-stopped
-            ports:
-                - 8634:8634
-            environment:
-                - DATABASE_URL=postgres://postgres:{STRONG_PASSWORD}@db:5432/openwatch
-                - NEXT_PUBLIC_BASE_URL=http://localhost:8634
-                - AUTH_SECRET={STRONG_SECRET}
-            volumes:
-                - ./data/.storage:/app/.storage
-            depends_on:
-                - db
+    db:
+        image: postgres:16-alpine
+        container_name: openwatch-db
+        restart: unless-stopped
+        ports:
+            - 5432:5432
+        environment:
+            - POSTGRES_USER=postgres
+            - POSTGRES_PASSWORD={STRONG_PASSWORD}
+            - POSTGRES_DB=openwatch
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
 
-        db:
-            image: postgres:16-alpine
-            container_name: openwatch-db
-            restart: unless-stopped
-            ports:
-                - 5432:5432
-            environment:
-                - POSTGRES_USER=postgres
-                - POSTGRES_PASSWORD={STRONG_PASSWORD}
-                - POSTGRES_DB=openwatch
-            volumes:
-                - postgres_data:/var/lib/postgresql/data
+volumes:
+postgres_data:
+```
 
-    volumes:
-        postgres_data:
-    ```
-
-    Note: Replace `{STRONG_PASSWORD}` and `{STRONG_SECRET}` with your own secure values.
-
-3. **Start your instance**:
-
-    ```bash
-    docker-compose up -d
-    ```
-
-4. **Access OpenWatch**: Open your browser and go to `http://localhost:8634`
+</details>
 
 ## Development Setup
 
