@@ -6,42 +6,6 @@ An open-source alternative to YouTube, perfect for anyone wanting to store video
 
 <img src="./.github/preview.png" alt="OpenWatch Preview" width="800" />
 
-## Features
-
-### Core Experience
-
-- **Home Feed**: Personalized feed with filters (All, Recently uploaded, Watched)
-- **Video Player**: Adaptive streaming with multiple quality support
-- **Search**: Full-text search for videos and channels
-- **History**: Watch history tracking with pause functionality
-
-### Interaction
-
-- **Comments**: Nested replies, pinning, hearting, and like/dislike reactions
-- **Reactions**: Like and Dislike videos
-- **Subscriptions**: Subscribe to channels and customize notification settings
-- **Notifications**: Real-time alerts for uploads, replies, and hearts with deep linking and management
-
-### Creator Studio
-
-- **Dashboard**: Overview of channel content and performance
-- **Content Management**: Upload, edit, and manage videos
-- **Customization**: Update channel banner, avatar, and description
-
-### Admin Console
-
-- **User Management**: Manage users and bans
-- **System Settings**: Configure global application settings
-- **Statistics**: Platform-wide metrics for users, videos, and engagement
-
-## Tech Stack
-
-- **Framework**: Next.js 16 (React 19)
-- **Styling**: Tailwind CSS v4
-- **Database**: PostgreSQL, Drizzle ORM
-- **Video**: FFmpeg, HLS.js
-- **State Management**: Zustand
-
 ### Quick Start
 
 ```bash
@@ -86,6 +50,43 @@ postgres_data:
 ```
 
 </details>
+
+
+## Features
+
+### Core Experience
+
+- **Home Feed**: Personalized feed with filters (All, Recently uploaded, Watched)
+- **Video Player**: Adaptive streaming with multiple quality support
+- **Search**: Full-text search for videos and channels
+- **History**: Watch history tracking with pause functionality
+
+### Interaction
+
+- **Comments**: Nested replies, pinning, hearting, and like/dislike reactions
+- **Reactions**: Like and Dislike videos
+- **Subscriptions**: Subscribe to channels and customize notification settings
+- **Notifications**: Real-time alerts for uploads, replies, and hearts with deep linking and management
+
+### Creator Studio
+
+- **Dashboard**: Overview of channel content and performance
+- **Content Management**: Upload, edit, and manage videos
+- **Customization**: Update channel banner, avatar, and description
+
+### Admin Console
+
+- **User Management**: Manage users and bans
+- **System Settings**: Configure global application settings
+- **Statistics**: Platform-wide metrics for users, videos, and engagement
+
+## Tech Stack
+
+- **Framework**: Next.js 16 (React 19)
+- **Styling**: Tailwind CSS v4
+- **Database**: PostgreSQL, Drizzle ORM
+- **Video**: FFmpeg, HLS.js
+- **State Management**: Zustand
 
 ## Development Setup
 
