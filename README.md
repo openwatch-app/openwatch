@@ -26,6 +26,7 @@ services:
         environment:
             - DATABASE_URL=postgres://postgres:{STRONG_PASSWORD}@db:5432/openwatch
             - NEXT_PUBLIC_BASE_URL=http://localhost:8634
+            - NEXT_PUBLIC_ENABLE_FEDERATION={Boolean}
             - AUTH_SECRET={STRONG_SECRET}
         volumes:
             - ./data/.storage:/app/.storage
