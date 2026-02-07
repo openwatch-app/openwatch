@@ -215,7 +215,7 @@ export const VideoPlayer = ({ videoId, videoUrl, autoPlay = false, initialTime =
 					if (autoPlay) safePlay();
 				});
 			} else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-				video.src = hlsSrc;
+				video.src = sourceUrl;
 				if (initialTime > 0 && !hasInitialSeeked.current) {
 					video.currentTime = initialTime;
 					hasInitialSeeked.current = true;
