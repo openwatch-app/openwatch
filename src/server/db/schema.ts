@@ -193,6 +193,7 @@ export const videos = pgTable('videos', {
 	dislikes: integer('dislikes').default(0).notNull(),
 	category: text('category').default('General').notNull(),
 	tags: text('tags').array(),
+	isShort: boolean('is_short').default(false).notNull(),
 	createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 	updatedAt: timestamp('updated_at', { withTimezone: true })
 		.defaultNow()

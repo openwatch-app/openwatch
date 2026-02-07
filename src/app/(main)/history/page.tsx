@@ -6,9 +6,12 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Input } from '~components/input';
 import { Video } from '~app/types';
+import { cn } from '~lib/utils';
 import axios from 'axios';
+import { authClient } from '~lib/auth-client';
 
 const Page = () => {
+	const { data: session, isPending: isSessionLoading } = authClient.useSession();
 	const [videos, setVideos] = useState<Video[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [searchQuery, setSearchQuery] = useState('');
@@ -17,9 +20,15 @@ const Page = () => {
 	const router = useRouter();
 
 	useEffect(() => {
-		fetchHistory();
-		fetchPauseStatus();
-	}, []);
+		if (!isSessionLoading && !session) {
+			router.push('/auth');
+			return;
+		}
+		if (session) {
+			fetchHistory();
+			fetchPauseStatus();
+		}
+	}, [session, isSessionLoading, router]);
 
 	const fetchHistory = async () => {
 		try {
@@ -82,17 +91,18 @@ const Page = () => {
 				) : (
 					<div className="space-y-4">
 						{filteredVideos.map((video) => (
-							<div key={video.id} className="flex gap-4 group cursor-pointer hover:bg-secondary/20 p-2 rounded-lg transition-colors" onClick={() => router.push(`/watch/${video.id}`)}>
+							<div
+								key={video.id}
+								className="flex gap-4 group cursor-pointer hover:bg-secondary/20 p-2 rounded-lg transition-colors"
+								onClick={() => router.push(video.isShort ? `/shorts/${video.id}` : `/watch/${video.id}`)}
+							>
 								{/* Thumbnail */}
-								<div className="relative w-40 sm:w-60 aspect-video rounded-xl overflow-hidden shrink-0">
+								<div className={cn('relative rounded-xl overflow-hidden shrink-0 bg-black/10', video.isShort ? 'w-[90px] aspect-[9/16]' : 'w-40 sm:w-60 aspect-video')}>
 									<img src={video.thumbnail} alt={video.title} className="object-cover w-full h-full" />
-									<div className="absolute bottom-1 right-1 bg-black/80 text-white text-xs px-1 py-0.5 rounded font-medium">{video.duration}</div>
+									{!video.isShort && <div className="absolute bottom-1 right-1 bg-black/80 text-white text-xs px-1 py-0.5 rounded font-medium">{video.duration}</div>}
 									{video.savedProgress !== undefined && video.savedProgress > 0 && video.durationInSeconds && video.durationInSeconds > 0 && (
 										<div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-600/50 z-10">
-											<div
-												className="h-full bg-orange-600"
-												style={{ width: `${Math.min((video.savedProgress / video.durationInSeconds) * 100, 100)}%` }}
-											/>
+											<div className="h-full bg-primary" style={{ width: `${Math.min((video.savedProgress / video.durationInSeconds) * 100, 100)}%` }} />
 										</div>
 									)}
 								</div>

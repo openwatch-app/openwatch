@@ -28,6 +28,7 @@ export interface Video {
 	description?: string;
 	category: string;
 	type: 'video' | 'short';
+	isShort?: boolean;
 	likes?: string;
 	dislikes?: string;
 	userReaction?: 'LIKE' | 'DISLIKE' | null;

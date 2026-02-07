@@ -51,9 +51,10 @@ export const GET = async (req: NextRequest, { params }: { params: Promise<{ id: 
 			},
 			description: v.description,
 			category: 'General',
-			type: 'video',
+			type: v.isShort ? 'short' : 'video',
 			visibility: v.visibility,
-			restrictions: v.restrictions
+			restrictions: v.restrictions,
+			isShort: v.isShort
 		}));
 
 		return NextResponse.json(mappedVideos);

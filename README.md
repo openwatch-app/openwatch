@@ -33,7 +33,7 @@ services:
             - db
 
     db:
-        image: postgres:16-alpine
+        image: postgres:17-alpine
         container_name: openwatch-db
         restart: unless-stopped
         ports:
@@ -56,6 +56,7 @@ postgres_data:
 ### Core Experience
 
 - **Home Feed**: Personalized feed with filters (All, Recently uploaded, Watched)
+- **Shorts**: Vertical video feed with infinite scrolling and immersive mobile experience
 - **Video Player**: Adaptive streaming with multiple quality support
 - **Search**: Full-text search for videos and channels
 - **History**: Watch history tracking with pause functionality

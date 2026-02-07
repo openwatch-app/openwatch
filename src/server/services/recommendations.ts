@@ -40,8 +40,7 @@ export class RecommendationService {
 					}
 				}
 			});
-			// Filter out null videos (deleted) and deduplicate by videoId if needed
-			// (simple approach: just map)
+			// Filter out null videos (deleted)
 			return history
 				.filter((h) => !!h.video)
 				.map((h) => ({
@@ -52,7 +51,7 @@ export class RecommendationService {
 
 		if (filter === 'recently-uploaded') {
 			return db.query.videos.findMany({
-				where: eq(videos.visibility, 'public'),
+				where: and(eq(videos.visibility, 'public'), eq(videos.isShort, false)),
 				orderBy: [desc(videos.createdAt)],
 				limit,
 				offset,
@@ -96,7 +95,7 @@ export class RecommendationService {
 		// For simplicity, we'll fetch a batch of recent videos and rank them in memory
 		// In a real large-scale app, we'd push this logic to the DB or a search engine
 		const candidates = await db.query.videos.findMany({
-			where: eq(videos.visibility, 'public'),
+			where: and(eq(videos.visibility, 'public'), eq(videos.isShort, false)),
 			limit: 100, // Fetch pool of 100 candidates
 			orderBy: [desc(videos.createdAt)], // Bias towards recent
 			with: {

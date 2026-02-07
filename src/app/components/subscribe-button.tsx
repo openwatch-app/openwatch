@@ -14,10 +14,11 @@ interface SubscribeButtonProps {
 	initialNotify?: boolean;
 	isOwner?: boolean;
 	className?: string;
+	buttonClassName?: string;
 	onSubscriptionChange?: (isSubscribed: boolean) => void;
 }
 
-export const SubscribeButton = ({ channelId, initialIsSubscribed = false, initialNotify = false, isOwner = false, className, onSubscriptionChange }: SubscribeButtonProps) => {
+export const SubscribeButton = ({ channelId, initialIsSubscribed = false, initialNotify = false, isOwner = false, className, buttonClassName, onSubscriptionChange }: SubscribeButtonProps) => {
 	const [isSubscribed, setIsSubscribed] = useState(initialIsSubscribed);
 	const [notify, setNotify] = useState(initialNotify);
 	const [isLoading, setIsLoading] = useState(false);
@@ -82,10 +83,7 @@ export const SubscribeButton = ({ channelId, initialIsSubscribed = false, initia
 		<div className={cn('flex items-center gap-2', className)}>
 			<Button
 				variant={isSubscribed ? 'secondary' : 'default'}
-				className={cn(
-					'rounded-full font-medium transition-colors',
-					!isSubscribed && 'bg-foreground text-background hover:bg-foreground/90 border-none'
-				)}
+				className={cn('rounded-full font-medium transition-colors', !isSubscribed && 'bg-foreground text-background hover:bg-foreground/90 border-none', buttonClassName)}
 				onClick={handleSubscribe}
 				disabled={isLoading}
 			>

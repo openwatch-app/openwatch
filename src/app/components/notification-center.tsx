@@ -151,12 +151,12 @@ export const NotificationCenter = () => {
 									<DropdownMenuItem
 										className={cn(
 											'flex items-start gap-4 p-4 cursor-pointer focus:bg-accent/50 focus:text-accent-foreground rounded-none border-l-4 transition-all duration-200',
-											!notification.isRead ? 'border-blue-500 bg-blue-500/5' : 'border-transparent hover:bg-accent/50'
+											!notification.isRead ? 'border-primary bg-primary/5' : 'border-transparent hover:bg-accent/50'
 										)}
 										onClick={() => handleNotificationClick(notification)}
 									>
 										{/* Unread Indicator (Dot) */}
-										{!notification.isRead && <div className="absolute left-2 top-1/2 -translate-y-1/2 h-2 w-2 rounded-full bg-blue-500" />}
+										{!notification.isRead && <div className="absolute left-2 top-1/2 -translate-y-1/2 h-2 w-2 rounded-full bg-primary" />}
 
 										{/* Avatar */}
 										<Avatar className="h-10 w-10 shrink-0 border border-border/50">

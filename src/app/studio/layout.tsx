@@ -5,9 +5,14 @@ import StudioNavbar from '~components/studio-navbar';
 import { useAppStore } from '~lib/store';
 import { useEffect } from 'react';
 import '~lib/dayjs-config';
+import { authClient } from '~lib/auth-client';
+import { useRouter } from 'next/navigation';
+import { Loader2 } from 'lucide-react';
 
 const StudioLayout = ({ children }: { children: React.ReactNode }) => {
 	const { closeSidebar } = useAppStore();
+	const { data: session, isPending: isSessionLoading } = authClient.useSession();
+	const router = useRouter();
 
 	useEffect(() => {
 		// Close sidebar on mobile by default
@@ -15,6 +20,20 @@ const StudioLayout = ({ children }: { children: React.ReactNode }) => {
 			closeSidebar();
 		}
 	}, [closeSidebar]);
+
+	useEffect(() => {
+		if (!isSessionLoading && !session) {
+			router.push('/auth');
+		}
+	}, [session, isSessionLoading, router]);
+
+	if (isSessionLoading || !session) {
+		return (
+			<div className="flex h-screen items-center justify-center bg-background text-foreground">
+				<Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+			</div>
+		);
+	}
 
 	return (
 		<div className="min-h-screen bg-background text-foreground">

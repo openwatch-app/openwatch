@@ -83,7 +83,7 @@ export const CommentInput = ({ videoId, parentId, onCommentAdded, onCancel, auto
 								size="sm"
 								onClick={handleSubmit}
 								disabled={!content.trim() || loading}
-								className="rounded-full bg-[#065fd4] hover:bg-[#065fd4]/90 text-white disabled:bg-zinc-200 disabled:text-zinc-500 dark:disabled:bg-zinc-700"
+								className="rounded-full bg-primary hover:bg-primary/90 text-white disabled:bg-zinc-200 disabled:text-zinc-500 dark:disabled:bg-zinc-700"
 							>
 								{loading ? 'Posting...' : parentId ? 'Reply' : 'Comment'}
 							</Button>

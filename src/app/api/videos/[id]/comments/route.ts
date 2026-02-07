@@ -10,6 +10,7 @@ export const GET = async (req: NextRequest, { params }: { params: Promise<{ id: 
 		const { id } = await params;
 		const { searchParams } = new URL(req.url);
 		const sort = searchParams.get('sort') || 'top';
+		console.log(`Fetching comments for video ${id} with sort: ${sort}`);
 		const session = await auth.api.getSession({
 			headers: req.headers
 		});

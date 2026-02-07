@@ -189,14 +189,14 @@ const AuthPage = () => {
 								<button
 									type="button"
 									onClick={() => setShowPassword(!showPassword)}
-									className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium text-blue-500 hover:text-blue-400"
+									className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium text-primary hover:text-primary/90"
 								>
 									{showPassword ? 'Hide' : 'Show'}
 								</button>
 							</div>
 
 							{!isSigningUp && (
-								<Link href="#" className="inline-block text-sm font-medium text-blue-500 hover:text-blue-400">
+								<Link href="#" className="inline-block text-sm font-medium text-primary hover:text-primary/90">
 									Forgot password?
 								</Link>
 							)}

@@ -7,6 +7,7 @@ import { auth } from '~server/auth';
 import { eq } from 'drizzle-orm';
 import { db } from '~server/db';
 import { join } from 'path';
+import ffmpeg from 'fluent-ffmpeg';
 
 export const POST = async (req: NextRequest) => {
 	try {
@@ -38,16 +39,16 @@ export const POST = async (req: NextRequest) => {
 			return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
 		}
 
-        const title = (formData.get('title') as string) || file.name;
+		const title = (formData.get('title') as string) || file.name;
 
-        // Validate video file type
-        const validVideoTypes = ['video/mp4', 'video/quicktime', 'video/webm', 'video/x-matroska'];
-        const validExtensions = ['mp4', 'mov', 'webm', 'mkv'];
-        const ext = file.name.split('.').pop()?.toLowerCase();
+		// Validate video file type
+		const validVideoTypes = ['video/mp4', 'video/quicktime', 'video/webm', 'video/x-matroska'];
+		const validExtensions = ['mp4', 'mov', 'webm', 'mkv'];
+		const ext = file.name.split('.').pop()?.toLowerCase();
 
-        if (!validVideoTypes.some(type => file.type.startsWith('video/')) || !ext || !validExtensions.includes(ext)) {
-            return NextResponse.json({ error: 'Invalid video file type' }, { status: 415 });
-        }
+		if (!validVideoTypes.includes(file.type) || !ext || !validExtensions.includes(ext)) {
+			return NextResponse.json({ error: 'Invalid video file type' }, { status: 415 });
+		}
 
 		const bytes = await file.arrayBuffer();
 		const buffer = Buffer.from(bytes);
@@ -68,6 +69,49 @@ export const POST = async (req: NextRequest) => {
 
 		await writeFile(path, buffer);
 
+		let isShort = false;
+		let duration = 0;
+
+		try {
+			const metadata = await new Promise<ffmpeg.FfprobeData>((resolve, reject) => {
+				ffmpeg.ffprobe(path, (err, metadata) => {
+					if (err) reject(err);
+					else resolve(metadata);
+				});
+			});
+
+			const videoStream = metadata.streams.find((s) => s.codec_type === 'video');
+			if (videoStream && videoStream.width && videoStream.height) {
+				let width = videoStream.width;
+				let height = videoStream.height;
+
+				// Check for rotation metadata (e.g. phone recordings)
+				const rotation = videoStream.tags?.rotate || videoStream.tags?.ROTATE;
+				if (rotation) {
+					const rot = parseInt(String(rotation), 10);
+					if (Math.abs(rot) === 90 || Math.abs(rot) === 270) {
+						// Swap dimensions for vertical video recorded in landscape container
+						[width, height] = [height, width];
+					}
+				}
+
+				const aspectRatio = width / height;
+				// Detect 9:16 or vertical/square video
+				if (aspectRatio <= 1) {
+					isShort = true;
+				}
+			}
+
+			if (metadata.format && metadata.format.duration) {
+				duration = Math.round(metadata.format.duration);
+				if (duration > 60) {
+					isShort = false;
+				}
+			}
+		} catch (e) {
+			console.error('Error probing video:', e);
+		}
+
 		const videoId = generateId();
 
 		// Create DB entry
@@ -78,7 +122,9 @@ export const POST = async (req: NextRequest) => {
 			filename: filename,
 			originalPath: path,
 			status: 'processing',
-			thumbnailUrl: `/api/uploads/${filename}` // Temporary thumbnail, ideally we extract one from video
+			thumbnailUrl: `/api/uploads/${filename}`, // Temporary thumbnail, ideally we extract one from video
+			isShort: isShort,
+			duration: duration
 		});
 
 		// Start transcoding in background

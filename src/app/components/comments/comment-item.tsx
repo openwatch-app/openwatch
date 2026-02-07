@@ -11,6 +11,7 @@ import { useState } from 'react';
 import { cn } from '~lib/utils';
 import axios from 'axios';
 import dayjs from 'dayjs';
+import Link from 'next/link';
 
 interface CommentItemProps {
 	comment: Comment;
@@ -100,17 +101,19 @@ export const CommentItem = ({ comment, videoId, isVideoOwner, onDelete, onUpdate
 		<div className="w-full">
 			<div className="flex gap-4 group relative">
 				{/* Avatar */}
-				<div className="flex-shrink-0 z-10">
+				<Link href={`/channel/${comment.user.id}`} className="flex-shrink-0 z-10">
 					<Avatar className={cn('h-10 w-10', isReply && 'h-8 w-8')}>
 						<AvatarImage src={comment.user.avatar} />
 						<AvatarFallback>{comment.user.name[0]}</AvatarFallback>
 					</Avatar>
-				</div>
+				</Link>
 
 				{/* Content */}
 				<div className="flex-1 min-w-0">
 					<div className="flex items-center gap-2 mb-1">
-						<span className={cn('font-semibold text-sm', comment.isPinned && 'bg-secondary px-1 rounded')}>{comment.user.name}</span>
+						<Link href={`/channel/${comment.user.id}`} className={cn('font-semibold text-sm hover:text-zinc-300 transition-colors', comment.isPinned && 'bg-secondary px-1 rounded')}>
+							{comment.user.name}
+						</Link>
 						<span className="text-xs text-muted-foreground">{dayjs(comment.createdAt).fromNow()}</span>
 						{comment.isPinned && (
 							<div className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -154,11 +157,11 @@ export const CommentItem = ({ comment, videoId, isVideoOwner, onDelete, onUpdate
 						{(isAuthor || isVideoOwner) && (
 							<DropdownMenu>
 								<DropdownMenuTrigger asChild>
-									<Button variant="ghost" size="icon" className="h-8 w-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity ml-auto">
+									<Button variant="ghost" size="icon" className="h-8 w-8 rounded-full transition-opacity ml-auto md:opacity-0 md:group-hover:opacity-100">
 										<MoreVertical className="h-4 w-4" />
 									</Button>
 								</DropdownMenuTrigger>
-								<DropdownMenuContent align="end">
+								<DropdownMenuContent align="end" className="z-[100]">
 									{isVideoOwner && (
 										<>
 											<DropdownMenuItem onClick={handlePin}>

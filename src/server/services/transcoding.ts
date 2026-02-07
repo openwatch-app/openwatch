@@ -118,14 +118,34 @@ export const transcodeVideo = async (inputPath: string, outputDir: string, video
 
 	// Generate Thumbnail
 	try {
+		const isVertical = inputWidth > 0 && inputHeight > 0 && inputWidth <= inputHeight;
+
 		await new Promise<void>((resolve, reject) => {
-			ffmpeg(inputPath)
-				.screenshots({ timestamps: ['1'], filename: 'thumbnail.jpg', folder: outputDir, size: '1280x720' })
+			let command = ffmpeg(inputPath);
+
+			if (isVertical) {
+				// Complex filter for vertical video: blurred background + centered video in 16:9 container
+				command = command
+					.complexFilter([
+						'[0:v]split=2[bg][fg]',
+						'[bg]scale=1280:720:force_original_aspect_ratio=increase,crop=1280:720,boxblur=20[bg_blurred]',
+						'[fg]scale=1280:720:force_original_aspect_ratio=decrease[fg_scaled]',
+						'[bg_blurred][fg_scaled]overlay=(W-w)/2:(H-h)/2'
+					])
+					.outputOptions(['-ss 1', '-frames:v 1', '-update 1']);
+			} else {
+				// Standard screenshot for horizontal video
+				command = command.outputOptions(['-ss 1', '-frames:v 1']).size('1280x720');
+			}
+
+			command
+				.output(path.join(outputDir, 'thumbnail.jpg'))
 				.on('end', () => resolve())
 				.on('error', (err) => {
 					console.error(`[${videoId}] Error generating thumbnail:`, err);
 					reject(err);
-				});
+				})
+				.run();
 		});
 	} catch (e) {
 		console.error(`[${videoId}] Failed to generate thumbnail`, e);

@@ -8,8 +8,8 @@ import { Button } from '~components/button';
 import { Avatar, AvatarFallback, AvatarImage } from '~components/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '~components/tabs';
 import VideoCard from '~components/video-card';
-import { Search, Loader2 } from 'lucide-react';
-import { cn } from '~lib/utils';
+import { Search, Loader2, MoreVertical } from 'lucide-react';
+import { cn, normalizeViewCount, formatCompactNumber } from '~lib/utils';
 import { authClient } from '~lib/auth-client';
 import Image from 'next/image';
 import { SubscribeButton } from '~components/subscribe-button';
@@ -28,6 +28,9 @@ const ChannelPage = () => {
 	const [activeTab, setActiveTab] = useState('videos');
 
 	const isOwner = session?.user?.id === channel?.id;
+
+	const regularVideos = videos.filter((v) => !v.isShort && v.type !== 'short');
+	const shortVideos = videos.filter((v) => v.isShort || v.type === 'short');
 
 	useEffect(() => {
 		const fetchChannelData = async () => {
@@ -157,6 +160,12 @@ const ChannelPage = () => {
 								Videos
 							</TabsTrigger>
 							<TabsTrigger
+								value="shorts"
+								className="rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent px-0 py-3 font-semibold text-muted-foreground data-[state=active]:text-foreground shadow-none transition-colors text-sm tracking-wide"
+							>
+								Shorts
+							</TabsTrigger>
+							<TabsTrigger
 								value="playlists"
 								className="rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent px-0 py-3 font-semibold text-muted-foreground data-[state=active]:text-foreground shadow-none transition-colors text-sm tracking-wide"
 							>
@@ -166,13 +175,44 @@ const ChannelPage = () => {
 
 						<TabsContent value="videos" className="mt-6">
 							<div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 pb-10">
-								{videos.map((video) => (
+								{regularVideos.map((video) => (
 									<VideoCard key={video.id} video={video} />
 								))}
 							</div>
-							{videos.length === 0 && (
+							{regularVideos.length === 0 && (
 								<div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
 									<p className="text-lg">No videos available</p>
+								</div>
+							)}
+						</TabsContent>
+
+						<TabsContent value="shorts" className="mt-6">
+							<div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4 pb-10">
+								{shortVideos.map((video) => (
+									<div key={video.id} className="relative group">
+										<a href={`/shorts/${video.id}`} className="block aspect-[9/16] relative rounded-xl overflow-hidden">
+											<Image
+												src={video.thumbnail || '/placeholder.jpg'}
+												alt={video.title}
+												fill
+												className="object-cover transition-transform duration-300 group-hover:scale-105"
+											/>
+											<div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+										</a>
+										<div className="mt-2 flex gap-x-2 items-start">
+											<div className="flex-1 min-w-0">
+												<a href={`/shorts/${video.id}`}>
+													<h3 className="font-semibold text-sm line-clamp-2 leading-tight group-hover:text-primary transition-colors mb-1">{video.title}</h3>
+												</a>
+												<div className="text-xs text-muted-foreground">{formatCompactNumber(normalizeViewCount(video.views))} views</div>
+											</div>
+										</div>
+									</div>
+								))}
+							</div>
+							{shortVideos.length === 0 && (
+								<div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+									<p className="text-lg">No shorts available</p>
 								</div>
 							)}
 						</TabsContent>

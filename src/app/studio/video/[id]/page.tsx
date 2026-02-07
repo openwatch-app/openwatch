@@ -3,6 +3,7 @@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '~components/dropdown-menu';
 import { Loader2, ArrowLeft, Copy, Check, ChevronDown, MoreVertical, Trash2, AlertCircle } from 'lucide-react';
 import { VideoPlayer } from '~components/video-player/video-player';
+import { ShortsPlayer } from '~components/shorts/shorts-player';
 import React, { useEffect, useState } from 'react';
 import { Textarea } from '~components/textarea';
 import { Button } from '~components/button';
@@ -10,6 +11,7 @@ import { useRouter } from 'next/navigation';
 import { Label } from '~components/label';
 import { Input } from '~components/input';
 import { Video } from '~app/types';
+import { cn } from '~lib/utils';
 import Link from 'next/link';
 import axios from 'axios';
 
@@ -31,6 +33,7 @@ const Page = ({ params }: { params: Promise<{ id: string }> }) => {
 
 	// Copy state
 	const [copied, setCopied] = useState(false);
+	const [isMuted, setIsMuted] = useState(false);
 
 	const [uploadingThumbnail, setUploadingThumbnail] = useState(false);
 	const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -150,6 +153,8 @@ const Page = ({ params }: { params: Promise<{ id: string }> }) => {
 		setTimeout(() => setCopied(false), 2000);
 	};
 
+	const toggleMute = () => setIsMuted(!isMuted);
+
 	if (loading) {
 		return (
 			<div className="flex h-full items-center justify-center">
@@ -243,7 +248,10 @@ const Page = ({ params }: { params: Promise<{ id: string }> }) => {
 						<p className="text-xs text-muted-foreground mb-2">Set a thumbnail that stands out and draws viewers' attention.</p>
 						<div className="flex flex-col gap-4">
 							<input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
-							<div className="w-40 aspect-video border-2 border-primary rounded-lg overflow-hidden relative cursor-pointer group" onClick={handleThumbnailClick}>
+							<div
+								className={cn('w-40 border-2 border-primary rounded-lg overflow-hidden relative cursor-pointer group', video.isShort ? 'aspect-[9/16]' : 'aspect-video')}
+								onClick={handleThumbnailClick}
+							>
 								<img
 									src={video.thumbnail || '/images/no-thumbnail.jpg'}
 									onError={(e) => {
@@ -294,8 +302,12 @@ const Page = ({ params }: { params: Promise<{ id: string }> }) => {
 
 					{/* Video Preview */}
 					<div className="bg-card border rounded-lg overflow-hidden">
-						<div className="aspect-video bg-black relative">
-							<VideoPlayer videoId={video.id} />
+						<div className={cn('bg-black relative', video.isShort ? 'aspect-[9/16] max-w-[300px] mx-auto' : 'aspect-video')}>
+							{video.isShort ? (
+								<ShortsPlayer video={video} isActive={true} toggleMute={toggleMute} isMuted={isMuted} onCommentClick={() => {}} variant="studio" />
+							) : (
+								<VideoPlayer videoId={video.id} />
+							)}
 						</div>
 						<div className="p-4 space-y-4">
 							<div className="space-y-1">

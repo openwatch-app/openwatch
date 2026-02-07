@@ -25,7 +25,7 @@ const StudioNavbar = () => {
 					<Menu className="h-5 w-5" />
 				</Button>
 				<Link href="/" className="flex items-center gap-1">
-					<div className="bg-primary text-primary-foreground p-1 rounded-lg">
+					<div className="bg-primary text-white p-1 rounded-lg">
 						<Video className="h-4 w-4 fill-current" />
 					</div>
 					<span className="text-xl font-bold tracking-tighter">Studio</span>

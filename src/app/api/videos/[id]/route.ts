@@ -148,7 +148,8 @@ export const GET = async (req: NextRequest, { params }: { params: Promise<{ id: 
 			uploadedAt: videoData.createdAt.toISOString(),
 			description: videoData.description,
 			category: 'General', // Default category
-			type: 'video',
+			type: videoData.isShort ? 'short' : 'video',
+			isShort: videoData.isShort,
 			likes: likesCount.toString(),
 			dislikes: dislikesCount.toString(),
 			userReaction,

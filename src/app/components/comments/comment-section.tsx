@@ -12,9 +12,11 @@ interface CommentSectionProps {
 	videoId: string;
 	videoOwnerId: string;
 	currentUserId?: string;
+	variant?: 'default' | 'shorts';
+	onClose?: () => void;
 }
 
-export const CommentSection = ({ videoId, videoOwnerId, currentUserId }: CommentSectionProps) => {
+export const CommentSection = ({ videoId, videoOwnerId, currentUserId, variant = 'default', onClose }: CommentSectionProps) => {
 	const [comments, setComments] = useState<Comment[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [sort, setSort] = useState<'top' | 'newest'>('top');
@@ -58,6 +60,54 @@ export const CommentSection = ({ videoId, videoOwnerId, currentUserId }: Comment
 
 	if (loading) {
 		return <Loader2 className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />;
+	}
+
+	if (variant === 'shorts') {
+		return (
+			<div className="flex flex-col h-full bg-[#0f0f0f] text-white">
+				{/* Header */}
+				<div className="flex items-center justify-between p-4 border-b border-white/10 shrink-0">
+					<h3 className="text-xl font-bold">Comments {countComments(comments)}</h3>
+					<div className="flex items-center gap-2">
+						<DropdownMenu>
+							<DropdownMenuTrigger asChild>
+								<div className="p-2 hover:bg-white/10 rounded-full cursor-pointer transition-colors">
+									<AlignLeft className="h-5 w-5" />
+								</div>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent align="end" className="w-48 bg-[#282828] border-white/10 text-white z-[100]">
+								<DropdownMenuItem onClick={() => setSort('top')} className="hover:bg-white/10 cursor-pointer">
+									Top comments
+								</DropdownMenuItem>
+								<DropdownMenuItem onClick={() => setSort('newest')} className="hover:bg-white/10 cursor-pointer">
+									Newest first
+								</DropdownMenuItem>
+							</DropdownMenuContent>
+						</DropdownMenu>
+						{onClose && (
+							<div onClick={onClose} className="p-2 hover:bg-white/10 rounded-full cursor-pointer transition-colors">
+								<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+									<line x1="18" y1="6" x2="6" y2="18"></line>
+									<line x1="6" y1="6" x2="18" y2="18"></line>
+								</svg>
+							</div>
+						)}
+					</div>
+				</div>
+
+				{/* Scrollable List */}
+				<div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
+					{comments.map((comment) => (
+						<CommentItem key={comment.id} comment={comment} videoId={videoId} isVideoOwner={isVideoOwner} onDelete={handleDelete} onUpdate={handleUpdate} />
+					))}
+				</div>
+
+				{/* Sticky Input */}
+				<div className="p-4 border-t border-white/10 bg-[#0f0f0f] shrink-0">
+					<CommentInput videoId={videoId} onCommentAdded={handleCommentAdded} />
+				</div>
+			</div>
+		);
 	}
 
 	return (
