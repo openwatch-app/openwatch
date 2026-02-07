@@ -71,6 +71,15 @@ fi
 printf "${GREEN}Creating directories...${NC}\n"
 mkdir -p "$INSTALL_DIR/data/.storage"
 
+# Federation Configuration
+printf "Do you want to enable Federation? (ActivityPub) (Y/n) "
+read FED_REPLY
+ENABLE_FEDERATION="true"
+case "$FED_REPLY" in
+    [nN]*) ENABLE_FEDERATION="false" ;;
+esac
+printf "${YELLOW}You can enable/disable federation anytime from $INSTALL_DIR/compose.yml${NC}\n"
+
 # Generate Secrets
 printf "${GREEN}Generating secure credentials...${NC}\n"
 DB_PASSWORD=$(generate_secret 24)
@@ -90,6 +99,7 @@ services:
         environment:
             - DATABASE_URL=postgres://postgres:${DB_PASSWORD}@db:5432/openwatch
             - NEXT_PUBLIC_BASE_URL=http://localhost:8634
+            - NEXT_PUBLIC_ENABLE_FEDERATION=${ENABLE_FEDERATION}
             - AUTH_SECRET=${AUTH_SECRET}
         volumes:
             - ./data/.storage:/app/.storage

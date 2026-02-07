@@ -4,6 +4,8 @@ import { eq, desc, count, sql, and, or } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '~server/auth';
 
+import { RecommendationService } from '~server/services/recommendations';
+
 export const GET = async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
 	try {
 		const session = await auth.api.getSession({
@@ -18,12 +20,28 @@ export const GET = async (req: NextRequest, { params }: { params: Promise<{ id: 
 
 		const decodedId = decodeURIComponent(id);
 
+		// Fetch external playlists
+		if (decodedId.startsWith('external:')) {
+			const parts = decodedId.split(':');
+			if (parts.length >= 3) {
+				const host = parts[1];
+				const username = parts[2];
+				const remotePlaylists = await RecommendationService.getRemoteChannelPlaylists(host, username);
+				return NextResponse.json(remotePlaylists);
+			}
+			return NextResponse.json([]);
+		}
+
 		// Find user by ID or Handle
 		const channelUser = await db.query.user.findFirst({
 			where: or(eq(user.id, decodedId), eq(user.handle, decodedId), eq(user.handle, decodedId.startsWith('@') ? decodedId : `@${decodedId}`))
 		});
 
 		if (!channelUser) {
+			// If it looks like an external handle, return empty list instead of 404
+			if (decodedId.includes('@') && process.env.NEXT_PUBLIC_ENABLE_FEDERATION === 'true') {
+				return NextResponse.json([]);
+			}
 			return NextResponse.json({ error: 'Channel not found' }, { status: 404 });
 		}
 

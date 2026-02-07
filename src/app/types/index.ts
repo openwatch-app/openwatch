@@ -14,6 +14,8 @@ export interface Channel {
 	isSubscribed?: boolean;
 	notify?: boolean;
 	type?: 'channel';
+	isExternal?: boolean;
+	host?: string;
 }
 
 export interface Video {
@@ -37,6 +39,7 @@ export interface Video {
 	restrictions?: string;
 	savedProgress?: number;
 	durationInSeconds?: number;
+	isExternal?: boolean;
 }
 
 export interface Comment {

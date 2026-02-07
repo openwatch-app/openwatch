@@ -1,6 +1,4 @@
 import { Avatar, AvatarFallback, AvatarImage } from './avatar';
-import { MoreVertical } from 'lucide-react';
-import { Button } from './button';
 import { Video } from '../types';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -24,7 +22,7 @@ const SearchResultCard = ({ video }: SearchResultCardProps) => {
 			{/* Thumbnail Container */}
 			<Link href={`/watch/${video.id}`} className="relative shrink-0 w-full md:w-[360px] aspect-video rounded-xl overflow-hidden">
 				<Image
-					src={video.thumbnail || '/placeholder.jpg'}
+					src={video.thumbnail || '/images/no-thumbnail.jpg'}
 					alt={video.title}
 					fill
 					className="object-cover transition-transform duration-300 group-hover:scale-105"
@@ -41,14 +39,9 @@ const SearchResultCard = ({ video }: SearchResultCardProps) => {
 
 			{/* Info */}
 			<div className="flex flex-col flex-1 gap-1 min-w-0">
-				<div className="flex justify-between items-start gap-2">
-					<Link href={`/watch/${video.id}`}>
-						<h3 className="font-normal text-lg leading-tight line-clamp-2 group-hover:text-primary transition-colors">{video.title}</h3>
-					</Link>
-					<Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 opacity-0 group-hover:opacity-100">
-						<MoreVertical className="h-5 w-5" />
-					</Button>
-				</div>
+				<Link href={`/watch/${video.id}`}>
+					<h3 className="font-normal text-lg leading-tight line-clamp-2 group-hover:text-primary transition-colors">{video.title}</h3>
+				</Link>
 
 				<div className="text-xs text-muted-foreground flex items-center mb-2">
 					<span>{video.views} views</span>

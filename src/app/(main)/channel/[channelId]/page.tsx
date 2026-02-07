@@ -104,6 +104,12 @@ const ChannelPage = () => {
 
 						<div className="flex flex-wrap items-center justify-center md:justify-start gap-x-2 text-sm text-muted-foreground">
 							<span className="font-medium text-foreground">{channel.handle}</span>
+							{channel.isExternal && channel.host && (
+								<>
+									<span>•</span>
+									<span className="text-xs bg-muted px-1.5 py-0.5 rounded">Source: {channel.host}</span>
+								</>
+							)}
 							<span>•</span>
 							<span>{channel.subscribers} subscribers</span>
 							<span>•</span>
@@ -116,7 +122,11 @@ const ChannelPage = () => {
 
 						{/* Buttons */}
 						<div className="flex flex-wrap gap-2 mt-3">
-							{isOwner ? (
+							{channel.isExternal ? (
+								<Button disabled variant="secondary" className="h-9 opacity-70 cursor-not-allowed">
+									Subscribing disabled
+								</Button>
+							) : isOwner ? (
 								<>
 									<Button variant="secondary" className="font-medium" onClick={() => router.push('/studio/customization')}>
 										Customize channel
@@ -192,7 +202,7 @@ const ChannelPage = () => {
 									<div key={video.id} className="relative group">
 										<a href={`/shorts/${video.id}`} className="block aspect-[9/16] relative rounded-xl overflow-hidden">
 											<Image
-												src={video.thumbnail || '/placeholder.jpg'}
+												src={video.thumbnail || '/images/no-thumbnail.jpg'}
 												alt={video.title}
 												fill
 												className="object-cover transition-transform duration-300 group-hover:scale-105"

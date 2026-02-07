@@ -57,7 +57,7 @@ export const PlaylistSidebar = ({ playlist, currentVideoId, onClose }: PlaylistS
 							</div>
 
 							<div className="relative w-24 aspect-video rounded overflow-hidden shrink-0 bg-secondary">
-								<Image src={video.thumbnail || '/placeholder.jpg'} alt={video.title} fill className="object-cover" />
+								<Image src={video.thumbnail || '/images/no-thumbnail.jpg'} alt={video.title} fill className="object-cover" />
 								<div className="absolute bottom-1 right-1 bg-black/80 text-white text-[10px] px-1 rounded">{video.duration}</div>
 							</div>
 

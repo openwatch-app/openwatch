@@ -150,9 +150,8 @@ const PlaylistPage = () => {
 	}
 
 	// Calculate stats
-	const totalViews = playlist.videos.reduce((acc, v) => acc + normalizeViewCount(v.views), 0);
 	const firstVideo = playlist.videos[0];
-	const thumbnail = firstVideo?.thumbnail || '/placeholder.jpg';
+	const thumbnail = firstVideo?.thumbnail || '/images/no-thumbnail.jpg';
 
 	return (
 		<div className="flex flex-col lg:flex-row max-w-[1284px] mx-auto w-full p-4 sm:p-6 gap-6">

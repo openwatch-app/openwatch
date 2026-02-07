@@ -1,6 +1,7 @@
-import { videos, videoViews, subscription, user, watchHistory } from '~server/db/schema';
-import { desc, eq, and, not, sql, or, ilike, inArray } from 'drizzle-orm';
+import { videos, videoViews, subscription, user, watchHistory, playlists, playlistItems } from '~server/db/schema';
+import { desc, eq, and, not, sql, or, ilike, inArray, isNull } from 'drizzle-orm';
 import { db } from '~server/db';
+import axios from 'axios';
 
 // Helper to calculate similarity score between two strings (titles)
 const calculateTextSimilarity = (text1: string | null, text2: string | null): number => {
@@ -148,40 +149,402 @@ export class RecommendationService {
 		return finalVideos;
 	}
 
-	static async search(query: string, limit: number = 20, offset: number = 0, userId?: string) {
-		let videoResults = await db.query.videos.findMany({
-			where: and(eq(videos.visibility, 'public'), or(ilike(videos.title, `%${query}%`), ilike(videos.description, `%${query}%`))),
-			limit,
-			offset,
-			orderBy: [desc(videos.views)], // Order by views for now
-			with: {
-				user: true
-			}
-		});
-
-		// Populate watch progress if user is logged in
-		if (userId && videoResults.length > 0) {
-			const videoIds = videoResults.map((v) => v.id);
-			const history = await db.query.watchHistory.findMany({
-				where: and(eq(watchHistory.userId, userId), inArray(watchHistory.videoId, videoIds))
+	// Search Federated Content (Sepia Search)
+	static async searchRemote(query: string, limit: number = 20, offset: number = 0) {
+		try {
+			const { data } = await axios.get('https://sepiasearch.org/api/v1/search/videos', {
+				params: {
+					search: query,
+					count: limit,
+					start: offset,
+					sort: '-createdAt'
+				}
 			});
-			const historyMap = new Map(history.map((h) => [h.videoId, h.progress]));
-			videoResults = videoResults.map((v) => ({
-				...v,
-				savedProgress: historyMap.get(v.id)
+
+			return data.data.map((item: any) => {
+				const resolveAvatar = (ch: any) => {
+					if (ch.avatar?.path) return 'https://' + ch.host + ch.avatar.path;
+					if (ch.avatars && Array.isArray(ch.avatars) && ch.avatars.length > 0) {
+						const sorted = [...ch.avatars].sort((a: any, b: any) => (b.width || 0) - (a.width || 0));
+						return 'https://' + ch.host + sorted[0].path;
+					}
+					return null;
+				};
+
+				return {
+					id: 'external:' + item.channel.host + ':' + item.uuid,
+					title: item.name,
+					description: item.description,
+					thumbnailUrl: item.thumbnailUrl,
+					videoUrl: item.url, // External Page URL
+					views: item.views,
+					duration: item.duration,
+					createdAt: new Date(item.publishedAt),
+					isExternal: true,
+					category: 'General', // Default
+					visibility: 'public',
+					status: 'ready',
+					isShort: false,
+					user: {
+						id: `external:${item.channel.host}:${item.channel.name}`,
+						name: item.channel.displayName,
+						handle: item.channel.name + '@' + item.channel.host,
+						email: '',
+						image: resolveAvatar(item.channel),
+						host: item.channel.host,
+						verified: false,
+						isExternal: true
+					}
+				};
+			});
+		} catch (error) {
+			console.error('Sepia Search failed:', error);
+			return [];
+		}
+	}
+
+	// Search Federated Playlists (Sepia Search)
+	static async searchRemotePlaylists(query: string, limit: number = 20, offset: number = 0) {
+		try {
+			const { data } = await axios.get('https://sepiasearch.org/api/v1/search/video-playlists', {
+				params: {
+					search: query,
+					count: limit,
+					start: offset
+				}
+			});
+
+			return data.data.map((item: any) => ({
+				id: 'external:' + item.ownerAccount.host + ':' + item.uuid,
+				title: item.displayName,
+				visibility: 'public',
+				updatedAt: new Date(item.updatedAt),
+				videoCount: item.videosLength,
+				firstVideoThumbnail: item.thumbnailUrl || (item.thumbnailPath ? `https://${item.ownerAccount.host}${item.thumbnailPath}` : null),
+				isExternal: true,
+				host: item.ownerAccount.host,
+				owner: {
+					name: item.ownerAccount.displayName,
+					handle: item.ownerAccount.name + '@' + item.ownerAccount.host
+				}
 			}));
+		} catch (error) {
+			console.error('Sepia Search Playlists failed:', error);
+			return [];
 		}
+	}
 
-		// Only search channels on the first page
-		let channelResults: any[] = [];
-		if (offset === 0) {
-			channelResults = await db.query.user.findMany({
-				where: or(ilike(user.name, `%${query}%`), ilike(user.handle, `%${query}%`)),
-				limit: 3 // Limit to top 3 matching channels
+	// Resolve external identity via WebFinger
+	static async resolveExternalIdentity(query: string) {
+		try {
+			// Remove leading @ if present and split
+			const handle = query.trim().startsWith('@') ? query.trim().substring(1) : query.trim();
+			const parts = handle.split('@');
+
+			// Must be username@host format
+			if (parts.length !== 2) return null;
+
+			const [username, host] = parts;
+			// Basic validation
+			if (!username || !host || host.includes('/') || !host.includes('.')) return null;
+
+			console.log(`Resolving external identity: ${username}@${host}`);
+
+			// 1. WebFinger Lookup
+			const webfingerUrl = `https://${host}/.well-known/webfinger?resource=acct:${username}@${host}`;
+			const { data: webfinger } = await axios.get(webfingerUrl, { timeout: 5000 });
+
+			const selfLink = webfinger.links?.find((l: any) => l.rel === 'self' && (l.type === 'application/activity+json' || l.type === 'application/ld+json'));
+
+			if (!selfLink?.href) return null;
+
+			// 2. Fetch Actor
+			const { data: actor } = await axios.get(selfLink.href, {
+				headers: { Accept: 'application/activity+json' },
+				timeout: 5000
 			});
+
+			// 3. Resolve Stats (Subscribers & Videos)
+			let subscribersCount = actor.followersCount || actor.stats?.followersCount;
+			let videosCount = actor.videosCount || actor.stats?.videosCount;
+
+			// If stats are missing, try fetching the collections
+			const statPromises = [];
+			if (subscribersCount === undefined && actor.followers) {
+				statPromises.push(
+					axios
+						.get(actor.followers, { headers: { Accept: 'application/activity+json' }, timeout: 5000 })
+						.then((res) => {
+							subscribersCount = res.data.totalItems;
+						})
+						.catch(() => {
+							subscribersCount = 0;
+						})
+				);
+			}
+			if (videosCount === undefined && actor.outbox) {
+				statPromises.push(
+					axios
+						.get(actor.outbox, { headers: { Accept: 'application/activity+json' }, timeout: 5000 })
+						.then((res) => {
+							videosCount = res.data.totalItems;
+						})
+						.catch(() => {
+							videosCount = 0;
+						})
+				);
+			}
+
+			if (statPromises.length > 0) {
+				await Promise.allSettled(statPromises);
+			}
+
+			// 4. Resolve Images (Avatar & Banner)
+			// Helper to get largest image from array or object
+			const getImage = (img: any) => {
+				if (!img) return null;
+				if (typeof img === 'string') return img;
+				if (Array.isArray(img)) {
+					// Prefer largest, or just first if no width
+					const sorted = [...img].sort((a, b) => (b.width || 0) - (a.width || 0));
+					return sorted[0]?.url || null;
+				}
+				return img.url || null;
+			};
+
+			const avatarUrl = getImage(actor.icon);
+			const bannerUrl = getImage(actor.image) || getImage(actor.header); // PeerTube uses image for banner, Mastodon uses header
+
+			return {
+				id: `external:${host}:${username}`,
+				name: actor.name || actor.preferredUsername || username,
+				email: '', // No email for external
+				image: avatarUrl,
+				banner: bannerUrl,
+				handle: `${actor.preferredUsername || username}@${host}`,
+				description: actor.summary || '',
+				verified: false,
+				host: host,
+				isExternal: true,
+				subscribers: (subscribersCount || 0).toString(),
+				videosCount: (videosCount || 0).toString()
+			};
+		} catch (error) {
+			console.error('Failed to resolve external identity:', error);
+			return null;
+		}
+	}
+
+	// Fetch videos from external channel (PeerTube API)
+	static async getRemoteChannelVideos(host: string, username: string, limit: number = 20, offset: number = 0) {
+		try {
+			let data;
+
+			// Try PeerTube API accounts endpoint first
+			try {
+				const response = await axios.get(`https://${host}/api/v1/accounts/${username}/videos`, {
+					params: {
+						count: limit,
+						start: offset,
+						sort: '-createdAt'
+					},
+					timeout: 5000
+				});
+				data = response.data;
+			} catch (error: any) {
+				// If 404, try video-channels endpoint
+				if (error.response?.status === 404) {
+					const response = await axios.get(`https://${host}/api/v1/video-channels/${username}/videos`, {
+						params: {
+							count: limit,
+							start: offset,
+							sort: '-createdAt'
+						},
+						timeout: 5000
+					});
+					data = response.data;
+				} else {
+					throw error;
+				}
+			}
+
+			if (!data?.data) return [];
+
+			return data.data.map((item: any) => {
+				// Determine avatar path (account or channel, support both object and array formats)
+				let avatarPath = null;
+				// Prefer channel avatar if we are looking at a channel, but fallback to account
+				const sourceObj = item.channel?.name === username ? item.channel : item.account;
+
+				if (sourceObj?.avatar?.path) {
+					avatarPath = sourceObj.avatar.path;
+				} else if (sourceObj?.avatars && Array.isArray(sourceObj.avatars) && sourceObj.avatars.length > 0) {
+					// Prefer largest avatar usually, or just the first one
+					avatarPath = sourceObj.avatars[0].path;
+				} else if (item.account?.avatar?.path) {
+					avatarPath = item.account.avatar.path;
+				} else if (item.account?.avatars?.length > 0) {
+					avatarPath = item.account.avatars[0].path;
+				}
+
+				return {
+					id: 'external:' + host + ':' + item.uuid,
+					title: item.name,
+					description: item.description,
+					thumbnailUrl: item.thumbnailPath ? `https://${host}${item.thumbnailPath}` : null,
+					videoUrl: item.url || `https://${host}${item.watchPath}`, // Use URL or watch path
+					views: item.views,
+					duration: item.duration,
+					createdAt: new Date(item.publishedAt),
+					isExternal: true,
+					category: 'General',
+					visibility: 'public',
+					status: 'ready',
+					isShort: false,
+					user: {
+						id: `external:${host}:${username}`,
+						name: item.channel?.displayName || item.account?.displayName || username,
+						handle: `${username}@${host}`,
+						email: '',
+						image: avatarPath ? `https://${host}${avatarPath}` : null,
+						host: host,
+						verified: false,
+						isExternal: true
+					}
+				};
+			});
+		} catch (error) {
+			console.error(`Failed to fetch remote videos from ${username}@${host}:`, error);
+			return [];
+		}
+	}
+
+	// Search videos
+	static async search(
+		query: string,
+		limit: number = 20,
+		offset: number = 0,
+		userId?: string,
+		source: 'local' | 'network' = 'local',
+		type: 'all' | 'video' | 'channel' | 'playlist' | 'short' = 'all'
+	) {
+		let videoResults: any[] = [];
+		let channelResults: any[] = [];
+		let playlistResults: any[] = [];
+
+		const shouldFetchVideos = ['all', 'video', 'short'].includes(type);
+		const shouldFetchChannels = ['all', 'channel'].includes(type);
+		const shouldFetchPlaylists = ['all', 'playlist'].includes(type);
+
+		// Local Search - Videos
+		if (shouldFetchVideos) {
+			const conditions = [eq(videos.visibility, 'public'), or(ilike(videos.title, `%${query}%`), ilike(videos.description, `%${query}%`))];
+
+			if (source === 'local') {
+				conditions.push(isNull(user.host));
+			}
+
+			if (type === 'short') conditions.push(eq(videos.isShort, true));
+			if (type === 'video') conditions.push(eq(videos.isShort, false));
+
+			const localQuery = db
+				.select({
+					video: videos,
+					user: user
+				})
+				.from(videos)
+				.innerJoin(user, eq(videos.userId, user.id))
+				.where(and(...conditions))
+				.limit(limit)
+				.offset(offset)
+				.orderBy(desc(videos.views));
+
+			const results = await localQuery;
+			videoResults = results.map((r) => ({ ...r.video, user: r.user }));
 		}
 
-		return { videos: videoResults, channels: channelResults };
+		// Local Playlist Search
+		if (shouldFetchPlaylists) {
+			const localPlaylists = await db
+				.select({
+					id: playlists.id,
+					title: playlists.title,
+					visibility: playlists.visibility,
+					updatedAt: playlists.updatedAt,
+					videoCount: sql<number>`(SELECT COUNT(*) FROM ${playlistItems} WHERE ${playlistItems.playlistId} = playlists.id)`.mapWith(Number),
+					firstVideoThumbnail: sql<string>`(
+						SELECT ${videos.thumbnailUrl} 
+						FROM ${playlistItems} 
+						JOIN ${videos} ON ${playlistItems.videoId} = videos.id 
+						WHERE ${playlistItems.playlistId} = playlists.id 
+						ORDER BY ${playlistItems.order} ASC 
+						LIMIT 1
+					)`
+				})
+				.from(playlists)
+				.where(and(eq(playlists.visibility, 'public'), or(ilike(playlists.title, `%${query}%`), ilike(playlists.description, `%${query}%`))))
+				.limit(limit)
+				.offset(offset);
+
+			playlistResults = [...localPlaylists];
+		}
+
+		// Network Search (if requested)
+		if (source === 'network' && process.env.NEXT_PUBLIC_ENABLE_FEDERATION === 'true') {
+			// Fetch remote videos
+			if (shouldFetchVideos) {
+				const remoteVideos = await RecommendationService.searchRemote(query, limit, offset);
+
+				// Basic filtering for shorts based on duration if explicit type requested
+				let filteredRemoteVideos = remoteVideos;
+				if (type === 'short') {
+					filteredRemoteVideos = remoteVideos.filter((v: any) => v.duration <= 60);
+					// Mark as short
+					filteredRemoteVideos.forEach((v: any) => (v.isShort = true));
+				} else if (type === 'video') {
+					filteredRemoteVideos = remoteVideos.filter((v: any) => v.duration > 60);
+				}
+
+				videoResults = [...videoResults, ...filteredRemoteVideos];
+			}
+
+			// Fetch remote playlists
+			if (shouldFetchPlaylists) {
+				const remotePlaylists = await RecommendationService.searchRemotePlaylists(query, limit, offset);
+				playlistResults = [...playlistResults, ...remotePlaylists];
+			}
+		}
+
+		// Search Channels (Local only for now, unless we want to search remote channels too)
+		if (shouldFetchChannels) {
+			const isExplicitChannelSearch = type === 'channel';
+
+			if (offset === 0 || isExplicitChannelSearch) {
+				const channelConditions = [or(ilike(user.name, `%${query}%`), ilike(user.handle, `%${query}%`))];
+				if (source === 'local') {
+					channelConditions.push(isNull(user.host));
+				}
+
+				channelResults = await db.query.user.findMany({
+					where: and(...channelConditions),
+					limit: isExplicitChannelSearch ? limit : 3 // Limit to top 3 matching channels if mixed
+				});
+
+				// Resolve external channel if query looks like a handle and federation is enabled
+				if (process.env.NEXT_PUBLIC_ENABLE_FEDERATION === 'true' && (query.includes('@') || source === 'network')) {
+					const externalChannel = await RecommendationService.resolveExternalIdentity(query);
+					if (externalChannel) {
+						// Check if already found in local results (by handle) to avoid duplicates
+						const exists = channelResults.some((c) => c.handle === externalChannel.handle);
+						if (!exists) {
+							channelResults.unshift(externalChannel);
+						}
+					}
+				}
+			}
+		}
+
+		return { videos: videoResults, channels: channelResults, playlists: playlistResults };
 	}
 
 	// Get related videos for Watch Page
@@ -291,5 +654,51 @@ export class RecommendationService {
 		}
 
 		return finalRelatedVideos;
+	}
+
+	// Fetch playlists from external channel (PeerTube API)
+	static async getRemoteChannelPlaylists(host: string, username: string, limit: number = 20, offset: number = 0) {
+		try {
+			let data;
+			// Try PeerTube API accounts endpoint first
+			try {
+				const response = await axios.get(`https://${host}/api/v1/accounts/${username}/video-playlists`, {
+					params: { count: limit, start: offset, sort: '-createdAt' },
+					timeout: 5000
+				});
+				data = response.data;
+			} catch (error: any) {
+				// If 404, try video-channels endpoint
+				if (error.response?.status === 404) {
+					const response = await axios.get(`https://${host}/api/v1/video-channels/${username}/video-playlists`, {
+						params: { count: limit, start: offset, sort: '-createdAt' },
+						timeout: 5000
+					});
+					data = response.data;
+				} else {
+					throw error;
+				}
+			}
+
+			if (!data?.data) return [];
+
+			return data.data.map((item: any) => ({
+				id: 'external:' + host + ':' + item.uuid,
+				name: item.displayName,
+				description: item.description,
+				thumbnailUrl: item.thumbnailPath ? `https://${host}${item.thumbnailPath}` : null,
+				createdAt: new Date(item.createdAt),
+				updatedAt: new Date(item.updatedAt),
+				isExternal: true,
+				visibility: 'public',
+				userId: `external:${host}:${username}`,
+				videosCount: item.videosLength || 0,
+				// We don't have full video list here usually, but that's fine for listing playlists
+				videos: []
+			}));
+		} catch (error) {
+			console.error(`Failed to fetch remote playlists from ${username}@${host}:`, error);
+			return [];
+		}
 	}
 }

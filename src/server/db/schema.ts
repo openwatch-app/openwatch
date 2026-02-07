@@ -8,6 +8,7 @@ export const user = pgTable('user', {
 	emailVerified: boolean('email_verified').default(false).notNull(),
 	image: text('image'),
 	handle: text('handle').unique(),
+	host: text('host'), // null = local, set = remote domain
 	role: text('role').default('user').notNull(),
 	banned: boolean('banned').default(false).notNull(),
 	allowedToUpload: boolean('allowed_to_upload').default(true).notNull(),
@@ -178,8 +179,8 @@ export const videos = pgTable('videos', {
 	userId: text('user_id')
 		.notNull()
 		.references(() => user.id, { onDelete: 'cascade' }),
-	filename: text('filename').notNull(),
-	originalPath: text('original_path').notNull(),
+	filename: text('filename'),
+	originalPath: text('original_path'),
 	title: text('title'),
 	description: text('description'),
 	duration: integer('duration'),
@@ -194,6 +195,8 @@ export const videos = pgTable('videos', {
 	category: text('category').default('General').notNull(),
 	tags: text('tags').array(),
 	isShort: boolean('is_short').default(false).notNull(),
+	host: text('host'),
+	externalUrl: text('external_url'),
 	createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 	updatedAt: timestamp('updated_at', { withTimezone: true })
 		.defaultNow()

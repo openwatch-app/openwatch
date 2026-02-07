@@ -17,7 +17,9 @@ export const mapUserToChannel = (user: any): FrontendChannel => {
 		videosCount: '0',
 		verified: user.verified || false,
 		description: user.description || '',
-		type: 'channel'
+		type: 'channel',
+		isExternal: user.isExternal,
+		host: user.host
 	};
 };
 
@@ -25,7 +27,7 @@ export const mapVideoToFrontend = (video: any): FrontendVideo => {
 	return {
 		id: video.id,
 		title: video.title || '',
-		thumbnail: video.thumbnailUrl || '/placeholder.jpg',
+		thumbnail: video.thumbnailUrl || '/images/no-thumbnail.jpg',
 		videoUrl: `/watch/${video.id}`,
 		duration: video.duration ? formatDuration(video.duration) : '0:00',
 		views: video.views?.toString() || '0',
@@ -40,6 +42,7 @@ export const mapVideoToFrontend = (video: any): FrontendVideo => {
 		dislikes: video.dislikes?.toString() || '0',
 		savedProgress: video.savedProgress,
 		durationInSeconds: video.duration || 0,
+		isExternal: !!video.host,
 		channel: {
 			id: video.user.id,
 			name: video.user.name,

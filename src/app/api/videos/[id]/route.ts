@@ -9,21 +9,246 @@ import { db } from '~server/db';
 import { existsSync } from 'fs';
 import { join } from 'path';
 import dayjs from 'dayjs';
+import axios from 'axios';
 
 dayjs.extend(duration);
 dayjs.extend(relativeTime);
 
 const VIEW_COOLDOWN_MINUTES = 15;
 
+// Helper to resolve avatar path from PeerTube channel/account object
+const resolvePeerTubeAvatar = (channel: any, account: any) => {
+	// 1. Try Channel Avatar (object)
+	if (channel?.avatar?.path) return channel.avatar.path;
+
+	// 2. Try Channel Avatars (array) - prefer largest
+	if (channel?.avatars && Array.isArray(channel.avatars) && channel.avatars.length > 0) {
+		const sorted = [...channel.avatars].sort((a: any, b: any) => (b.width || 0) - (a.width || 0));
+		return sorted[0].path;
+	}
+
+	// 3. Try Account Avatar (object)
+	if (account?.avatar?.path) return account.avatar.path;
+
+	// 4. Try Account Avatars (array)
+	if (account?.avatars && Array.isArray(account.avatars) && account.avatars.length > 0) {
+		const sorted = [...account.avatars].sort((a: any, b: any) => (b.width || 0) - (a.width || 0));
+		return sorted[0].path;
+	}
+
+	return null;
+};
+
+// Helper to map remote video to internal Video interface
+const mapRemoteVideoToResponse = (remoteVideo: any, host: string, uuid: string, videoUrl: string) => {
+	return {
+		id: `external:${host}:${uuid}`,
+		title: remoteVideo.name,
+		description: remoteVideo.description,
+		thumbnailUrl: remoteVideo.thumbnailPath ? `https://${host}${remoteVideo.thumbnailPath}` : null,
+		videoUrl: videoUrl,
+		views: remoteVideo.views,
+		duration: remoteVideo.duration,
+		createdAt: new Date(remoteVideo.publishedAt),
+		isExternal: true,
+		visibility: 'public',
+		status: 'ready',
+		likes: remoteVideo.likes?.toString() || '0',
+		dislikes: remoteVideo.dislikes?.toString() || '0',
+		channel: {
+			id: `external:${host}:${remoteVideo.channel.name}`,
+			name: remoteVideo.channel.displayName,
+			handle: remoteVideo.channel.name + '@' + host,
+			avatar: resolvePeerTubeAvatar(remoteVideo.channel, remoteVideo.account) ? `https://${host}${resolvePeerTubeAvatar(remoteVideo.channel, remoteVideo.account)}` : null,
+			subscribers: remoteVideo.channel.followersCount?.toString() || '0',
+			verified: false,
+			isSubscribed: false
+		},
+		userReaction: null
+	};
+};
+
 export const GET = async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
 	try {
-		const { id } = await params;
+		const { id: rawId } = await params;
+		const id = decodeURIComponent(rawId);
 		const session = await auth.api.getSession({
 			headers: req.headers
 		});
 
 		if (!id) {
 			return NextResponse.json({ error: 'Missing Video ID' }, { status: 400 });
+		}
+
+		// Handle legacy "sepia-" IDs (backward compatibility)
+		if (id.startsWith('sepia-')) {
+			if (process.env.NEXT_PUBLIC_ENABLE_FEDERATION !== 'true') {
+				return NextResponse.json({ error: 'Federation is disabled' }, { status: 403 });
+			}
+			try {
+				const uuid = id.replace('sepia-', '');
+				console.log(`Resolving legacy ID: ${id} -> UUID: ${uuid}`);
+
+				// Resolve host via Sepia Search
+				const { data } = await axios.get('https://sepiasearch.org/api/v1/search/videos', {
+					params: { 'ids[]': uuid }
+				});
+
+				if (data.data && data.data.length > 0) {
+					const item = data.data[0];
+					const host = item.channel.host;
+					console.log(`Resolved legacy ID to host: ${host}`);
+
+					// Redirect to the new ID format logic by mutating 'id' and recursively calling or just jumping to logic?
+					// Simpler: Just set the variables needed for the external logic and fall through?
+					// Actually, better to just call the external logic here.
+
+					// We'll reconstruct the ID as an external ID and let the next block handle it
+					// But we can't easily jump. So let's duplicate the fetch logic or wrap it in a helper function?
+					// Duplication is safer for a quick patch.
+
+					// Fetch video details from external PeerTube instance
+					console.log(`Fetching external video (legacy path): host=${host}, uuid=${uuid}`);
+					const { data: remoteVideo } = await axios.get(`https://${host}/api/v1/videos/${uuid}`, {
+						timeout: 5000
+					});
+
+					// Find best video URL (HLS preferred, then mp4)
+					let videoUrl = '';
+					if (remoteVideo.streamingPlaylists && remoteVideo.streamingPlaylists.length > 0) {
+						videoUrl = remoteVideo.streamingPlaylists[0].playlistUrl;
+					} else if (remoteVideo.files && remoteVideo.files.length > 0) {
+						const files = [...remoteVideo.files].sort((a: any, b: any) => (b.resolution?.id || 0) - (a.resolution?.id || 0));
+						videoUrl = files[0].fileUrl;
+					}
+
+					if (!videoUrl) {
+						return NextResponse.json({ error: 'No playable video found on remote server' }, { status: 404 });
+					}
+
+					const mappedVideo = mapRemoteVideoToResponse(remoteVideo, host, uuid, videoUrl);
+					return NextResponse.json(mappedVideo);
+				} else {
+					return NextResponse.json({ error: `Could not resolve legacy ID: ${id}` }, { status: 404 });
+				}
+			} catch (error: any) {
+				console.error('Failed to resolve legacy ID:', error.message);
+				// Continue to normal DB check if failed, or return error?
+				// If it was explicitly a sepia ID, we should probably fail here.
+				return NextResponse.json({ error: `Failed to resolve legacy ID: ${error.message}` }, { status: 502 });
+			}
+		}
+
+		// Check if it's an external video
+		if (id.startsWith('external:')) {
+			if (process.env.NEXT_PUBLIC_ENABLE_FEDERATION !== 'true') {
+				return NextResponse.json({ error: 'Federation is disabled' }, { status: 403 });
+			}
+			try {
+				const parts = id.split(':');
+				// external:host:uuid
+				if (parts.length < 3) throw new Error('Invalid external ID format');
+				const host = parts[1];
+				// Join the rest in case UUID has colons, though standard UUIDs don't
+				const uuid = parts.slice(2).join(':');
+
+				if (!host || host === 'undefined') {
+					throw new Error('Missing host in external ID');
+				}
+
+				// Fetch video details from external PeerTube instance
+				// Use the video API endpoint: /api/v1/videos/{id}
+				console.log(`Fetching external video: host=${host}, uuid=${uuid}`);
+				const { data: remoteVideo } = await axios.get(`https://${host}/api/v1/videos/${uuid}`, {
+					timeout: 5000 // Add timeout to prevent long hangs
+				});
+
+				// Find best video URL (HLS preferred, then mp4)
+				let videoUrl = '';
+				if (remoteVideo.streamingPlaylists && remoteVideo.streamingPlaylists.length > 0) {
+					videoUrl = remoteVideo.streamingPlaylists[0].playlistUrl;
+				} else if (remoteVideo.files && remoteVideo.files.length > 0) {
+					// Sort by resolution desc
+					const files = [...remoteVideo.files].sort((a: any, b: any) => (b.resolution?.id || 0) - (a.resolution?.id || 0));
+					videoUrl = files[0].fileUrl;
+				}
+
+				if (!videoUrl) {
+					return NextResponse.json({ error: 'No playable video found on remote server' }, { status: 404 });
+				}
+
+				const channelId = `external:${host}:${remoteVideo.channel.name}`;
+				const channelHandle = `${remoteVideo.channel.name}@${host}`;
+				const channelEmail = `${remoteVideo.channel.name}@${host}.invalid`; // Fake email for external user
+
+				// Upsert External User (Channel)
+				await db
+					.insert(user)
+					.values({
+						id: channelId,
+						name: remoteVideo.channel.displayName || remoteVideo.channel.name,
+						email: channelEmail,
+						handle: channelHandle,
+						host: host,
+						image: resolvePeerTubeAvatar(remoteVideo.channel, remoteVideo.account) ? `https://${host}${resolvePeerTubeAvatar(remoteVideo.channel, remoteVideo.account)}` : null,
+						verified: false,
+						description: remoteVideo.channel.description,
+						createdAt: new Date(remoteVideo.publishedAt), // Use video date as proxy or current date
+						updatedAt: new Date()
+					})
+					.onConflictDoUpdate({
+						target: user.id,
+						set: {
+							name: remoteVideo.channel.displayName || remoteVideo.channel.name,
+							image: resolvePeerTubeAvatar(remoteVideo.channel, remoteVideo.account) ? `https://${host}${resolvePeerTubeAvatar(remoteVideo.channel, remoteVideo.account)}` : null,
+							updatedAt: new Date()
+						}
+					});
+
+				// Upsert External Video
+				await db
+					.insert(videos)
+					.values({
+						id: id,
+						userId: channelId,
+						title: remoteVideo.name,
+						description: remoteVideo.description,
+						duration: remoteVideo.duration,
+						thumbnailUrl: remoteVideo.thumbnailPath ? `https://${host}${remoteVideo.thumbnailPath}` : null,
+						views: remoteVideo.views,
+						likes: remoteVideo.likes,
+						dislikes: remoteVideo.dislikes,
+						uploadDate: new Date(remoteVideo.publishedAt),
+						isShort: remoteVideo.duration <= 60, // Auto-detect short
+						host: host,
+						externalUrl: videoUrl,
+						status: 'ready',
+						visibility: 'public',
+						category: 'General', // Default
+						updatedAt: new Date()
+					})
+					.onConflictDoUpdate({
+						target: videos.id,
+						set: {
+							title: remoteVideo.name,
+							description: remoteVideo.description,
+							thumbnailUrl: remoteVideo.thumbnailPath ? `https://${host}${remoteVideo.thumbnailPath}` : null,
+							views: remoteVideo.views,
+							likes: remoteVideo.likes,
+							dislikes: remoteVideo.dislikes,
+							externalUrl: videoUrl,
+							updatedAt: new Date()
+						}
+					});
+
+				// Map to our Video structure
+				const mappedVideo = mapRemoteVideoToResponse(remoteVideo, host, uuid, videoUrl);
+
+				return NextResponse.json(mappedVideo);
+			} catch (error: any) {
+				console.error('Failed to fetch external video:', error.message);
+				return NextResponse.json({ error: `Failed to load external video: ${error.message}` }, { status: 502 });
+			}
 		}
 
 		// Fetch video with user details
@@ -35,7 +260,7 @@ export const GET = async (req: NextRequest, { params }: { params: Promise<{ id: 
 		});
 
 		if (!videoData) {
-			return NextResponse.json({ error: 'Video not found' }, { status: 404 });
+			return NextResponse.json({ error: `Video not found (ID: ${id})` }, { status: 404 });
 		}
 
 		// Check visibility
@@ -141,8 +366,8 @@ export const GET = async (req: NextRequest, { params }: { params: Promise<{ id: 
 		const responseData = {
 			id: videoData.id,
 			title: videoData.title || 'Untitled',
-			thumbnail: videoData.thumbnailUrl || '/placeholder.jpg',
-			videoUrl: `/api/uploads/${videoData.filename}`, // Serve via API route
+			thumbnail: videoData.thumbnailUrl || '/no-thumbnail.jpg',
+			videoUrl: videoData.filename ? `/api/uploads/${videoData.filename}` : videoData.externalUrl || '', // Serve via API route
 			duration: videoData.duration ? formattedDuration : '00:00',
 			views: videoData.views.toString(),
 			uploadedAt: videoData.createdAt.toISOString(),

@@ -3,6 +3,7 @@ import { subscription, user, videos } from '~server/db/schema';
 import { eq, or, and, count } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '~server/auth';
+import { RecommendationService } from '~server/services/recommendations';
 
 export const GET = async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
 	try {
@@ -18,6 +19,29 @@ export const GET = async (req: NextRequest, { params }: { params: Promise<{ id: 
 		// Decode URL in case of @ or other special chars
 		const decodedId = decodeURIComponent(id);
 
+		// Handle External Channel
+		if (decodedId.startsWith('external:')) {
+			const parts = decodedId.split(':');
+			if (parts.length === 3) {
+				const [_, host, username] = parts;
+				const handle = `${username}@${host}`;
+				const externalChannel = await RecommendationService.resolveExternalIdentity(handle);
+
+				if (externalChannel) {
+					return NextResponse.json({
+						...externalChannel,
+						avatar: externalChannel.image,
+						// Use externalChannel stats if available, otherwise default to 0
+						subscribers: externalChannel.subscribers || '0',
+						videosCount: externalChannel.videosCount || '0',
+						isSubscribed: false,
+						notify: false
+					});
+				}
+			}
+			return NextResponse.json({ error: 'External channel not found' }, { status: 404 });
+		}
+
 		// Find user by ID or Handle
 		const result = await db.query.user.findFirst({
 			where: or(
@@ -29,6 +53,22 @@ export const GET = async (req: NextRequest, { params }: { params: Promise<{ id: 
 		});
 
 		if (!result) {
+			// Attempt to resolve as external handle if federation is enabled
+			if (process.env.NEXT_PUBLIC_ENABLE_FEDERATION === 'true' && decodedId.includes('@')) {
+				const externalChannel = await RecommendationService.resolveExternalIdentity(decodedId);
+				if (externalChannel) {
+					return NextResponse.json({
+						...externalChannel,
+						avatar: externalChannel.image,
+						// Use externalChannel stats if available, otherwise default to 0
+						subscribers: externalChannel.subscribers || '0',
+						videosCount: externalChannel.videosCount || '0',
+						isSubscribed: false,
+						notify: false
+					});
+				}
+			}
+
 			return NextResponse.json({ error: 'User not found' }, { status: 404 });
 		}
 

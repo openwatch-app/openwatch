@@ -58,9 +58,17 @@ postgres_data:
 - **Home Feed**: Personalized feed with filters (All, Recently uploaded, Watched)
 - **Shorts**: Vertical video feed with infinite scrolling and immersive mobile experience
 - **Video Player**: Adaptive streaming with multiple quality support
-- **Search**: Full-text search for videos and channels
-- **History**: Watch history tracking with pause functionality
+- **Search**: Advanced search with type filtering (Videos, Shorts, Channels, Playlists) and mixed results
+- **History**: Watch history tracking with pause functionality and support for external videos
 - **Playlists**: Create and manage personal playlists with visibility controls and autoplay support
+
+### Federation (Beta)
+
+- **Content Consumption**: Search and watch videos from the Fediverse (PeerTube) via Sepia Search
+- **Seamless Integration**: External videos appear natively in search and watch history
+- **Current Limitations**:
+    - Federation is currently **one-way (incoming only)**. You can view content from other platforms, but cannot yet like, comment, or subscribe to them. (This will be implemented in future)
+    - OpenWatch content is **not yet discoverable** on other Fediverse platforms. (This will be implemented in future)
 
 ### Interaction
 

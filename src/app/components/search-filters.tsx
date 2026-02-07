@@ -1,0 +1,55 @@
+'use client';
+
+import { useSearchParams, useRouter } from 'next/navigation';
+import { Button } from '~components/button';
+import { ScrollArea, ScrollBar } from '~components/scroll-area';
+import { cn } from '~lib/utils';
+
+const SearchFilters = () => {
+	const searchParams = useSearchParams();
+	const router = useRouter();
+	const currentType = searchParams.get('type') || 'all';
+
+	const filters = [
+		{ id: 'all', label: 'All' },
+		{ id: 'short', label: 'Shorts' },
+		{ id: 'video', label: 'Videos' },
+		{ id: 'channel', label: 'Channels' },
+		{ id: 'playlist', label: 'Playlists' }
+	];
+
+	const handleTypeChange = (value: string) => {
+		const params = new URLSearchParams(searchParams.toString());
+		if (value === 'all') {
+			params.delete('type');
+		} else {
+			params.set('type', value);
+		}
+		router.push(`/results?${params.toString()}`);
+	};
+
+	return (
+		<div className="w-full border-b border-transparent pb-2">
+			<ScrollArea className="w-full whitespace-nowrap">
+				<div className="flex w-max space-x-3 p-1">
+					{filters.map((filter) => (
+						<Button
+							key={filter.id}
+							variant={currentType === filter.id ? 'default' : 'secondary'}
+							className={cn(
+								'rounded-lg px-3 py-1 h-8 text-sm font-medium transition-colors',
+								currentType === filter.id ? 'bg-foreground text-background hover:bg-foreground/90' : 'bg-secondary hover:bg-secondary/80 text-foreground'
+							)}
+							onClick={() => handleTypeChange(filter.id)}
+						>
+							{filter.label}
+						</Button>
+					))}
+				</div>
+				<ScrollBar orientation="horizontal" className="invisible" />
+			</ScrollArea>
+		</div>
+	);
+};
+
+export default SearchFilters;

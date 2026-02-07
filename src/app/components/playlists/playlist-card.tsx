@@ -1,4 +1,3 @@
-
 import Link from 'next/link';
 import Image from 'next/image';
 import { ListPlus, Lock, Globe, EyeOff, Play } from 'lucide-react';
@@ -21,13 +20,8 @@ export const PlaylistCard = ({ playlist }: PlaylistCardProps) => {
 		<div className="flex flex-col gap-2 group cursor-pointer">
 			{/* Thumbnail */}
 			<Link href={`/playlist/${playlist.id}`} className="relative aspect-video rounded-xl overflow-hidden bg-secondary/50">
-				<Image
-					src={playlist.firstVideoThumbnail || '/placeholder.jpg'}
-					alt={playlist.title}
-					fill
-					className="object-cover transition-transform duration-300 group-hover:scale-105"
-				/>
-				
+				<Image src={playlist.firstVideoThumbnail || '/images/no-thumbnail.jpg'} alt={playlist.title} fill className="object-cover transition-transform duration-300 group-hover:scale-105" />
+
 				{/* Overlay for playlist count */}
 				<div className="absolute inset-y-0 right-0 w-1/3 bg-black/60 backdrop-blur-[2px] flex flex-col items-center justify-center text-white gap-1">
 					<span className="font-bold text-lg">{playlist.videoCount}</span>
@@ -46,9 +40,7 @@ export const PlaylistCard = ({ playlist }: PlaylistCardProps) => {
 			{/* Info */}
 			<div className="flex flex-col gap-1 mt-2">
 				<Link href={`/playlist/${playlist.id}`}>
-					<h3 className="font-semibold text-base leading-tight line-clamp-2 group-hover:text-primary transition-colors">
-						{playlist.title}
-					</h3>
+					<h3 className="font-semibold text-base leading-tight line-clamp-2 group-hover:text-primary transition-colors">{playlist.title}</h3>
 				</Link>
 				<div className="flex flex-col gap-0.5">
 					<div className="text-xs text-muted-foreground flex items-center gap-1">

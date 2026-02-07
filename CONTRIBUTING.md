@@ -64,6 +64,10 @@ To maintain code quality and consistency, please adhere to the following guideli
 
 - If you modify the schema, ensure you run `npm run db:generate` to create migrations.
 
-## License Reminder
+## Code of Conduct
 
-Please note that this project is licensed under a custom **OpenWatch License**. While contributions are welcome, the source code itself cannot be redistributed or modified for other projects without permission.
+Please note that this project is released with a [Contributor Code of Conduct](CODE_OF_CONDUCT.md). By participating in this project you agree to abide by its terms.
+
+## License
+
+By contributing to OpenWatch, you agree that your contributions will be licensed under its **MIT License**.

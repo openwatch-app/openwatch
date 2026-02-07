@@ -126,8 +126,13 @@ export const VideoPlayer = ({ videoId, videoUrl, autoPlay = false, initialTime =
 		// Reset completion status for new video
 		hasMarkedCompleted.current = false;
 
-		// Add cache busting to URL
-		const hlsSrc = `/api/stream/${videoId}/master.m3u8?t=${Date.now()}`;
+		// Determine Source URL
+		let sourceUrl = `/api/stream/${videoId}/master.m3u8?t=${Date.now()}`;
+		let isExternal = false;
+		if (videoUrl && (videoUrl.startsWith('http') || videoUrl.startsWith('//'))) {
+			sourceUrl = videoUrl;
+			isExternal = true;
+		}
 
 		// Helper to safely play
 		const safePlay = () => {
@@ -139,6 +144,17 @@ export const VideoPlayer = ({ videoId, videoUrl, autoPlay = false, initialTime =
 				});
 			}
 		};
+
+		// If external non-m3u8, use native player
+		if (isExternal && !sourceUrl.includes('.m3u8')) {
+			if (hlsRef.current) {
+				hlsRef.current.destroy();
+				hlsRef.current = null;
+			}
+			video.src = sourceUrl;
+			if (autoPlay) safePlay();
+			return;
+		}
 
 		let hls: Hls | null = null;
 		let retryCount = 0;
@@ -168,7 +184,7 @@ export const VideoPlayer = ({ videoId, videoUrl, autoPlay = false, initialTime =
 										hls?.startLoad();
 										// If it was a specific loading error, we might need to reload source
 										if (data.details === 'manifestLoadError' || data.details === 'manifestParsingError' || data.response?.code === 404) {
-											hls?.loadSource(hlsSrc);
+											hls?.loadSource(sourceUrl);
 										}
 									}, 2000);
 								} else {
@@ -186,7 +202,7 @@ export const VideoPlayer = ({ videoId, videoUrl, autoPlay = false, initialTime =
 					}
 				});
 
-				hls.loadSource(hlsSrc);
+				hls.loadSource(sourceUrl);
 				hls.attachMedia(video);
 
 				hls.on(Hls.Events.MANIFEST_PARSED, (event, data) => {

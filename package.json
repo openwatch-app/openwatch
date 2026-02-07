@@ -1,8 +1,12 @@
 {
 	"name": "open-watch",
 	"author": "Ge0rg3e",
-	"license": "SEE LICENSE IN LICENSE",
-	"version": "0.0.7",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/openwatch-app/openwatch.git"
+	},
+	"version": "0.0.8",
 	"private": true,
 	"scripts": {
 		"db:init": "npm run db:push",
