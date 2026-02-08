@@ -1,8 +1,7 @@
 'use client';
 
-import { ScrollArea, ScrollBar } from '~components/scroll-area';
-import VideoCard from '~components/video-card';
 import { Video, Category } from '~app/types';
+import VideoCard from '~components/video-card';
 import { useEffect, useState } from 'react';
 import { Button } from '~components/button';
 import { cn } from '~lib/utils';
@@ -48,7 +47,7 @@ const Page = () => {
 		<div className="flex flex-col h-full">
 			{/* Categories */}
 			<div className="sticky top-14 bg-background z-30 pt-3 pb-3 px-4 w-full border-b border-transparent">
-				<ScrollArea className="w-full whitespace-nowrap">
+				<div className="w-full max-w-[calc(100vw-2rem)] overflow-x-auto scrollbar-hide">
 					<div className="flex w-max space-x-3 p-1">
 						{categories.map((category) => (
 							<Button
@@ -64,8 +63,7 @@ const Page = () => {
 							</Button>
 						))}
 					</div>
-					<ScrollBar orientation="horizontal" className="invisible" />
-				</ScrollArea>
+				</div>
 			</div>
 
 			{/* Video Grid */}

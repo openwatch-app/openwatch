@@ -2,6 +2,7 @@
 
 import { useAppStore } from '~lib/store';
 import { Sidebar } from './sidebar';
+import { MobileNav } from './mobile-nav';
 import { useEffect } from 'react';
 import { cn } from '~lib/utils';
 import Navbar from './navbar';
@@ -22,8 +23,9 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
 			<Navbar />
 			<div className="flex pt-14">
 				<Sidebar />
-				<main className={cn('flex-1 transition-all duration-300', isSidebarOpen ? 'md:ml-60' : 'md:ml-[72px]')}>{children}</main>
+				<main className={cn('flex-1 transition-all duration-300 pb-16 md:pb-0', isSidebarOpen ? 'md:ml-60' : 'md:ml-[72px]')}>{children}</main>
 			</div>
+			<MobileNav />
 		</div>
 	);
 };

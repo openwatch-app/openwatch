@@ -9,12 +9,15 @@ export const GET = async (req: NextRequest) => {
 		const { searchParams } = new URL(req.url);
 		const rawLimit = parseInt(searchParams.get('limit') || '5', 10);
 		const limit = Number.isFinite(rawLimit) && !Number.isNaN(rawLimit) ? Math.max(1, Math.min(rawLimit, 100)) : 5;
-		const excludeId = searchParams.get('exclude');
+		const excludeParam = searchParams.get('exclude');
+		const excludeIds = excludeParam ? excludeParam.split(',') : [];
 
 		const shorts = await db.query.videos.findMany({
-			where: (videos, { eq, and, ne }) => {
+			where: (videos, { eq, and, ne, notInArray }) => {
 				const conditions = [eq(videos.isShort, true), eq(videos.visibility, 'public'), eq(videos.status, 'ready')];
-				if (excludeId) conditions.push(ne(videos.id, excludeId));
+				if (excludeIds.length > 0) {
+					conditions.push(notInArray(videos.id, excludeIds));
+				}
 				return and(...conditions);
 			},
 			with: {

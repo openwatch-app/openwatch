@@ -2,7 +2,6 @@
 
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Button } from '~components/button';
-import { ScrollArea, ScrollBar } from '~components/scroll-area';
 import { cn } from '~lib/utils';
 
 const SearchFilters = () => {
@@ -30,7 +29,7 @@ const SearchFilters = () => {
 
 	return (
 		<div className="w-full border-b border-transparent pb-2">
-			<ScrollArea className="w-full whitespace-nowrap">
+			<div className="w-full max-w-[calc(100vw-2rem)] overflow-x-auto scrollbar-hide">
 				<div className="flex w-max space-x-3 p-1">
 					{filters.map((filter) => (
 						<Button
@@ -46,8 +45,7 @@ const SearchFilters = () => {
 						</Button>
 					))}
 				</div>
-				<ScrollBar orientation="horizontal" className="invisible" />
-			</ScrollArea>
+			</div>
 		</div>
 	);
 };

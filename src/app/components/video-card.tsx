@@ -24,7 +24,7 @@ const VideoCard = ({ video }: VideoCardProps) => {
 		<Card className="border-0 bg-transparent shadow-none">
 			<CardContent className="p-0">
 				{/* Thumbnail Container */}
-				<Link href={`/watch/${video.id}`} className="relative aspect-video rounded-xl overflow-hidden mb-2 group block w-full">
+				<Link href={video.isShort ? `/shorts/${video.id}` : `/watch/${video.id}`} className="relative aspect-video rounded-xl overflow-hidden mb-2 group block w-full">
 					<Image
 						src={video.thumbnail || '/images/no-thumbnail.jpg'}
 						alt={video.title}
@@ -55,7 +55,7 @@ const VideoCard = ({ video }: VideoCardProps) => {
 
 					<div className="flex flex-col flex-1 gap-1">
 						<div className="flex justify-between items-start gap-2">
-							<Link href={`/watch/${video.id}`}>
+							<Link href={video.isShort ? `/shorts/${video.id}` : `/watch/${video.id}`}>
 								<h3 className="font-semibold text-base leading-tight line-clamp-2 group-hover:text-primary transition-colors">{video.title}</h3>
 							</Link>
 							<Button variant="ghost" size="icon" className="h-6 w-6 shrink-0 opacity-0 group-hover:opacity-100">

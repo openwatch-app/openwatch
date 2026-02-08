@@ -15,13 +15,14 @@ import Hls from 'hls.js';
 interface ShortsPlayerProps {
 	video: Video;
 	isActive: boolean;
+	shouldLoad?: boolean;
 	toggleMute: () => void;
 	isMuted: boolean;
 	onCommentClick: () => void;
 	variant?: 'feed' | 'studio';
 }
 
-export const ShortsPlayer = ({ video, isActive, toggleMute, isMuted, onCommentClick, variant = 'feed' }: ShortsPlayerProps) => {
+export const ShortsPlayer = ({ video, isActive, shouldLoad = true, toggleMute, isMuted, onCommentClick, variant = 'feed' }: ShortsPlayerProps) => {
 	const videoRef = useRef<HTMLVideoElement>(null);
 	const hlsRef = useRef<Hls | null>(null);
 	const progressBarRef = useRef<HTMLDivElement>(null);
@@ -280,6 +281,47 @@ export const ShortsPlayer = ({ video, isActive, toggleMute, isMuted, onCommentCl
 		</div>
 	);
 
+	// If shouldLoad is false, we only render a thumbnail placeholder
+	if (!shouldLoad) {
+		return (
+			<div className="relative h-full w-full flex justify-center snap-start shrink-0 overflow-hidden bg-black">
+				<div className="relative h-full aspect-9/16 max-w-full">
+					{/* Thumbnail Image */}
+					<img src={video.thumbnail || video.channel.banner || '/placeholder-video.jpg'} alt={video.title} className="h-full w-full object-cover opacity-50 blur-sm" />
+
+					{/* Loading Spinner or Placeholder UI */}
+					<div className="absolute inset-0 flex items-center justify-center">
+						<div className="w-10 h-10 border-4 border-white/20 border-t-white/80 rounded-full animate-spin" />
+					</div>
+
+					{/* Overlay Info (Static) */}
+					<div className="absolute inset-0 flex flex-col justify-between p-4 pb-8 z-10 pointer-events-none">
+						<div className="flex justify-between items-start">
+							{/* Placeholder for header controls */}
+							<div className="w-8 h-8" />
+							<div className="w-8 h-8" />
+						</div>
+
+						{variant === 'feed' && (
+							<div className="flex items-end gap-4">
+								<div className="flex-1 space-y-4">
+									<div className="flex items-center gap-2">
+										<div className="w-9 h-9 rounded-full bg-white/10" />
+										<div className="h-4 w-24 bg-white/10 rounded" />
+									</div>
+									<div className="space-y-2">
+										<div className="h-4 w-3/4 bg-white/10 rounded" />
+										<div className="h-4 w-1/2 bg-white/10 rounded" />
+									</div>
+								</div>
+							</div>
+						)}
+					</div>
+				</div>
+			</div>
+		);
+	}
+
 	return (
 		<div className="relative h-full w-full flex justify-center snap-start shrink-0 overflow-hidden">
 			<div className="flex h-full items-end justify-center w-full">
@@ -290,7 +332,7 @@ export const ShortsPlayer = ({ video, isActive, toggleMute, isMuted, onCommentCl
 					{/* Progress Bar */}
 					<div
 						ref={progressContainerRef}
-						className="absolute bottom-0 left-0 w-full h-5 z-20 cursor-pointer flex items-end group touch-none pb-[1px]"
+						className="absolute bottom-0 left-0 w-full h-5 z-20 cursor-pointer flex items-end group touch-none pb-px"
 						onMouseDown={(e) => {
 							setIsDragging(true);
 							handleSeek(e.clientX);
@@ -356,10 +398,14 @@ export const ShortsPlayer = ({ video, isActive, toggleMute, isMuted, onCommentCl
 						)}
 					</div>
 				</div>
-
-				{/* Desktop Actions (Right Side) */}
-				{variant === 'feed' && <ActionButtons className="hidden md:flex ml-4 pb-12" />}
 			</div>
+
+			{/* Desktop Side Actions - Only show in 'feed' variant */}
+			{variant === 'feed' && (
+				<div className="hidden md:flex flex-col justify-end pb-4 pl-4 z-20">
+					<ActionButtons />
+				</div>
+			)}
 		</div>
 	);
 };

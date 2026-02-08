@@ -20,7 +20,7 @@ const SearchResultCard = ({ video }: SearchResultCardProps) => {
 	return (
 		<div className="flex flex-col md:flex-row gap-4 w-full group">
 			{/* Thumbnail Container */}
-			<Link href={`/watch/${video.id}`} className="relative shrink-0 w-full md:w-[360px] aspect-video rounded-xl overflow-hidden">
+			<Link href={video.isShort ? `/shorts/${video.id}` : `/watch/${video.id}`} className="relative shrink-0 w-full md:w-[360px] aspect-video rounded-xl overflow-hidden">
 				<Image
 					src={video.thumbnail || '/images/no-thumbnail.jpg'}
 					alt={video.title}
@@ -39,7 +39,7 @@ const SearchResultCard = ({ video }: SearchResultCardProps) => {
 
 			{/* Info */}
 			<div className="flex flex-col flex-1 gap-1 min-w-0">
-				<Link href={`/watch/${video.id}`}>
+				<Link href={video.isShort ? `/shorts/${video.id}` : `/watch/${video.id}`}>
 					<h3 className="font-normal text-lg leading-tight line-clamp-2 group-hover:text-primary transition-colors">{video.title}</h3>
 				</Link>
 

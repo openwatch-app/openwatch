@@ -99,18 +99,10 @@ const CollapsedSidebarContent = () => {
 };
 
 export const Sidebar = () => {
-	const { isSidebarOpen, toggleSidebar } = useAppStore();
+	const { isSidebarOpen } = useAppStore();
 
 	return (
 		<>
-			{/* Mobile Overlay Sidebar */}
-			{isSidebarOpen && <div className="fixed inset-0 z-50 bg-black/50 md:hidden" onClick={toggleSidebar} />}
-			<aside
-				className={cn('fixed left-0 top-14 bottom-0 w-60 bg-background z-50 md:hidden transition-transform duration-300 flex flex-col', isSidebarOpen ? 'translate-x-0' : '-translate-x-full')}
-			>
-				<ExpandedSidebarContent />
-			</aside>
-
 			{/* Desktop Sidebar (Expanded) */}
 			<aside className={cn('fixed left-0 top-14 bottom-0 w-60 bg-background z-40 hidden flex-col', isSidebarOpen ? 'md:flex' : 'md:hidden')}>
 				<ExpandedSidebarContent />

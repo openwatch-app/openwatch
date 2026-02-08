@@ -224,11 +224,11 @@ const Page = () => {
 	}
 
 	return (
-		<div className="flex flex-col lg:flex-row gap-6 p-6 max-w-[1800px] mx-auto">
+		<div className="flex flex-col lg:flex-row gap-6 p-0 lg:p-6 max-w-[1800px] mx-auto">
 			{/* Main Content */}
 			<div className="flex-1 min-w-0">
 				{/* Video Player */}
-				<div className="aspect-video bg-black rounded-xl overflow-hidden mb-4 relative group">
+				<div className="aspect-video bg-black rounded-none lg:rounded-xl overflow-hidden mb-0 lg:mb-4 relative group">
 					<VideoPlayer
 						videoId={id}
 						videoUrl={video.videoUrl}
@@ -243,141 +243,137 @@ const Page = () => {
 					</VideoPlayer>
 				</div>
 
-				{/* Title */}
-				<h1 className="text-xl font-bold mb-2">{video.title}</h1>
+				<div className="p-4 lg:p-0">
+					{/* Title */}
+					<h1 className="text-xl font-bold mb-2">{video.title}</h1>
 
-				{/* Channel & Actions */}
-				<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
-					<div className="flex items-center gap-3">
-						<Avatar className="h-10 w-10 cursor-pointer" onClick={() => router.push(`/channel/${video.channel.handle || video.channel.id}`)}>
-							<AvatarImage src={video.channel.avatar} />
-							<AvatarFallback>{video.channel.name[0]}</AvatarFallback>
-						</Avatar>
-						<div>
-							<h3 className="font-semibold cursor-pointer hover:text-foreground/80" onClick={() => router.push(`/channel/${video.channel.handle || video.channel.id}`)}>
-								{video.channel.name}
-							</h3>
-							<p className="text-xs text-muted-foreground">
-								{video.channel.subscribers} subscribers
-								{video.isExternal && <span className="ml-1">(from original instance)</span>}
-							</p>
-						</div>
-						{!isOwner &&
-							(video.isExternal ? (
-								<Button disabled variant="secondary" className="ml-4 rounded-full opacity-70 cursor-not-allowed">
-									Subscribe
-								</Button>
-							) : (
-								<SubscribeButton
-									channelId={video.channel.id}
-									initialIsSubscribed={video.channel.isSubscribed}
-									initialNotify={video.channel.notify}
-									className="ml-4"
-									onSubscriptionChange={(subscribed) => {
-										setVideo((prev) => {
-											if (!prev) return null;
-											const currentCount = parseInt(prev.channel.subscribers || '0');
-											const newCount = subscribed ? currentCount + 1 : Math.max(0, currentCount - 1);
-
-											return {
-												...prev,
-												channel: {
-													...prev.channel,
-													isSubscribed: subscribed,
-													subscribers: newCount.toString()
-												}
-											};
-										});
-									}}
-								/>
-							))}
-					</div>
-
-					<div className="flex flex-col items-end sm:items-start gap-1">
-						<div className="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0">
-							<div className="flex items-center bg-secondary rounded-full">
-								<Button
-									variant="ghost"
-									disabled={video.isExternal}
-									className={cn(
-										'rounded-r-none px-4 border-r border-border/50 gap-2 hover:bg-secondary/80',
-										video.userReaction === 'LIKE' && 'text-primary',
-										video.isExternal && 'cursor-not-allowed opacity-70'
-									)}
-									onClick={() => handleReaction('LIKE')}
-									title={video.isExternal ? 'Likes from original instance (interactions disabled)' : undefined}
-								>
-									<ThumbsUp className={cn('h-4 w-4', video.userReaction === 'LIKE' && 'fill-current')} />
-									<span>{video.likes || 'Like'}</span>
-								</Button>
-								<Button
-									variant="ghost"
-									disabled={video.isExternal}
-									className={cn(
-										'rounded-r-full px-4 hover:bg-secondary/80 gap-2',
-										video.userReaction === 'DISLIKE' && 'text-primary',
-										video.isExternal && 'cursor-not-allowed opacity-70'
-									)}
-									onClick={() => handleReaction('DISLIKE')}
-									title={video.isExternal ? 'Dislikes from original instance (interactions disabled)' : undefined}
-								>
-									<ThumbsDown className={cn('h-4 w-4', video.userReaction === 'DISLIKE' && 'fill-current')} />
-									<span>{video.dislikes || '0'}</span>
-								</Button>
+					{/* Channel & Actions */}
+					<div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-4">
+						<div className="flex items-center gap-3 flex-1 min-w-0">
+							<Avatar className="h-10 w-10 shrink-0 cursor-pointer" onClick={() => router.push(`/channel/${video.channel.handle || video.channel.id}`)}>
+								<AvatarImage src={video.channel.avatar} />
+								<AvatarFallback>{video.channel.name[0]}</AvatarFallback>
+							</Avatar>
+							<div className="min-w-0 flex-1">
+								<h3 className="font-semibold cursor-pointer hover:text-foreground/80 truncate" onClick={() => router.push(`/channel/${video.channel.handle || video.channel.id}`)}>
+									{video.channel.name}
+								</h3>
+								<p className="text-xs text-muted-foreground truncate">{video.channel.subscribers} subscribers</p>
 							</div>
+							{!isOwner &&
+								(video.isExternal ? (
+									<Button disabled variant="secondary" className="ml-4 rounded-full opacity-70 cursor-not-allowed shrink-0">
+										Subscribe
+									</Button>
+								) : (
+									<SubscribeButton
+										channelId={video.channel.id}
+										initialIsSubscribed={video.channel.isSubscribed}
+										initialNotify={video.channel.notify}
+										className="ml-4 shrink-0"
+										onSubscriptionChange={(subscribed) => {
+											setVideo((prev) => {
+												if (!prev) return null;
+												const currentCount = parseInt(prev.channel.subscribers || '0');
+												const newCount = subscribed ? currentCount + 1 : Math.max(0, currentCount - 1);
 
-							<Button variant="secondary" className="rounded-full gap-2" onClick={handleShare}>
-								{isCopied ? <Check className="h-4 w-4" /> : <Share2 className="h-4 w-4" />}
-								<span>{isCopied ? 'Copied' : 'Share'}</span>
-							</Button>
+												return {
+													...prev,
+													channel: {
+														...prev.channel,
+														isSubscribed: subscribed,
+														subscribers: newCount.toString()
+													}
+												};
+											});
+										}}
+									/>
+								))}
+						</div>
 
-							<SaveToPlaylist videoId={id}>
-								<Button variant="secondary" className="rounded-full gap-2">
-									<ListPlus className="h-4 w-4" />
-									<span>Save</span>
+						<div className="flex flex-col items-start sm:items-end gap-1 w-full sm:w-auto">
+							<div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-2 sm:pb-0 no-scrollbar">
+								<div className="flex items-center bg-secondary rounded-full">
+									<Button
+										variant="ghost"
+										disabled={video.isExternal}
+										className={cn(
+											'rounded-r-none px-4 border-r border-white/20 gap-2 hover:bg-secondary/80',
+											video.userReaction === 'LIKE' && 'text-primary',
+											video.isExternal && 'cursor-not-allowed opacity-70'
+										)}
+										onClick={() => handleReaction('LIKE')}
+										title={video.isExternal ? 'Likes from original instance (interactions disabled)' : undefined}
+									>
+										<ThumbsUp className={cn('h-4 w-4', video.userReaction === 'LIKE' && 'fill-current')} />
+										<span>{video.likes || '0'}</span>
+									</Button>
+									<Button
+										variant="ghost"
+										disabled={video.isExternal}
+										className={cn(
+											'rounded-r-full px-4 hover:bg-secondary/80 gap-2',
+											video.userReaction === 'DISLIKE' && 'text-primary',
+											video.isExternal && 'cursor-not-allowed opacity-70'
+										)}
+										onClick={() => handleReaction('DISLIKE')}
+										title={video.isExternal ? 'Dislikes from original instance (interactions disabled)' : undefined}
+									>
+										<ThumbsDown className={cn('h-4 w-4', video.userReaction === 'DISLIKE' && 'fill-current')} />
+										<span>{video.dislikes || '0'}</span>
+									</Button>
+								</div>
+
+								<Button variant="secondary" className="rounded-full gap-2" onClick={handleShare}>
+									{isCopied ? <Check className="h-4 w-4" /> : <Share2 className="h-4 w-4" />}
+									<span>{isCopied ? 'Copied' : 'Share'}</span>
 								</Button>
-							</SaveToPlaylist>
-						</div>
-						{video.isExternal && <span className="text-[10px] text-muted-foreground px-1">(Likes/Dislikes from original instance)</span>}
-					</div>
-				</div>
 
-				{/* Description */}
-				<div
-					className={cn('bg-secondary/50 rounded-xl p-3 text-sm mb-6 hover:bg-secondary/70 transition-colors relative', !isDescriptionExpanded && 'cursor-pointer')}
-					onClick={() => !isDescriptionExpanded && setIsDescriptionExpanded(true)}
-				>
-					<div className="font-medium mb-1 flex items-center gap-2">
-						<span>
-							{video.views} views {video.isExternal && <span className="text-xs text-muted-foreground font-normal">(from original instance)</span>}
-						</span>
-						<span>•</span>
-						<span>{dayjs(video.uploadedAt).fromNow()}</span>
-					</div>
-					<div className="whitespace-pre-wrap text-muted-foreground">
-						{isDescriptionExpanded
-							? video.description || 'No description provided.'
-							: (video.description?.slice(0, 10) || 'No description provided.') + (video.description && video.description.length > 150 ? '...' : '')}
-					</div>
-					{video.description && video.description.length > 10 && (
-						<div
-							className="mt-2 font-medium cursor-pointer w-fit"
-							onClick={(e) => {
-								e.stopPropagation();
-								setIsDescriptionExpanded(!isDescriptionExpanded);
-							}}
-						>
-							{isDescriptionExpanded ? 'Show less' : '...more'}
+								<SaveToPlaylist videoId={id}>
+									<Button variant="secondary" className="rounded-full gap-2">
+										<ListPlus className="h-4 w-4" />
+										<span>Save</span>
+									</Button>
+								</SaveToPlaylist>
+							</div>
 						</div>
-					)}
-				</div>
+					</div>
 
-				{/* Comments Section */}
-				<CommentSection videoId={id} videoOwnerId={video.channel.id} currentUserId={session?.user?.id} />
+					{/* Description */}
+					<div
+						className={cn('bg-secondary/50 rounded-xl p-3 text-sm mb-6 hover:bg-secondary/70 transition-colors relative', !isDescriptionExpanded && 'cursor-pointer')}
+						onClick={() => !isDescriptionExpanded && setIsDescriptionExpanded(true)}
+					>
+						<div className="font-medium mb-1 flex items-center gap-2">
+							<span>{video.views} views</span>
+							<span>•</span>
+							<span>{dayjs(video.uploadedAt).fromNow()}</span>
+						</div>
+						<div className="whitespace-pre-wrap text-muted-foreground">
+							{isDescriptionExpanded
+								? video.description || 'No description provided.'
+								: (video.description?.slice(0, 10) || 'No description provided.') + (video.description && video.description.length > 150 ? '...' : '')}
+						</div>
+						{video.description && video.description.length > 10 && (
+							<div
+								className="mt-2 font-medium cursor-pointer w-fit"
+								onClick={(e) => {
+									e.stopPropagation();
+									setIsDescriptionExpanded(!isDescriptionExpanded);
+								}}
+							>
+								{isDescriptionExpanded ? 'Show less' : '...more'}
+							</div>
+						)}
+					</div>
+
+					{/* Comments Section */}
+					<CommentSection videoId={id} videoOwnerId={video.channel.id} currentUserId={session?.user?.id} />
+				</div>
 			</div>
 
 			{/* Sidebar Recommendations */}
-			<div className="lg:w-[400px] shrink-0">
+			<div className="lg:w-[400px] shrink-0 p-4 lg:p-0">
 				{playlist && (
 					<div className="mb-4">
 						<PlaylistSidebar

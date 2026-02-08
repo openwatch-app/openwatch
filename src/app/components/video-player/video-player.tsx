@@ -1,6 +1,6 @@
 'use client';
 
-import { Play, Pause, Volume2, VolumeX, Volume1, Settings, Maximize, Minimize, PictureInPicture, Check, Volume } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX, Volume1, Settings, Maximize, Minimize, PictureInPicture, Check, Volume, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Button } from '~components/button';
 import { useAppStore } from '~lib/store';
@@ -50,10 +50,26 @@ export const VideoPlayer = ({ videoId, videoUrl, autoPlay = false, initialTime =
 	const [currentLevel, setCurrentLevel] = useState(-1); // -1 = Auto
 	const [playbackRate, setPlaybackRate] = useState(1);
 	const [isProcessing, setIsProcessing] = useState(false);
+	const [seekOverlay, setSeekOverlay] = useState<'left' | 'right' | null>(null);
 
 	const lastSavedTimeRef = useRef(initialTime);
 	const hasInitialSeeked = useRef(false);
 	const hasMarkedCompleted = useRef(false);
+	const lastTapRef = useRef<{ time: number; x: number } | null>(null);
+	const seekOverlayTimeoutRef = useRef<NodeJS.Timeout>(null);
+
+	useEffect(() => {
+		return () => {
+			if (controlsTimeoutRef.current) {
+				clearTimeout(controlsTimeoutRef.current);
+				controlsTimeoutRef.current = null;
+			}
+			if (seekOverlayTimeoutRef.current) {
+				clearTimeout(seekOverlayTimeoutRef.current);
+				seekOverlayTimeoutRef.current = null;
+			}
+		};
+	}, []);
 
 	const saveProgress = useCallback(
 		async (time: number, completed: boolean = false) => {
@@ -323,15 +339,44 @@ export const VideoPlayer = ({ videoId, videoUrl, autoPlay = false, initialTime =
 		}
 	};
 
-	const toggleFullscreen = () => {
-		if (!containerRef.current) return;
+	// Handle fullscreen changes and orientation
+	useEffect(() => {
+		const handleFullscreenChange = () => {
+			const isFs = !!document.fullscreenElement;
+			setIsFullscreen(isFs);
+			if (!isFs && screen.orientation && 'unlock' in screen.orientation) {
+				try {
+					(screen.orientation as any).unlock();
+				} catch (e) {
+					// Ignore errors
+				}
+			}
+		};
 
-		if (!document.fullscreenElement) {
-			containerRef.current.requestFullscreen();
-			setIsFullscreen(true);
-		} else {
-			document.exitFullscreen();
-			setIsFullscreen(false);
+		document.addEventListener('fullscreenchange', handleFullscreenChange);
+		return () => {
+			document.removeEventListener('fullscreenchange', handleFullscreenChange);
+		};
+	}, []);
+
+	const toggleFullscreen = async () => {
+		try {
+			if (!isFullscreen) {
+				if (containerRef.current) {
+					await containerRef.current.requestFullscreen();
+					if (screen.orientation && 'lock' in screen.orientation) {
+						try {
+							await (screen.orientation as any).lock('landscape');
+						} catch (e) {
+							// Ignore errors
+						}
+					}
+				}
+			} else {
+				await document.exitFullscreen();
+			}
+		} catch (error) {
+			console.error('Fullscreen error:', error);
 		}
 	};
 
@@ -378,17 +423,88 @@ export const VideoPlayer = ({ videoId, videoUrl, autoPlay = false, initialTime =
 		setShowControls(true);
 		if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
 		controlsTimeoutRef.current = setTimeout(() => {
-			if (isPlaying) setShowControls(false);
+			setShowControls(false);
 		}, 3000);
 	};
 
+	const handleSeekRelative = (seconds: number) => {
+		if (videoRef.current) {
+			const newTime = Math.max(0, Math.min(duration, currentTime + seconds));
+			videoRef.current.currentTime = newTime;
+			setCurrentTime(newTime);
+			hasMarkedCompleted.current = false;
+		}
+	};
+
+	const handleTap = (e: React.MouseEvent<HTMLDivElement>) => {
+		const rect = e.currentTarget.getBoundingClientRect();
+		const x = e.clientX - rect.left;
+		const width = rect.width;
+		const percent = x / width;
+		const now = Date.now();
+
+		// Double Tap Logic
+		if (lastTapRef.current && now - lastTapRef.current.time < 300) {
+			const lastPercent = lastTapRef.current.x / width;
+
+			// Left side (< 30%)
+			if (percent < 0.3 && lastPercent < 0.3) {
+				handleSeekRelative(-10);
+				setSeekOverlay('left');
+				if (seekOverlayTimeoutRef.current) clearTimeout(seekOverlayTimeoutRef.current);
+				seekOverlayTimeoutRef.current = setTimeout(() => setSeekOverlay(null), 1000);
+				lastTapRef.current = null;
+				return;
+			}
+
+			// Right side (> 70%)
+			if (percent > 0.7 && lastPercent > 0.7) {
+				handleSeekRelative(10);
+				setSeekOverlay('right');
+				if (seekOverlayTimeoutRef.current) clearTimeout(seekOverlayTimeoutRef.current);
+				seekOverlayTimeoutRef.current = setTimeout(() => setSeekOverlay(null), 1000);
+				lastTapRef.current = null;
+				return;
+			}
+
+			// Center (30-70%) - Double tap for fullscreen
+			if (percent >= 0.3 && percent <= 0.7 && lastPercent >= 0.3 && lastPercent <= 0.7) {
+				toggleFullscreen();
+				lastTapRef.current = null;
+				return;
+			}
+		}
+
+		lastTapRef.current = { time: now, x };
+
+		// Single Tap Logic
+
+		// If controls are hidden, first tap just shows them
+		if (!showControls) {
+			setShowControls(true);
+			if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
+			controlsTimeoutRef.current = setTimeout(() => {
+				setShowControls(false);
+			}, 3000);
+			return;
+		}
+
+		// Center: Toggle Play/Pause
+		if (percent >= 0.3 && percent <= 0.7) {
+			togglePlay();
+			// Keep controls visible for a moment after interaction
+			if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
+			controlsTimeoutRef.current = setTimeout(() => {
+				setShowControls(false);
+			}, 3000);
+		} else {
+			// Sides: Hide Controls
+			setShowControls(false);
+		}
+	};
+
 	return (
-		<div
-			ref={containerRef}
-			className="relative w-full aspect-video bg-black group overflow-hidden select-none"
-			onMouseMove={handleMouseMove}
-			onMouseLeave={() => isPlaying && setShowControls(false)}
-		>
+		<div ref={containerRef} className="relative w-full aspect-video bg-black group select-none" onMouseMove={handleMouseMove} onMouseLeave={() => setShowControls(false)}>
 			<video
 				ref={videoRef}
 				className="w-full h-full object-contain"
@@ -396,13 +512,39 @@ export const VideoPlayer = ({ videoId, videoUrl, autoPlay = false, initialTime =
 				onPause={() => setIsPlaying(false)}
 				onTimeUpdate={handleTimeUpdate}
 				onLoadedMetadata={handleLoadedMetadata}
-				onClick={togglePlay}
-				onDoubleClick={toggleFullscreen}
 				onEnded={() => {
 					setIsPlaying(false);
 					onEnded?.();
 				}}
 			/>
+
+			{/* Interaction Overlay */}
+			<div className="absolute inset-0 z-10" onClick={handleTap} />
+
+			{/* Seek Feedback Overlays */}
+			{seekOverlay === 'left' && (
+				<div className="absolute left-0 top-0 bottom-0 w-1/3 z-20 flex flex-col items-center justify-center bg-white/10 backdrop-blur-[2px] rounded-r-full animate-in fade-in zoom-in duration-200">
+					<div className="flex flex-col items-center gap-2">
+						<ChevronsLeft className="w-12 h-12 text-white" />
+						<span className="text-white font-medium text-sm">10 seconds</span>
+					</div>
+				</div>
+			)}
+			{seekOverlay === 'right' && (
+				<div className="absolute right-0 top-0 bottom-0 w-1/3 z-20 flex flex-col items-center justify-center bg-white/10 backdrop-blur-[2px] rounded-l-full animate-in fade-in zoom-in duration-200">
+					<div className="flex flex-col items-center gap-2">
+						<ChevronsRight className="w-12 h-12 text-white" />
+						<span className="text-white font-medium text-sm">10 seconds</span>
+					</div>
+				</div>
+			)}
+
+			{/* Center Play/Pause Button */}
+			<div className={cn('absolute inset-0 z-10 flex items-center justify-center pointer-events-none transition-opacity duration-300', showControls ? 'opacity-100' : 'opacity-0')}>
+				<div className="bg-black/50 w-14 h-14 rounded-full backdrop-blur-sm flex items-center justify-center">
+					{isPlaying ? <Pause className="w-8 h-8 text-white fill-white" /> : <Play className="w-8 h-8 text-white fill-white ml-1" />}
+				</div>
+			</div>
 
 			{/* Custom Overlay Children (e.g. Up Next) */}
 			{children}
@@ -430,7 +572,7 @@ export const VideoPlayer = ({ videoId, videoUrl, autoPlay = false, initialTime =
 			/>
 
 			{/* Controls Container */}
-			<div className={cn('absolute bottom-0 left-0 right-0 px-4 pb-4 pt-10 flex flex-col gap-2 transition-opacity duration-300', showControls ? 'opacity-100' : 'opacity-0')}>
+			<div className={cn('absolute bottom-0 left-0 right-0 px-4 pb-4 pt-10 flex flex-col gap-2 transition-opacity duration-300 z-30', showControls ? 'opacity-100' : 'opacity-0')}>
 				{/* Progress Bar */}
 				<div className="relative h-1 group/slider cursor-pointer flex items-center mb-2">
 					{/* Background */}
@@ -482,7 +624,7 @@ export const VideoPlayer = ({ videoId, videoUrl, autoPlay = false, initialTime =
 					{/* Right Controls */}
 					<div className="flex items-center gap-2">
 						{showAutoplayToggle && (
-							<div className="flex items-center gap-2 mr-2 group/autoplay relative">
+							<div className="hidden md:flex items-center gap-2 mr-2 group/autoplay relative">
 								<label className="relative inline-flex items-center cursor-pointer">
 									<input type="checkbox" className="sr-only peer" checked={!!autoplayEnabled} onChange={(e) => onAutoplayChange?.(e.target.checked)} />
 									<div className="w-9 h-5 bg-white/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-orange-600"></div>
@@ -502,7 +644,30 @@ export const VideoPlayer = ({ videoId, videoUrl, autoPlay = false, initialTime =
 									{currentLevel !== -1 && <span className="absolute -top-0.5 -right-0.5 bg-orange-600 text-[10px] px-0.5 rounded-sm leading-tight">HD</span>}
 								</Button>
 							</DropdownMenuTrigger>
-							<DropdownMenuContent side="top" align="end" className="w-64 bg-[#0f0f0f]/95 border-white/10 text-white backdrop-blur-md p-1.5 shadow-xl rounded-xl">
+							<DropdownMenuContent
+								container={isFullscreen ? containerRef.current : null}
+								side="top"
+								align="end"
+								className="w-64 bg-[#0f0f0f]/95 border-white/10 text-white backdrop-blur-md p-1.5 shadow-xl rounded-xl"
+							>
+								{showAutoplayToggle && (
+									<DropdownMenuItem
+										className="md:hidden flex items-center gap-3 px-3 py-2.5 text-sm hover:bg-white/10 focus:bg-white/10 cursor-pointer rounded-lg transition-colors outline-none"
+										onClick={(e) => {
+											e.preventDefault();
+											onAutoplayChange?.(!autoplayEnabled);
+										}}
+									>
+										<div className="flex items-center gap-2 w-full">
+											<span>Autoplay</span>
+											<div className="ml-auto relative inline-flex items-center cursor-pointer pointer-events-none">
+												<div className={cn('w-9 h-5 bg-white/20 rounded-full transition-colors', autoplayEnabled && 'bg-orange-600')}>
+													<div className={cn('absolute top-[2px] left-[2px] bg-white rounded-full h-4 w-4 transition-transform', autoplayEnabled && 'translate-x-full')} />
+												</div>
+											</div>
+										</div>
+									</DropdownMenuItem>
+								)}
 								<DropdownMenuSub>
 									<DropdownMenuSubTrigger className="flex items-center gap-3 px-3 py-2.5 text-sm hover:bg-white/10 focus:bg-white/10 cursor-pointer rounded-lg transition-colors outline-none">
 										<div className="flex items-center gap-2 w-full">
@@ -510,7 +675,7 @@ export const VideoPlayer = ({ videoId, videoUrl, autoPlay = false, initialTime =
 											<span className="text-white/50 text-sm ml-auto">{playbackRate === 1 ? 'Normal' : `${playbackRate}x`}</span>
 										</div>
 									</DropdownMenuSubTrigger>
-									<DropdownMenuPortal>
+									<DropdownMenuPortal container={isFullscreen ? containerRef.current : null}>
 										<DropdownMenuSubContent className="w-48 bg-[#0f0f0f]/95 border-white/10 text-white backdrop-blur-md p-1.5 shadow-xl rounded-xl max-h-[300px] overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
 											{speeds.map((speed) => (
 												<DropdownMenuItem
@@ -535,7 +700,7 @@ export const VideoPlayer = ({ videoId, videoUrl, autoPlay = false, initialTime =
 											</span>
 										</div>
 									</DropdownMenuSubTrigger>
-									<DropdownMenuPortal>
+									<DropdownMenuPortal container={isFullscreen ? containerRef.current : null}>
 										<DropdownMenuSubContent className="w-48 bg-[#0f0f0f]/95 border-white/10 text-white backdrop-blur-md p-1.5 shadow-xl rounded-xl max-h-[300px] overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
 											<DropdownMenuItem
 												className="flex items-center gap-3 px-3 py-2.5 text-sm hover:bg-white/10 focus:bg-white/10 cursor-pointer rounded-lg transition-colors outline-none"

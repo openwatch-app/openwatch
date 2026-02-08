@@ -25,6 +25,7 @@ const ShortsFeedPage = () => {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const [showComments, setShowComments] = useState(false);
 	const [isMobile, setIsMobile] = useState(false);
+	const isFetchingRef = useRef(false);
 
 	// Check if mobile
 	useEffect(() => {
@@ -62,22 +63,31 @@ const ShortsFeedPage = () => {
 
 	// Infinite scroll loading
 	const loadMore = useCallback(async () => {
+		if (isFetchingRef.current) return;
+		isFetchingRef.current = true;
 		try {
 			// Fetch more shorts
-			const feedRes = await axios.get(`/api/shorts?limit=5`);
+			const excludeIds = videos
+				.slice(-20)
+				.map((v) => v.id)
+				.join(',');
+			const feedRes = await axios.get(`/api/shorts?limit=5&exclude=${excludeIds}`);
 			const newVideos = feedRes.data;
 
 			if (newVideos.length > 0) {
 				setVideos((prev) => {
 					const existingIds = new Set(prev.map((v) => v.id));
 					const uniqueNewVideos = newVideos.filter((v: Video) => !existingIds.has(v.id));
+					if (uniqueNewVideos.length === 0) return prev;
 					return [...prev, ...uniqueNewVideos];
 				});
 			}
 		} catch (error) {
 			console.error(error);
+		} finally {
+			isFetchingRef.current = false;
 		}
-	}, []);
+	}, [videos]);
 
 	// Scroll handling (Intersection Observer)
 	useEffect(() => {
@@ -118,20 +128,21 @@ const ShortsFeedPage = () => {
 
 	if (loading) {
 		return (
-			<div className="flex h-[calc(100vh-64px)] items-center justify-center bg-black">
+			<div className="flex md:h-[calc(100vh-64px)] h-[calc(100dvh-120px)] items-center justify-center bg-black">
 				<Loader2 className="h-8 w-8 animate-spin text-white" />
 			</div>
 		);
 	}
 
 	return (
-		<div className="flex h-[calc(100vh-64px)] bg-black overflow-hidden relative justify-center">
-			<div ref={containerRef} className="flex-1 h-full overflow-y-scroll snap-y snap-mandatory scrollbar-hide">
+		<div className="flex h-[calc(100dvh-120px)] md:h-[calc(100vh-64px)] bg-black overflow-hidden relative justify-center w-full z-0">
+			<div ref={containerRef} className="flex-1 h-full overflow-y-scroll snap-y snap-mandatory scrollbar-hide w-full max-w-full">
 				{videos.map((video, index) => (
-					<div key={video.id} data-index={index} className="h-full w-full snap-start flex justify-center">
+					<div key={video.id} data-index={index} className="h-full w-full snap-start flex justify-center overflow-hidden">
 						<ShortsPlayer
 							video={video}
 							isActive={index === activeIndex}
+							shouldLoad={Math.abs(index - activeIndex) <= 1}
 							isMuted={isMuted}
 							toggleMute={() => setIsMuted(!isMuted)}
 							onCommentClick={() => setShowComments((prev) => !prev)}
@@ -159,7 +170,7 @@ const ShortsFeedPage = () => {
 			{isMobile && (
 				<div className="md:hidden">
 					<Sheet open={showComments} onOpenChange={setShowComments}>
-						<SheetContent side="bottom" showCloseButton={false} className="h-[60vh] p-0 bg-background text-foreground border-t border-border z-60 rounded-t-xl flex flex-col">
+						<SheetContent side="bottom" showCloseButton={false} className="h-[60vh] p-0 bg-background text-foreground border-t border-border z-60 rounded-t-xl flex flex-col mb-16">
 							<SheetHeader className="sr-only">
 								<SheetTitle>Comments</SheetTitle>
 							</SheetHeader>

@@ -80,7 +80,7 @@ const ChannelPage = () => {
 
 	return (
 		<div className="flex flex-col w-full min-h-screen bg-background">
-			<div className="max-w-[1284px] mx-auto w-full px-10 sm:px-12 lg:px-16 pt-4">
+			<div className="max-w-[1284px] mx-auto w-full px-4 sm:px-12 lg:px-16 pt-4">
 				{/* Banner */}
 				{channel.banner && (
 					<div className="w-full aspect-6/1 min-h-[100px] max-h-[212px] relative overflow-hidden rounded-xl">
@@ -89,18 +89,18 @@ const ChannelPage = () => {
 				)}
 
 				{/* Header Section */}
-				<div className="flex flex-col md:flex-row items-center md:items-start gap-6 py-8">
+				<div className="flex flex-col md:flex-row items-center md:items-start gap-4 md:gap-6 py-6 md:py-8">
 					{/* Avatar */}
 					<div className="shrink-0">
-						<Avatar className="h-32 w-32 md:h-40 md:w-40 border-4 border-background shadow-sm">
+						<Avatar className="h-20 w-20 md:h-40 md:w-40 border-4 border-background shadow-sm">
 							<AvatarImage src={channel.avatar} />
-							<AvatarFallback className="text-5xl">{channel.name[0]}</AvatarFallback>
+							<AvatarFallback className="text-3xl md:text-5xl">{channel.name[0]}</AvatarFallback>
 						</Avatar>
 					</div>
 
 					{/* Channel Info */}
 					<div className="flex flex-col flex-1 items-center md:items-start text-center md:text-left gap-2 min-w-0 pt-2">
-						<h1 className="text-3xl font-bold">{channel.name}</h1>
+						<h1 className="text-2xl md:text-3xl font-bold">{channel.name}</h1>
 
 						<div className="flex flex-wrap items-center justify-center md:justify-start gap-x-2 text-sm text-muted-foreground">
 							<span className="font-medium text-foreground">{channel.handle}</span>
@@ -121,17 +121,17 @@ const ChannelPage = () => {
 						</div>
 
 						{/* Buttons */}
-						<div className="flex flex-wrap gap-2 mt-3">
+						<div className="flex flex-wrap justify-center md:justify-start gap-2 mt-3 w-full md:w-auto">
 							{channel.isExternal ? (
 								<Button disabled variant="secondary" className="h-9 opacity-70 cursor-not-allowed">
 									Subscribing disabled
 								</Button>
 							) : isOwner ? (
 								<>
-									<Button variant="secondary" className="font-medium" onClick={() => router.push('/studio/customization')}>
+									<Button variant="secondary" className="font-medium flex-1 sm:flex-none" onClick={() => router.push('/studio/customization')}>
 										Customize channel
 									</Button>
-									<Button variant="secondary" className="font-medium" onClick={() => router.push('/studio')}>
+									<Button variant="secondary" className="font-medium flex-1 sm:flex-none" onClick={() => router.push('/studio')}>
 										Manage videos
 									</Button>
 								</>
@@ -140,7 +140,7 @@ const ChannelPage = () => {
 									channelId={channel.id}
 									initialIsSubscribed={channel.isSubscribed}
 									initialNotify={channel.notify}
-									className="h-9"
+									className="h-9 w-full sm:w-auto px-6"
 									onSubscriptionChange={(subscribed) => {
 										setChannel((prev) => {
 											if (!prev) return null;
@@ -162,7 +162,7 @@ const ChannelPage = () => {
 				{/* Videos Grid */}
 				<div className="mt-4">
 					<Tabs defaultValue="videos" value={activeTab} onValueChange={setActiveTab} className="w-full">
-						<TabsList className="w-full justify-start border-b border-border/40 rounded-none h-auto p-0 bg-transparent gap-8">
+						<TabsList className="w-full justify-start border-b border-border/40 rounded-none h-auto p-0 bg-transparent gap-4 md:gap-8 overflow-x-auto scrollbar-hide">
 							<TabsTrigger
 								value="videos"
 								className="rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent px-0 py-3 font-semibold text-muted-foreground data-[state=active]:text-foreground shadow-none transition-colors text-sm tracking-wide"
@@ -200,14 +200,14 @@ const ChannelPage = () => {
 							<div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4 pb-10">
 								{shortVideos.map((video) => (
 									<div key={video.id} className="relative group">
-										<a href={`/shorts/${video.id}`} className="block aspect-[9/16] relative rounded-xl overflow-hidden">
+										<a href={`/shorts/${video.id}`} className="block aspect-9/16 relative rounded-xl overflow-hidden">
 											<Image
 												src={video.thumbnail || '/images/no-thumbnail.jpg'}
 												alt={video.title}
 												fill
 												className="object-cover transition-transform duration-300 group-hover:scale-105"
 											/>
-											<div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+											<div className="absolute inset-0 bg-linear-to-b from-transparent to-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />
 										</a>
 										<div className="mt-2 flex gap-x-2 items-start">
 											<div className="flex-1 min-w-0">
