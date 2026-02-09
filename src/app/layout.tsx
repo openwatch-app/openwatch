@@ -34,7 +34,7 @@ export const viewport: Viewport = {
 const RootLayout = ({ children }: Readonly<{ children: React.ReactNode }>) => {
 	return (
 		<html lang="en" className="dark">
-			<body className={`antialiased`}>
+			<body className={`antialiased overflow-x-hidden`}>
 				{children}
 				<PWARegister />
 			</body>

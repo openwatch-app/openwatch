@@ -13,41 +13,24 @@ import { Input } from './input';
 import Link from 'next/link';
 
 const NavbarContent = () => {
-	const { toggleSidebar } = useAppStore();
-	const { data: session } = authClient.useSession();
+	const { toggleSidebar, searchHistory, addToSearchHistory, removeFromSearchHistory } = useAppStore();
+	const { data: sessionData } = authClient.useSession();
+	const [isMounted, setIsMounted] = useState(false);
+	const session = isMounted ? sessionData : null;
+
+	useEffect(() => {
+		setIsMounted(true);
+	}, []);
 	const [searchInput, setSearchInput] = useState('');
 	const [isFocused, setIsFocused] = useState(false);
 	const searchContainerRef = useRef<HTMLFormElement>(null);
 	const router = useRouter();
 	const searchParams = useSearchParams();
-	const [searchHistory, setSearchHistory] = useState<string[]>([]);
 	const [selectedIndex, setSelectedIndex] = useState(-1);
-
-	useEffect(() => {
-		const saved = localStorage.getItem('search_history');
-		if (saved) {
-			try {
-				setSearchHistory(JSON.parse(saved));
-			} catch (e) {
-				console.error('Failed to parse search history', e);
-			}
-		}
-	}, []);
-
-	const updateHistory = (newHistory: string[]) => {
-		setSearchHistory(newHistory);
-		localStorage.setItem('search_history', JSON.stringify(newHistory));
-	};
-
-	const addToHistory = (query: string) => {
-		const newHistory = [query, ...searchHistory.filter((h) => h !== query)].slice(0, 5);
-		updateHistory(newHistory);
-	};
 
 	const removeFromHistory = (e: React.MouseEvent, item: string) => {
 		e.stopPropagation();
-		const newHistory = searchHistory.filter((h) => h !== item);
-		updateHistory(newHistory);
+		removeFromSearchHistory(item);
 	};
 
 	useEffect(() => {
@@ -72,7 +55,7 @@ const NavbarContent = () => {
 	const handleSearch = (e: React.FormEvent, source: 'local' | 'network' = 'local') => {
 		e.preventDefault();
 		if (searchInput.trim()) {
-			addToHistory(searchInput.trim());
+			addToSearchHistory(searchInput.trim());
 			router.push(`/results?query=${encodeURIComponent(searchInput)}&source=${source}`);
 			setIsFocused(false);
 			setSelectedIndex(-1);
@@ -239,12 +222,12 @@ const NavbarContent = () => {
 						<UserDropdown user={session.user} />
 					</>
 				) : (
-					<Link href="/auth">
-						<Button variant="outline" className="rounded-full">
+					<Button variant="outline" className="rounded-full" asChild>
+						<Link href="/auth">
 							<User className="mr-2 h-5 w-5" />
 							Sign in
-						</Button>
-					</Link>
+						</Link>
+					</Button>
 				)}
 			</div>
 		</nav>

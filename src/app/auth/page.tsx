@@ -1,23 +1,23 @@
 'use client';
 
+import { authClient } from '~app/lib/auth-client';
+import { useRouter } from 'next/navigation';
 import { Button } from '~components/button';
 import { Input } from '~components/input';
 import { Card } from '~components/card';
 import { Video } from 'lucide-react';
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { authClient } from '~app/lib/auth-client';
 
 const AuthPage = () => {
-	const [email, setEmail] = useState('');
 	const [currentView, setCurrentView] = useState<'email' | 'password'>('email');
-	const [password, setPassword] = useState('');
 	const [showPassword, setShowPassword] = useState(false);
-	const [username, setUsername] = useState('');
 	const [isSigningUp, setIsSigningUp] = useState(false);
-	const [loading, setLoading] = useState(false);
 	const [errorMessage, setErrorMessage] = useState('');
+	const [loading, setLoading] = useState(false);
+	const [password, setPassword] = useState('');
+	const [email, setEmail] = useState('');
+	const [name, setName] = useState('');
 	const router = useRouter();
 
 	const isValidEmail = (email: string) => {
@@ -32,10 +32,6 @@ const AuthPage = () => {
 			return;
 		}
 		setCurrentView('password');
-		// We don't change isSigningUp here, it stays as false (default) or whatever was set previously if we navigated back
-		// Actually, if we are just entering email, we assume sign-in flow unless "Create account" was clicked.
-		// But standard flow is: Enter email -> Check if exists -> Password.
-		// Here we just go to password view.
 	};
 
 	const handleCreateAccountClick = (e: React.MouseEvent) => {
@@ -47,10 +43,6 @@ const AuthPage = () => {
 			return;
 		}
 
-		// Reset states for fresh start if needed, but here we just switch view mode if we want to support "Create account" flow.
-		// The design shows "Create account" link.
-		// If clicked, we probably want to start the sign-up flow.
-		// For now, let's assume it leads to the password/username setup screen or toggles a mode.
 		setIsSigningUp(true);
 		setCurrentView('password');
 	};
@@ -62,11 +54,7 @@ const AuthPage = () => {
 
 		try {
 			if (isSigningUp) {
-				const { error: signUpError } = await authClient.signUp.email({
-					name: username,
-					email,
-					password
-				});
+				const { error: signUpError } = await authClient.signUp.email({ name, email, password });
 
 				if (signUpError) {
 					setErrorMessage(signUpError.message || 'An unknown sign-up error occurred.');
@@ -169,9 +157,9 @@ const AuthPage = () => {
 							{isSigningUp && (
 								<Input
 									type="text"
-									placeholder="Username"
-									value={username}
-									onChange={(e) => setUsername(e.target.value)}
+									placeholder="Name"
+									value={name}
+									onChange={(e) => setName(e.target.value)}
 									required
 									className="h-14 w-full rounded-lg border-input bg-background px-4 text-base"
 								/>

@@ -7,6 +7,7 @@ import { cn } from '~lib/utils';
 import { useState, useEffect, useRef } from 'react';
 import { Input } from './input';
 import { Button } from './button';
+import { useAppStore } from '~lib/store';
 
 interface MobileNavItemProps {
 	icon: React.ElementType;
@@ -38,48 +39,25 @@ export const MobileNav = () => {
 	const router = useRouter();
 	const [isSearchOpen, setIsSearchOpen] = useState(false);
 	const [searchInput, setSearchInput] = useState('');
-	const [searchHistory, setSearchHistory] = useState<string[]>([]);
+	const { searchHistory, addToSearchHistory, removeFromSearchHistory } = useAppStore();
 	const inputRef = useRef<HTMLInputElement>(null);
 
 	useEffect(() => {
 		if (isSearchOpen) {
-			try {
-				const saved = localStorage.getItem('search_history');
-				if (saved) {
-					setSearchHistory(JSON.parse(saved));
-				}
-			} catch (e) {
-				console.error('Failed to load search history', e);
-			}
 			// Focus input when search opens
 			setTimeout(() => inputRef.current?.focus(), 100);
 		}
 	}, [isSearchOpen]);
 
-	const updateHistory = (newHistory: string[]) => {
-		setSearchHistory(newHistory);
-		try {
-			localStorage.setItem('search_history', JSON.stringify(newHistory));
-		} catch (e) {
-			console.warn('Failed to save search history', e);
-		}
-	};
-
-	const addToHistory = (query: string) => {
-		const newHistory = [query, ...searchHistory.filter((h) => h !== query)].slice(0, 10);
-		updateHistory(newHistory);
-	};
-
 	const removeFromHistory = (e: React.MouseEvent, item: string) => {
 		e.stopPropagation();
-		const newHistory = searchHistory.filter((h) => h !== item);
-		updateHistory(newHistory);
+		removeFromSearchHistory(item);
 	};
 
 	const handleSearch = (e: React.FormEvent, query: string = searchInput, source: 'local' | 'network' = 'local') => {
 		e.preventDefault();
 		if (query.trim()) {
-			addToHistory(query.trim());
+			addToSearchHistory(query.trim());
 			router.push(`/results?query=${encodeURIComponent(query.trim())}&source=${source}`);
 			setIsSearchOpen(false);
 			setSearchInput('');

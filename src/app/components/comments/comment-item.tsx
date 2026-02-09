@@ -3,15 +3,15 @@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '~components/dropdown-menu';
 import { ThumbsUp, ThumbsDown, MoreVertical, Heart, Pin, ChevronDown, Trash2 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '~components/avatar';
-import { authClient } from '~lib/auth-client';
 import { CommentInput } from './comment-input';
+import { authClient } from '~lib/auth-client';
 import { Button } from '~components/button';
 import { Comment } from '~app/types';
 import { useState } from 'react';
 import { cn } from '~lib/utils';
+import Link from 'next/link';
 import axios from 'axios';
 import dayjs from 'dayjs';
-import Link from 'next/link';
 
 interface CommentItemProps {
 	comment: Comment;
@@ -101,7 +101,7 @@ export const CommentItem = ({ comment, videoId, isVideoOwner, onDelete, onUpdate
 		<div className="w-full">
 			<div className="flex gap-4 group relative">
 				{/* Avatar */}
-				<Link href={`/channel/${comment.user.id}`} className="flex-shrink-0 z-10">
+				<Link href={`/channel/${comment.user.id}`} className="shrink-0 z-10">
 					<Avatar className={cn('h-10 w-10', isReply && 'h-8 w-8')}>
 						<AvatarImage src={comment.user.avatar} />
 						<AvatarFallback>{comment.user.name[0]}</AvatarFallback>
@@ -122,7 +122,7 @@ export const CommentItem = ({ comment, videoId, isVideoOwner, onDelete, onUpdate
 						)}
 					</div>
 
-					<p className="text-sm mb-2 whitespace-pre-wrap break-words">{comment.content}</p>
+					<p className="text-sm mb-2 whitespace-pre-wrap wrap-break-word">{comment.content}</p>
 
 					{/* Action Bar */}
 					<div className="flex items-center gap-2">
@@ -161,7 +161,7 @@ export const CommentItem = ({ comment, videoId, isVideoOwner, onDelete, onUpdate
 										<MoreVertical className="h-4 w-4" />
 									</Button>
 								</DropdownMenuTrigger>
-								<DropdownMenuContent align="end" className="z-[100]">
+								<DropdownMenuContent align="end" className="z-100">
 									{isVideoOwner && (
 										<>
 											<DropdownMenuItem onClick={handlePin}>
@@ -220,7 +220,7 @@ export const CommentItem = ({ comment, videoId, isVideoOwner, onDelete, onUpdate
 							{comment.replies.map((reply) => (
 								<div key={reply.id} className="relative pl-4">
 									{/* The Connector Curve */}
-									<div className="absolute -left-[1.25rem] top-[-0.8rem] w-12 h-8 border-b-2 border-l-2 border-zinc-700/50 rounded-bl-2xl z-0"></div>
+									<div className="absolute -left-5 top-[-0.8rem] w-12 h-8 border-b-2 border-l-2 border-zinc-700/50 rounded-bl-2xl z-0"></div>
 
 									<CommentItem
 										comment={reply}

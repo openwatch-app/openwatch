@@ -9,6 +9,16 @@ interface AppState {
 	setVolume: (volume: number) => void;
 	isMuted: boolean;
 	setIsMuted: (isMuted: boolean) => void;
+	theaterMode: boolean;
+	setTheaterMode: (enabled: boolean) => void;
+	autoplay: boolean;
+	setAutoplay: (enabled: boolean) => void;
+	playbackRate: number;
+	setPlaybackRate: (rate: number) => void;
+	searchHistory: string[];
+	addToSearchHistory: (query: string) => void;
+	removeFromSearchHistory: (query: string) => void;
+	clearSearchHistory: () => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -19,12 +29,36 @@ export const useAppStore = create<AppState>()(
 			setVolume: (volume: number) => set({ volume }),
 			isMuted: false,
 			setIsMuted: (isMuted: boolean) => set({ isMuted }),
+			theaterMode: false,
+			setTheaterMode: (enabled: boolean) => set({ theaterMode: enabled }),
+			autoplay: true,
+			setAutoplay: (enabled: boolean) => set({ autoplay: enabled }),
+			playbackRate: 1,
+			setPlaybackRate: (rate: number) => set({ playbackRate: rate }),
+			searchHistory: [],
+			addToSearchHistory: (query: string) =>
+				set((state) => ({
+					searchHistory: [query, ...state.searchHistory.filter((h) => h !== query)].slice(0, 5)
+				})),
+			removeFromSearchHistory: (query: string) =>
+				set((state) => ({
+					searchHistory: state.searchHistory.filter((h) => h !== query)
+				})),
+			clearSearchHistory: () => set({ searchHistory: [] }),
 			toggleSidebar: () => set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
 			closeSidebar: () => set({ isSidebarOpen: false })
 		}),
 		{
 			name: '@app',
-			partialize: (state) => ({ isSidebarOpen: state.isSidebarOpen, volume: state.volume, isMuted: state.isMuted })
+			partialize: (state) => ({
+				isSidebarOpen: state.isSidebarOpen,
+				volume: state.volume,
+				isMuted: state.isMuted,
+				theaterMode: state.theaterMode,
+				autoplay: state.autoplay,
+				playbackRate: state.playbackRate,
+				searchHistory: state.searchHistory
+			})
 		}
 	)
 );

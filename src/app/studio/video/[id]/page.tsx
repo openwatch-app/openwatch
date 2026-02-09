@@ -249,7 +249,7 @@ const Page = ({ params }: { params: Promise<{ id: string }> }) => {
 						<div className="flex flex-col gap-4">
 							<input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
 							<div
-								className={cn('w-40 border-2 border-primary rounded-lg overflow-hidden relative cursor-pointer group', video.isShort ? 'aspect-[9/16]' : 'aspect-video')}
+								className={cn('w-40 border-2 border-primary rounded-lg overflow-hidden relative cursor-pointer group', video.isShort ? 'aspect-9/16' : 'aspect-video')}
 								onClick={handleThumbnailClick}
 							>
 								<img
@@ -302,7 +302,7 @@ const Page = ({ params }: { params: Promise<{ id: string }> }) => {
 
 					{/* Video Preview */}
 					<div className="bg-card border rounded-lg overflow-hidden">
-						<div className={cn('bg-black relative', video.isShort ? 'aspect-[9/16] max-w-[300px] mx-auto' : 'aspect-video')}>
+						<div className={cn('bg-black relative', video.isShort ? 'aspect-9/16 max-w-[300px] mx-auto' : 'aspect-video')}>
 							{video.isShort ? (
 								<ShortsPlayer video={video} isActive={true} toggleMute={toggleMute} isMuted={isMuted} onCommentClick={() => {}} variant="studio" />
 							) : (

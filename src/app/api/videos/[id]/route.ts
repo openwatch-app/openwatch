@@ -58,7 +58,7 @@ const mapRemoteVideoToResponse = (remoteVideo: any, host: string, uuid: string, 
 		channel: {
 			id: `external:${host}:${remoteVideo.channel.name}`,
 			name: remoteVideo.channel.displayName,
-			handle: remoteVideo.channel.name + '@' + host,
+			handle: `${remoteVideo.channel.name}@${host}`,
 			avatar: resolvePeerTubeAvatar(remoteVideo.channel, remoteVideo.account) ? `https://${host}${resolvePeerTubeAvatar(remoteVideo.channel, remoteVideo.account)}` : null,
 			subscribers: remoteVideo.channel.followersCount?.toString() || '0',
 			verified: false,

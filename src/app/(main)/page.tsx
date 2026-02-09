@@ -1,16 +1,16 @@
 'use client';
 
-import { Video, Category } from '~app/types';
 import VideoCard from '~components/video-card';
+import { Video, Category } from '~app/types';
 import { useEffect, useState } from 'react';
 import { Button } from '~components/button';
-import { cn } from '~lib/utils';
 import { Loader2 } from 'lucide-react';
+import { cn } from '~lib/utils';
 import axios from 'axios';
 
 const Page = () => {
 	const [videos, setVideos] = useState<Video[]>([]);
-	const [categories, setCategories] = useState<Category[]>([
+	const [categories] = useState<Category[]>([
 		{ id: 'all', name: 'All' },
 		{ id: 'recently-uploaded', name: 'Recently uploaded' },
 		{ id: 'watched', name: 'Watched' }

@@ -23,7 +23,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
 			<Navbar />
 			<div className="flex pt-14">
 				<Sidebar />
-				<main className={cn('flex-1 transition-all duration-300 pb-16 md:pb-0', isSidebarOpen ? 'md:ml-60' : 'md:ml-[72px]')}>{children}</main>
+				<main className={cn('flex-1 transition-all duration-300 pb-16 md:pb-0 min-w-0', isSidebarOpen ? 'md:ml-60' : 'md:ml-[72px]')}>{children}</main>
 			</div>
 			<MobileNav />
 		</div>

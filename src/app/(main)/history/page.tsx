@@ -97,7 +97,7 @@ const Page = () => {
 								onClick={() => router.push(video.isShort ? `/shorts/${video.id}` : `/watch/${video.id}`)}
 							>
 								{/* Thumbnail */}
-								<div className={cn('relative rounded-xl overflow-hidden shrink-0 bg-black/10', video.isShort ? 'w-[90px] aspect-[9/16]' : 'w-40 sm:w-60 aspect-video')}>
+								<div className={cn('relative rounded-xl overflow-hidden shrink-0 bg-black/10', video.isShort ? 'w-[90px] aspect-9/16' : 'w-40 sm:w-60 aspect-video')}>
 									<img src={video.thumbnail} alt={video.title} className="object-cover w-full h-full" />
 									{!video.isShort && <div className="absolute bottom-1 right-1 bg-black/80 text-white text-xs px-1 py-0.5 rounded font-medium">{video.duration}</div>}
 									{video.savedProgress !== undefined && video.savedProgress > 0 && video.durationInSeconds && video.durationInSeconds > 0 && (

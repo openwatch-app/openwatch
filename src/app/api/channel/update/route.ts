@@ -1,8 +1,8 @@
-import { db } from '~server/db';
-import { user } from '~server/db/schema';
-import { eq, and, ne } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
+import { eq, and, ne } from 'drizzle-orm';
+import { user } from '~server/db/schema';
 import { auth } from '~server/auth';
+import { db } from '~server/db';
 
 export const PATCH = async (req: NextRequest) => {
 	try {
@@ -23,14 +23,13 @@ export const PATCH = async (req: NextRequest) => {
 		if (handle) {
 			// Handle should be alphanumeric, underscores, or dots, and 3-30 chars
 			const handleRegex = /^[a-zA-Z0-9._]{3,30}$/;
-			if (!handleRegex.test(handle.replace(/^@/, ''))) {
+			if (!handleRegex.test(handle)) {
 				return NextResponse.json({ error: 'Invalid handle format' }, { status: 400 });
 			}
 
 			// 2. Check handle uniqueness (excluding current user)
-			const normalizedHandle = handle.startsWith('@') ? handle : `@${handle}`;
 			const existingUser = await db.query.user.findFirst({
-				where: and(eq(user.handle, normalizedHandle), ne(user.id, userId))
+				where: and(eq(user.handle, handle), ne(user.id, userId))
 			});
 
 			if (existingUser) {
@@ -43,7 +42,7 @@ export const PATCH = async (req: NextRequest) => {
 			.update(user)
 			.set({
 				...(name && { name: name.trim() }),
-				...(handle && { handle: handle.startsWith('@') ? handle : `@${handle}` }),
+				...(handle && { handle }),
 				...(description !== undefined && { description: description.trim() }),
 				...(image !== undefined && { image }),
 				...(banner !== undefined && { banner }),

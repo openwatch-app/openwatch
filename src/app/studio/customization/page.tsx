@@ -42,6 +42,12 @@ const CustomizationPage = () => {
 		banner: null
 	});
 
+	const [origin, setOrigin] = useState('');
+
+	useEffect(() => {
+		setOrigin(window.location?.origin || '');
+	}, []);
+
 	useEffect(() => {
 		return () => {
 			if (activePreviews.current.avatar) URL.revokeObjectURL(activePreviews.current.avatar);
@@ -206,7 +212,7 @@ const CustomizationPage = () => {
 						<p className="text-sm text-muted-foreground">This image will appear across the top of your channel</p>
 					</div>
 					<div className="flex flex-col md:flex-row gap-6">
-						<div className="w-full md:w-[426px] aspect-[16/9] bg-[#1f1f1f] rounded-lg overflow-hidden relative group">
+						<div className="w-full md:w-[426px] aspect-video bg-[#1f1f1f] rounded-lg overflow-hidden relative group">
 							{formData.banner ? (
 								<img src={formData.banner} alt="Banner" className="w-full h-full object-cover" />
 							) : (
@@ -261,7 +267,7 @@ const CustomizationPage = () => {
 						</div>
 						<div className="flex-1 space-y-4 pt-2">
 							<p className="text-xs text-muted-foreground max-w-sm">
-								It's recommended to use a picture that's at least 98 x 98 pixels and 4MB or less. Use a PNG or GIF (no animations) file. Make sure your picture follows the YouTube
+								It's recommended to use a picture that's at least 98 x 98 pixels and 4MB or less. Use a PNG or GIF (no animations) file. Make sure your picture follows the OpenWatch
 								Community Guidelines. <HelpCircle className="h-3 w-3 inline cursor-help" />
 							</p>
 							<input type="file" ref={avatarInputRef} className="hidden" accept="image/*" onChange={(e) => handleFileChange(e, 'avatar')} />
@@ -284,8 +290,8 @@ const CustomizationPage = () => {
 					<div className="space-y-1">
 						<h3 className="font-semibold text-base">Name</h3>
 						<p className="text-xs text-muted-foreground max-w-2xl">
-							Choose a channel name that represents you and your content. Changes made to your name and picture are visible only on YouTube and not other Google services. You can change
-							your name twice in 14 days. <HelpCircle className="h-3 w-3 inline cursor-help" />
+							Choose a channel name that represents you and your content. Changes made to your name and picture are visible only on OpenWatch. You can change your name twice in 14 days.{' '}
+							<HelpCircle className="h-3 w-3 inline cursor-help" />
 						</p>
 					</div>
 					<Input

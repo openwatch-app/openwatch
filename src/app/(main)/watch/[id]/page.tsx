@@ -12,8 +12,10 @@ import { SubscribeButton } from '~components/subscribe-button';
 import { authClient } from '~lib/auth-client';
 import { useEffect, useState } from 'react';
 import { Button } from '~components/button';
+import { useAppStore } from '~lib/store';
 import { Video } from '~app/types';
 import { cn } from '~lib/utils';
+import Link from 'next/link';
 import axios from 'axios';
 import dayjs from 'dayjs';
 import '~lib/dayjs-config';
@@ -22,7 +24,8 @@ const Page = () => {
 	const router = useRouter();
 	const params = useParams();
 	const searchParams = useSearchParams();
-	const id = params.id as string;
+	// Decode ID to handle special characters (like colons in external IDs)
+	const id = decodeURIComponent((params.id as string) || '');
 	const playlistId = searchParams.get('list');
 	const { data: session } = authClient.useSession();
 
@@ -36,33 +39,9 @@ const Page = () => {
 	const [isCopied, setIsCopied] = useState(false);
 	const [showUpNext, setShowUpNext] = useState(false);
 	const [nextVideo, setNextVideo] = useState<Video | null>(null);
-	const [autoplay, setAutoplay] = useState(true);
+	const { theaterMode, autoplay, setAutoplay } = useAppStore();
 
 	const isOwner = session?.user?.id === video?.channel.id;
-
-	// Load autoplay preference
-	useEffect(() => {
-		try {
-			const stored = localStorage.getItem('openwatch-autoplay');
-			if (stored !== null) {
-				setAutoplay(stored === 'true');
-			}
-		} catch (error) {
-			console.warn('Failed to read autoplay preference from localStorage:', error);
-			// Default to true if storage access fails
-			setAutoplay(true);
-		}
-	}, []);
-
-	// Save autoplay preference
-	const handleAutoplayChange = (checked: boolean) => {
-		setAutoplay(checked);
-		try {
-			localStorage.setItem('openwatch-autoplay', String(checked));
-		} catch (error) {
-			console.warn('Failed to save autoplay preference to localStorage:', error);
-		}
-	};
 
 	const handleVideoEnded = () => {
 		let next: Video | null = null;
@@ -224,11 +203,21 @@ const Page = () => {
 	}
 
 	return (
-		<div className="flex flex-col lg:flex-row gap-6 p-0 lg:p-6 max-w-[1800px] mx-auto">
-			{/* Main Content */}
-			<div className="flex-1 min-w-0">
+		<div
+			className={cn(
+				'transition-all duration-300 ease-in-out',
+				theaterMode ? 'grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_400px] gap-6' : 'flex flex-col lg:grid lg:grid-cols-[1fr_400px] gap-6 p-0 lg:p-6 max-w-[1800px] mx-auto'
+			)}
+		>
+			{/* Main Content Wrapper (Video + Info) */}
+			<div className="contents">
 				{/* Video Player */}
-				<div className="aspect-video bg-black rounded-none lg:rounded-xl overflow-hidden mb-0 lg:mb-4 relative group">
+				<div
+					className={cn(
+						'relative group bg-black transition-all duration-300 ease-in-out z-20',
+						theaterMode ? 'col-span-1 lg:col-span-2 w-full h-[72vh]' : 'aspect-video rounded-none lg:rounded-xl overflow-hidden mb-0 lg:mb-4 lg:col-start-1 lg:row-start-1'
+					)}
+				>
 					<VideoPlayer
 						videoId={id}
 						videoUrl={video.videoUrl}
@@ -237,58 +226,61 @@ const Page = () => {
 						onEnded={handleVideoEnded}
 						showAutoplayToggle={true}
 						autoplayEnabled={autoplay}
-						onAutoplayChange={handleAutoplayChange}
+						onAutoplayChange={setAutoplay}
 					>
 						{showUpNext && nextVideo && <UpNextOverlay nextVideo={nextVideo} autoPlayEnabled={autoplay} onCancel={() => setShowUpNext(false)} onPlayNow={handlePlayNext} />}
 					</VideoPlayer>
 				</div>
 
-				<div className="p-4 lg:p-0">
+				<div
+					className={cn(
+						'transition-all duration-300 ease-in-out',
+						theaterMode ? 'col-span-1 pl-6 pb-6 mt-6 max-w-[1280px] lg:justify-self-end w-full' : 'p-4 lg:p-0 lg:col-start-1 lg:row-start-2'
+					)}
+				>
 					{/* Title */}
 					<h1 className="text-xl font-bold mb-2">{video.title}</h1>
 
 					{/* Channel & Actions */}
 					<div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-4">
 						<div className="flex items-center gap-3 flex-1 min-w-0">
-							<Avatar className="h-10 w-10 shrink-0 cursor-pointer" onClick={() => router.push(`/channel/${video.channel.handle || video.channel.id}`)}>
-								<AvatarImage src={video.channel.avatar} />
-								<AvatarFallback>{video.channel.name[0]}</AvatarFallback>
-							</Avatar>
-							<div className="min-w-0 flex-1">
-								<h3 className="font-semibold cursor-pointer hover:text-foreground/80 truncate" onClick={() => router.push(`/channel/${video.channel.handle || video.channel.id}`)}>
-									{video.channel.name}
-								</h3>
+							<Link href={`/channel/${video.channel.handle || video.channel.id}`}>
+								<Avatar className="h-10 w-10 shrink-0 cursor-pointer">
+									<AvatarImage src={video.channel.avatar} />
+									<AvatarFallback>{video.channel.name[0]}</AvatarFallback>
+								</Avatar>
+							</Link>
+							<div className="min-w-0 flex-1 sm:flex-initial">
+								<Link href={`/channel/${video.channel.handle || video.channel.id}`}>
+									<h3 className="font-semibold cursor-pointer hover:text-foreground/80 truncate">{video.channel.name}</h3>
+								</Link>
 								<p className="text-xs text-muted-foreground truncate">{video.channel.subscribers} subscribers</p>
 							</div>
-							{!isOwner &&
-								(video.isExternal ? (
-									<Button disabled variant="secondary" className="ml-4 rounded-full opacity-70 cursor-not-allowed shrink-0">
-										Subscribe
-									</Button>
-								) : (
-									<SubscribeButton
-										channelId={video.channel.id}
-										initialIsSubscribed={video.channel.isSubscribed}
-										initialNotify={video.channel.notify}
-										className="ml-4 shrink-0"
-										onSubscriptionChange={(subscribed) => {
-											setVideo((prev) => {
-												if (!prev) return null;
-												const currentCount = parseInt(prev.channel.subscribers || '0');
-												const newCount = subscribed ? currentCount + 1 : Math.max(0, currentCount - 1);
+							{!isOwner && (
+								<SubscribeButton
+									channelId={video.channel.id}
+									initialIsSubscribed={video.channel.isSubscribed}
+									initialNotify={video.channel.notify}
+									className="shrink-0"
+									onSubscriptionChange={(subscribed) => {
+										setVideo((prev) => {
+											if (!prev) return null;
+											let currentCount = parseInt(prev.channel.subscribers || '0', 10);
+											if (isNaN(currentCount)) currentCount = 0;
+											const newCount = subscribed ? currentCount + 1 : Math.max(0, currentCount - 1);
 
-												return {
-													...prev,
-													channel: {
-														...prev.channel,
-														isSubscribed: subscribed,
-														subscribers: newCount.toString()
-													}
-												};
-											});
-										}}
-									/>
-								))}
+											return {
+												...prev,
+												channel: {
+													...prev.channel,
+													isSubscribed: subscribed,
+													subscribers: newCount.toString()
+												}
+											};
+										});
+									}}
+								/>
+							)}
 						</div>
 
 						<div className="flex flex-col items-start sm:items-end gap-1 w-full sm:w-auto">
@@ -373,7 +365,12 @@ const Page = () => {
 			</div>
 
 			{/* Sidebar Recommendations */}
-			<div className="lg:w-[400px] shrink-0 p-4 lg:p-0">
+			<div
+				className={cn(
+					'shrink-0 p-4 lg:p-0 transition-all duration-300 ease-in-out',
+					theaterMode ? 'col-span-1 pr-6 pb-6 mt-6 w-full lg:w-[400px] justify-self-start' : 'lg:w-[400px] lg:col-start-2 lg:row-start-1 lg:row-span-2'
+				)}
+			>
 				{playlist && (
 					<div className="mb-4">
 						<PlaylistSidebar

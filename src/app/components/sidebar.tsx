@@ -24,9 +24,24 @@ interface SidebarItemProps {
 const SidebarItem = ({ icon: Icon, label, href, isActive, isCollapsed }: SidebarItemProps) => {
 	return (
 		<Link href={href} className="w-full">
-			<Button variant={isActive ? 'secondary' : 'ghost'} className={cn('w-full justify-start gap-4 px-3 mb-1', isCollapsed ? 'flex-col h-auto py-4 gap-1 px-0' : '')}>
-				<Icon className="h-5 w-5" />
-				<span className={cn('text-sm truncate', isCollapsed ? 'text-[10px]' : '')}>{label}</span>
+			<Button
+				variant={isActive ? 'secondary' : 'ghost'}
+				className={cn(
+					'w-full justify-start gap-4 px-3 mb-1 h-auto py-2 whitespace-normal transition-all duration-200 ease-in-out',
+					isActive && 'font-medium shadow-sm bg-secondary/80 hover:bg-secondary',
+					isCollapsed && 'flex-col py-4 gap-1 px-0 rounded-2xl'
+				)}
+			>
+				<Icon className={cn('h-5 w-5 shrink-0 transition-transform duration-200', isActive && 'scale-110 text-primary')} />
+				<span
+					className={cn(
+						'text-sm text-left wrap-break-word line-clamp-2 transition-colors',
+						isActive ? 'text-foreground' : 'text-muted-foreground group-hover:text-foreground',
+						isCollapsed ? 'text-[10px] line-clamp-1 break-all' : ''
+					)}
+				>
+					{label}
+				</span>
 			</Button>
 		</Link>
 	);
@@ -34,7 +49,9 @@ const SidebarItem = ({ icon: Icon, label, href, isActive, isCollapsed }: Sidebar
 
 const ExpandedSidebarContent = () => {
 	const [channels, setChannels] = useState<Channel[]>([]);
+	const [latestVersion, setLatestVersion] = useState<string | null>(null);
 	const pathname = usePathname();
+	const currentVersion = (process.env.NEXT_PUBLIC_APP_VERSION as string) || '0.0.0';
 
 	useEffect(() => {
 		const fetchChannels = async () => {
@@ -45,12 +62,27 @@ const ExpandedSidebarContent = () => {
 				console.error('Error fetching channels:', error);
 			}
 		};
+
+		const checkVersion = async () => {
+			try {
+				const response = await axios.get('https://raw.githubusercontent.com/openwatch-app/openwatch/refs/heads/main/package.json');
+				if (response.data && response.data.version) {
+					setLatestVersion(response.data.version);
+				}
+			} catch (e) {
+				console.error('Error fetching version:', e);
+			}
+		};
+
 		fetchChannels();
+		checkVersion();
 	}, []);
+
+	const isLatest = latestVersion ? currentVersion.replace('v', '') === latestVersion.replace('v', '') : true;
 
 	return (
 		<>
-			<ScrollArea className="flex-1 px-3 py-2">
+			<ScrollArea className="flex-1 px-3 py-4">
 				<div className="space-y-1">
 					<SidebarItem icon={Home} label="Home" href="/" isActive={pathname === '/'} />
 					<SidebarItem icon={Zap} label="Shorts" href="/shorts" isActive={pathname?.startsWith('/shorts')} />
@@ -58,28 +90,57 @@ const ExpandedSidebarContent = () => {
 					<SidebarItem icon={ListVideo} label="Playlists" href="/playlists" isActive={pathname === '/playlists'} />
 				</div>
 
-				<Separator className="my-3" />
+				<Separator className="my-4 bg-border/40" />
 
-				<div className="px-3 mb-2 font-medium">Subscriptions</div>
+				<div className="px-3 mb-2 text-xs font-semibold text-muted-foreground/70 uppercase tracking-wider">Subscriptions</div>
 				<div className="space-y-1">
 					{channels.map((channel) => (
-						<Link key={channel.id} href={`/channel/${channel.handle || channel.id}`} className="w-full">
-							<Button variant="ghost" className="w-full justify-start gap-3 px-3 mb-1">
-								<Avatar className="h-6 w-6">
+						<Link key={channel.id} href={`/channel/${channel.handle || channel.id}`} className="w-full group">
+							<Button variant="ghost" className="w-full justify-start gap-3 px-3 mb-1 h-auto py-2 whitespace-normal transition-colors hover:bg-accent/50">
+								<Avatar className="h-6 w-6 shrink-0 border border-transparent group-hover:border-border/50 transition-colors">
 									<AvatarImage src={channel.avatar} />
 									<AvatarFallback>{channel.name[0]}</AvatarFallback>
 								</Avatar>
-								<span className="text-sm truncate flex-1 text-left">{channel.name}</span>
+								<span className="text-sm text-left wrap-break-word line-clamp-2 flex-1 text-muted-foreground group-hover:text-foreground transition-colors">{channel.name}</span>
 							</Button>
 						</Link>
 					))}
 				</div>
 			</ScrollArea>
-			<div className="py-4 px-2 text-xs text-muted-foreground text-center whitespace-nowrap">
-				Developed with ☕ and ❤️ by{' '}
-				<a href="https://github.com/ge0rg3e" target="_blank" rel="noreferrer" className="underline">
-					Ge0rg3e
-				</a>
+
+			<div className="p-4 mt-auto border-t bg-card/30 backdrop-blur-[2px]">
+				<div className="flex flex-col gap-3">
+					<Link
+						href="https://github.com/openwatch-app/openwatch/issues/new"
+						className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-2 group"
+						target="_blank"
+						rel="noopener noreferrer"
+					>
+						<span className="w-1.5 h-1.5 rounded-full bg-red-500/70 group-hover:bg-red-500 transition-colors" />
+						Report a BUG / Request a feature
+					</Link>
+
+					<div className="text-xs text-muted-foreground">
+						Powered by{' '}
+						<Link
+							href="https://github.com/openwatch-app/openwatch"
+							className="text-foreground font-medium hover:underline decoration-border underline-offset-2"
+							target="_blank"
+							rel="noopener noreferrer"
+						>
+							OpenWatch
+						</Link>
+					</div>
+
+					<div className="text-[10px] text-muted-foreground/50 flex items-center gap-1.5 font-mono">
+						<span>v{currentVersion}</span>
+						{latestVersion && !isLatest ? (
+							<span className="text-amber-500/90 font-medium bg-amber-500/10 px-1.5 py-0.5 rounded-[4px] text-[9px] border border-amber-500/20">Update: {latestVersion}</span>
+						) : (
+							<span className="text-emerald-500/60 ml-1">• latest</span>
+						)}
+					</div>
+				</div>
 			</div>
 		</>
 	);

@@ -90,9 +90,20 @@ export const ShortsPlayer = ({ video, isActive, shouldLoad = true, toggleMute, i
 		const videoEl = videoRef.current;
 		if (!videoEl) return;
 
-		const hlsSrc = `/api/stream/${video.id}/master.m3u8`;
+		let hlsSrc: string | null = null;
+		let directSrc: string | null = null;
 
-		if (Hls.isSupported()) {
+		if (video.isExternal && video.videoUrl) {
+			if (video.videoUrl.includes('.m3u8')) {
+				hlsSrc = video.videoUrl;
+			} else {
+				directSrc = video.videoUrl;
+			}
+		} else {
+			hlsSrc = `/api/stream/${video.id}/master.m3u8`;
+		}
+
+		if (hlsSrc && Hls.isSupported()) {
 			if (hlsRef.current) {
 				hlsRef.current.destroy();
 			}
@@ -121,8 +132,10 @@ export const ShortsPlayer = ({ video, isActive, shouldLoad = true, toggleMute, i
 					}
 				}
 			});
-		} else if (videoEl.canPlayType('application/vnd.apple.mpegurl')) {
+		} else if (hlsSrc && videoEl.canPlayType('application/vnd.apple.mpegurl')) {
 			videoEl.src = hlsSrc;
+		} else if (directSrc) {
+			videoEl.src = directSrc;
 		}
 
 		return () => {
@@ -130,25 +143,39 @@ export const ShortsPlayer = ({ video, isActive, shouldLoad = true, toggleMute, i
 				hlsRef.current.destroy();
 			}
 		};
-	}, [video.id]);
+	}, [video.id, video.isExternal, video.videoUrl]);
 
 	useEffect(() => {
+		const videoEl = videoRef.current;
+		if (!videoEl) return;
+
+		let historyTimeout: NodeJS.Timeout;
+
+		const handlePlay = async () => {
+			try {
+				if (isActive && videoEl.paused) {
+					await videoEl.play();
+					setIsPlaying(true);
+				}
+			} catch (error) {
+				// Silently fail for abort errors during quick navigation
+				if (error instanceof Error && error.name !== 'AbortError') {
+					console.log('Autoplay prevented:', error);
+				}
+				setIsPlaying(false);
+			}
+		};
+
 		if (isActive) {
-			const playPromise = videoRef.current?.play();
-			if (playPromise !== undefined) {
-				playPromise
-					.then(() => {
-						setIsPlaying(true);
-					})
-					.catch((error) => {
-						console.log('Autoplay prevented:', error);
-						setIsPlaying(false);
-					});
+			if (videoEl.readyState >= 3) {
+				handlePlay();
+			} else {
+				videoEl.addEventListener('canplay', handlePlay, { once: true });
 			}
 
 			// Record history when video starts playing (or becomes active)
 			// We use a small delay to ensure it's an intentional view
-			const historyTimeout = setTimeout(async () => {
+			historyTimeout = setTimeout(async () => {
 				try {
 					await axios.post(`/api/videos/${video.id}/progress`, {
 						progress: 0,
@@ -158,12 +185,15 @@ export const ShortsPlayer = ({ video, isActive, shouldLoad = true, toggleMute, i
 					console.error('Error recording history view:', error);
 				}
 			}, 1000); // Record after 1 second of viewing
-
-			return () => clearTimeout(historyTimeout);
 		} else {
-			videoRef.current?.pause();
+			videoEl.pause();
 			setIsPlaying(false);
 		}
+
+		return () => {
+			clearTimeout(historyTimeout);
+			videoEl.removeEventListener('canplay', handlePlay);
+		};
 	}, [isActive, video.id]);
 
 	useEffect(() => {
@@ -181,12 +211,26 @@ export const ShortsPlayer = ({ video, isActive, shouldLoad = true, toggleMute, i
 		return () => vid.removeEventListener('timeupdate', updateProgress);
 	}, [isDragging]);
 
-	const togglePlay = () => {
-		if (videoRef.current?.paused) {
-			videoRef.current.play();
-			setIsPlaying(true);
-		} else {
-			videoRef.current?.pause();
+	const togglePlay = async () => {
+		const vid = videoRef.current;
+		if (!vid) return;
+
+		// Don't attempt to play if there's no source yet
+		if (!vid.currentSrc && !vid.src) return;
+
+		try {
+			if (vid.paused) {
+				await vid.play();
+				setIsPlaying(true);
+			} else {
+				vid.pause();
+				setIsPlaying(false);
+			}
+		} catch (error) {
+			// Silently fail for abort errors and not supported errors (loading/unloading)
+			if (error instanceof Error && error.name !== 'AbortError' && error.name !== 'NotSupportedError') {
+				console.error('Toggle play error:', error);
+			}
 			setIsPlaying(false);
 		}
 	};
@@ -375,37 +419,42 @@ export const ShortsPlayer = ({ video, isActive, shouldLoad = true, toggleMute, i
 						{/* Feed Controls (Info & Actions) - Only show in 'feed' variant */}
 						{variant === 'feed' && (
 							<div className="flex items-end gap-4">
-								<div className="flex-1 space-y-4 pointer-events-auto">
+								<div className="flex-1 space-y-4 pointer-events-auto min-w-0">
 									<div className="flex items-center gap-2">
-										<Link href={`/channel/${video.channel.id}`} className="flex items-center gap-2 group">
-											<Avatar className="w-9 h-9 border border-white/20">
+										<Link href={`/channel/${video.channel.id}`} className="flex items-center gap-2 group min-w-0">
+											<Avatar className="w-9 h-9 border border-white/20 shrink-0">
 												<AvatarImage src={video.channel.avatar} />
 												<AvatarFallback>{video.channel.name[0]}</AvatarFallback>
 											</Avatar>
-											<span className="font-semibold text-white group-hover:underline drop-shadow-md">@{video.channel.handle}</span>
+											<span className="font-semibold text-white group-hover:underline drop-shadow-md truncate max-w-[120px]">@{video.channel.handle}</span>
 										</Link>
-										<SubscribeButton channelId={video.channel.id} initialIsSubscribed={false} buttonClassName="h-8 bg-white text-black hover:bg-white/90" isOwner={isOwner} />
+										<SubscribeButton
+											channelId={video.channel.id}
+											initialIsSubscribed={false}
+											buttonClassName="h-8 bg-white text-black hover:bg-white/90 shrink-0"
+											isOwner={isOwner}
+										/>
 									</div>
 
 									<div>
-										<p className="text-white line-clamp-2 mb-2 drop-shadow-md font-medium">{video.title}</p>
+										<p className="text-white line-clamp-1 mb-2 drop-shadow-md font-medium">{video.title}</p>
 									</div>
 								</div>
 
 								{/* Right Side Actions (Mobile Only) */}
-								<ActionButtons className="md:hidden pb-4" />
+								<ActionButtons className="md:hidden pb-4 shrink-0" />
 							</div>
 						)}
 					</div>
 				</div>
-			</div>
 
-			{/* Desktop Side Actions - Only show in 'feed' variant */}
-			{variant === 'feed' && (
-				<div className="hidden md:flex flex-col justify-end pb-4 pl-4 z-20">
-					<ActionButtons />
-				</div>
-			)}
+				{/* Desktop Side Actions - Only show in 'feed' variant */}
+				{variant === 'feed' && (
+					<div className="hidden md:flex flex-col justify-end pb-4 pl-4 z-20">
+						<ActionButtons />
+					</div>
+				)}
+			</div>
 		</div>
 	);
 };

@@ -128,14 +128,14 @@ const ShortsFeedPage = () => {
 
 	if (loading) {
 		return (
-			<div className="flex md:h-[calc(100vh-64px)] h-[calc(100dvh-120px)] items-center justify-center bg-black">
+			<div className="flex md:h-[calc(100vh-64px)] h-[calc(100dvh-120px)] items-center justify-center">
 				<Loader2 className="h-8 w-8 animate-spin text-white" />
 			</div>
 		);
 	}
 
 	return (
-		<div className="flex h-[calc(100dvh-120px)] md:h-[calc(100vh-64px)] bg-black overflow-hidden relative justify-center w-full z-0">
+		<div className="flex h-[calc(100dvh-120px)] md:h-[calc(100vh-64px)] overflow-hidden relative justify-center w-full z-0">
 			<div ref={containerRef} className="flex-1 h-full overflow-y-scroll snap-y snap-mandatory scrollbar-hide w-full max-w-full">
 				{videos.map((video, index) => (
 					<div key={video.id} data-index={index} className="h-full w-full snap-start flex justify-center overflow-hidden">

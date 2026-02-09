@@ -34,7 +34,7 @@ export const GET = async (req: NextRequest, { params }: { params: Promise<{ id: 
 
 		// Find user by ID or Handle
 		const channelUser = await db.query.user.findFirst({
-			where: or(eq(user.id, decodedId), eq(user.handle, decodedId), eq(user.handle, decodedId.startsWith('@') ? decodedId : `@${decodedId}`))
+			where: or(eq(user.id, decodedId), eq(user.handle, decodedId))
 		});
 
 		if (!channelUser) {
