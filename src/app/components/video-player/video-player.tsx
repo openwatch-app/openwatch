@@ -516,7 +516,7 @@ export const VideoPlayer = ({ videoId, videoUrl, autoPlay = false, initialTime =
 	return (
 		<div
 			ref={containerRef}
-			className={cn('relative w-full bg-black group select-none', theaterMode ? 'h-full' : 'aspect-video')}
+			className={cn('relative w-full bg-black group select-none dark', theaterMode ? 'h-full' : 'aspect-video')}
 			onMouseMove={handleMouseMove}
 			onMouseLeave={() => setShowControls(false)}
 		>
@@ -667,7 +667,7 @@ export const VideoPlayer = ({ videoId, videoUrl, autoPlay = false, initialTime =
 									container={isFullscreen ? containerRef.current : null}
 									side="top"
 									align="end"
-									className="w-64 bg-[#0f0f0f]/95 border-white/10 text-white backdrop-blur-md p-1.5 shadow-xl rounded-xl"
+									className="w-64 bg-[#0f0f0f]/95 border-white/10 text-white backdrop-blur-md p-1.5 shadow-xl rounded-xl dark"
 								>
 									{showAutoplayToggle && (
 										<DropdownMenuItem
@@ -697,7 +697,7 @@ export const VideoPlayer = ({ videoId, videoUrl, autoPlay = false, initialTime =
 											</div>
 										</DropdownMenuSubTrigger>
 										<DropdownMenuPortal container={isFullscreen ? containerRef.current : null}>
-											<DropdownMenuSubContent className="w-48 bg-[#0f0f0f]/95 border-white/10 text-white backdrop-blur-md p-1.5 shadow-xl rounded-xl max-h-[300px] overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
+											<DropdownMenuSubContent className="w-48 bg-[#0f0f0f]/95 border-white/10 text-white backdrop-blur-md p-1.5 shadow-xl rounded-xl max-h-[300px] overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent dark">
 												{speeds.map((speed) => (
 													<DropdownMenuItem
 														key={speed}
@@ -722,7 +722,7 @@ export const VideoPlayer = ({ videoId, videoUrl, autoPlay = false, initialTime =
 											</div>
 										</DropdownMenuSubTrigger>
 										<DropdownMenuPortal container={isFullscreen ? containerRef.current : null}>
-											<DropdownMenuSubContent className="w-48 bg-[#0f0f0f]/95 border-white/10 text-white backdrop-blur-md p-1.5 shadow-xl rounded-xl max-h-[300px] overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
+											<DropdownMenuSubContent className="w-48 bg-[#0f0f0f]/95 border-white/10 text-white backdrop-blur-md p-1.5 shadow-xl rounded-xl max-h-[300px] overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent dark">
 												<DropdownMenuItem
 													className="flex items-center gap-3 px-3 py-2.5 text-sm hover:bg-white/10 focus:bg-white/10 cursor-pointer rounded-lg transition-colors outline-none"
 													onClick={() => handleQualityChange(-1)}

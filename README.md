@@ -62,6 +62,7 @@ postgres_data:
 - **Search**: Advanced search with type filtering (Videos, Shorts, Channels, Playlists) and mixed results
 - **History**: Watch history tracking with pause functionality and support for external videos
 - **Playlists**: Create and manage personal playlists with visibility controls and autoplay support
+- **PWA Support**: Installable as a Progressive Web App for a native mobile experience
 
 ### Federation (Beta)
 
@@ -73,6 +74,7 @@ postgres_data:
 
 ### Interaction
 
+- **Dark Mode**: Full system-aware dark and light theme support
 - **Comments**: Nested replies, pinning, hearting, and like/dislike reactions
 - **Reactions**: Like and Dislike videos
 - **Subscriptions**: Subscribe to channels and customize notification settings

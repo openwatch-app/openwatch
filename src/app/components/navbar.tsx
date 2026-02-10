@@ -6,6 +6,7 @@ import { authClient } from '~lib/auth-client';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAppStore } from '../lib/store';
 import UserDropdown from './user-dropdown';
+import GuestDropdown from './guest-dropdown';
 import { Button } from './button';
 import { Badge } from './badge';
 import { useState, useRef, useEffect, Suspense } from 'react';
@@ -222,12 +223,15 @@ const NavbarContent = () => {
 						<UserDropdown user={session.user} />
 					</>
 				) : (
-					<Button variant="outline" className="rounded-full" asChild>
-						<Link href="/auth">
-							<User className="mr-2 h-5 w-5" />
-							Sign in
-						</Link>
-					</Button>
+					<>
+						<GuestDropdown />
+						<Button variant="outline" className="rounded-full" asChild>
+							<Link href="/auth">
+								<User className="mr-2 h-5 w-5" />
+								Sign in
+							</Link>
+						</Button>
+					</>
 				)}
 			</div>
 		</nav>

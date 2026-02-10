@@ -328,7 +328,7 @@ export const ShortsPlayer = ({ video, isActive, shouldLoad = true, toggleMute, i
 	// If shouldLoad is false, we only render a thumbnail placeholder
 	if (!shouldLoad) {
 		return (
-			<div className="relative h-full w-full flex justify-center snap-start shrink-0 overflow-hidden bg-black">
+			<div className="relative h-full w-full flex justify-center snap-start shrink-0 overflow-hidden dark bg-black">
 				<div className="relative h-full aspect-9/16 max-w-full">
 					{/* Thumbnail Image */}
 					<img src={video.thumbnail || video.channel.banner || '/placeholder-video.jpg'} alt={video.title} className="h-full w-full object-cover opacity-50 blur-sm" />
@@ -367,7 +367,7 @@ export const ShortsPlayer = ({ video, isActive, shouldLoad = true, toggleMute, i
 	}
 
 	return (
-		<div className="relative h-full w-full flex justify-center snap-start shrink-0 overflow-hidden">
+		<div className="relative h-full w-full flex justify-center snap-start shrink-0 overflow-hidden dark bg-black">
 			<div className="flex h-full items-end justify-center w-full">
 				{/* Video container with aspect ratio handling */}
 				<div className="relative h-full aspect-9/16 max-w-full">

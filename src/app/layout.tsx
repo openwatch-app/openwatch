@@ -4,6 +4,7 @@ import type { Metadata, Viewport } from 'next';
 import duration from 'dayjs/plugin/duration';
 import dayjs from 'dayjs';
 import './globals.css';
+import ThemeProvider from './components/theme-provider';
 
 dayjs.extend(duration);
 dayjs.extend(relativeTime);
@@ -33,10 +34,12 @@ export const viewport: Viewport = {
 
 const RootLayout = ({ children }: Readonly<{ children: React.ReactNode }>) => {
 	return (
-		<html lang="en" className="dark">
+		<html lang="en" suppressHydrationWarning>
 			<body className={`antialiased overflow-x-hidden`}>
-				{children}
-				<PWARegister />
+				<ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+					{children}
+					<PWARegister />
+				</ThemeProvider>
 			</body>
 		</html>
 	);
