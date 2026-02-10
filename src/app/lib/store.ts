@@ -15,6 +15,8 @@ interface AppState {
 	setAutoplay: (enabled: boolean) => void;
 	playbackRate: number;
 	setPlaybackRate: (rate: number) => void;
+	ambientMode: boolean;
+	setAmbientMode: (enabled: boolean) => void;
 	searchHistory: string[];
 	addToSearchHistory: (query: string) => void;
 	removeFromSearchHistory: (query: string) => void;
@@ -39,6 +41,8 @@ export const useAppStore = create<AppState>()(
 			setAutoplay: (enabled: boolean) => set({ autoplay: enabled }),
 			playbackRate: 1,
 			setPlaybackRate: (rate: number) => set({ playbackRate: rate }),
+			ambientMode: true,
+			setAmbientMode: (enabled: boolean) => set({ ambientMode: enabled }),
 			searchHistory: [],
 			addToSearchHistory: (query: string) =>
 				set((state) => ({
@@ -61,6 +65,7 @@ export const useAppStore = create<AppState>()(
 				theaterMode: state.theaterMode,
 				autoplay: state.autoplay,
 				playbackRate: state.playbackRate,
+				ambientMode: state.ambientMode,
 				searchHistory: state.searchHistory,
 				language: state.language
 			})

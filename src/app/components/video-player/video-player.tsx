@@ -1,6 +1,6 @@
 'use client';
 
-import { Play, Pause, Volume2, VolumeX, Volume1, Settings, Maximize, Minimize, PictureInPicture, Check, Volume, ChevronsLeft, ChevronsRight, RectangleHorizontal } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX, Volume1, Settings, Maximize, Minimize, PictureInPicture, Check, Volume, ChevronsLeft, ChevronsRight, RectangleHorizontal, Sparkles } from 'lucide-react';
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Button } from '~components/button';
 import { useTranslation } from '~lib/i18n';
@@ -29,6 +29,7 @@ interface VideoPlayerProps {
 	showAutoplayToggle?: boolean;
 	autoplayEnabled?: boolean;
 	onAutoplayChange?: (enabled: boolean) => void;
+	className?: string;
 }
 
 const speeds = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
@@ -44,7 +45,7 @@ const VideoPlayerTooltip = ({ content, className }: { content: React.ReactNode; 
 	</div>
 );
 
-export const VideoPlayer = ({ videoId, videoUrl, autoPlay = false, initialTime = 0, onEnded, children, showAutoplayToggle, autoplayEnabled, onAutoplayChange }: VideoPlayerProps) => {
+export const VideoPlayer = ({ videoId, videoUrl, autoPlay = false, initialTime = 0, onEnded, children, showAutoplayToggle, autoplayEnabled, onAutoplayChange, className }: VideoPlayerProps) => {
 	const { t } = useTranslation();
 	const videoRef = useRef<HTMLVideoElement>(null);
 	const containerRef = useRef<HTMLDivElement>(null);
@@ -53,7 +54,8 @@ export const VideoPlayer = ({ videoId, videoUrl, autoPlay = false, initialTime =
 	const [isPlaying, setIsPlaying] = useState(false);
 	const [currentTime, setCurrentTime] = useState(initialTime);
 	const [duration, setDuration] = useState(0);
-	const { volume, setVolume, isMuted, setIsMuted, theaterMode, setTheaterMode, playbackRate, setPlaybackRate } = useAppStore();
+	const { volume, setVolume, isMuted, setIsMuted, theaterMode, setTheaterMode, playbackRate, setPlaybackRate, ambientMode, setAmbientMode } = useAppStore();
+	const ambientCanvasRef = useRef<HTMLCanvasElement>(null);
 	const [isFullscreen, setIsFullscreen] = useState(false);
 	const [showControls, setShowControls] = useState(true);
 	const controlsTimeoutRef = useRef<NodeJS.Timeout>(null);
@@ -351,7 +353,61 @@ export const VideoPlayer = ({ videoId, videoUrl, autoPlay = false, initialTime =
 		}
 	};
 
-	// Handle fullscreen changes and orientation
+	// Handle ambient mode
+	useEffect(() => {
+		if (!ambientMode) return;
+		const video = videoRef.current;
+		const canvas = ambientCanvasRef.current;
+		if (!video || !canvas) return;
+
+		const ctx = canvas.getContext('2d', { alpha: false });
+		if (!ctx) return;
+
+		let animationFrameId: number;
+
+		const draw = () => {
+			if (video.paused || video.ended || document.hidden) return;
+
+			ctx.globalAlpha = 0.2;
+			ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+			animationFrameId = requestAnimationFrame(draw);
+		};
+
+		const startLoop = () => {
+			if (animationFrameId) cancelAnimationFrame(animationFrameId);
+			if (!video.paused && !video.ended && !document.hidden) {
+				draw();
+			}
+		};
+
+		const stopLoop = () => {
+			if (animationFrameId) cancelAnimationFrame(animationFrameId);
+		};
+
+		const handleVisibilityChange = () => {
+			if (document.hidden) {
+				stopLoop();
+			} else {
+				startLoop();
+			}
+		};
+
+		video.addEventListener('play', startLoop);
+		video.addEventListener('pause', stopLoop);
+		video.addEventListener('ended', stopLoop);
+		document.addEventListener('visibilitychange', handleVisibilityChange);
+
+		startLoop();
+
+		return () => {
+			stopLoop();
+			video.removeEventListener('play', startLoop);
+			video.removeEventListener('pause', stopLoop);
+			video.removeEventListener('ended', stopLoop);
+			document.removeEventListener('visibilitychange', handleVisibilityChange);
+		};
+	}, [ambientMode]);
+
 	useEffect(() => {
 		const handleFullscreenChange = () => {
 			const isFs = !!document.fullscreenElement;
@@ -515,263 +571,381 @@ export const VideoPlayer = ({ videoId, videoUrl, autoPlay = false, initialTime =
 		}
 	};
 
+	// Keyboard shortcuts
+	useEffect(() => {
+		const handleKeyDown = (e: KeyboardEvent) => {
+			// Ignore if user is typing in an input
+			if (document.activeElement instanceof HTMLInputElement || document.activeElement instanceof HTMLTextAreaElement || (document.activeElement as HTMLElement).isContentEditable) {
+				return;
+			}
+
+			const video = videoRef.current;
+			if (!video) return;
+
+			// Reset controls timeout on any interaction
+			setShowControls(true);
+			if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
+			controlsTimeoutRef.current = setTimeout(() => {
+				setShowControls(false);
+			}, 3000);
+
+			switch (e.key.toLowerCase()) {
+				case ' ':
+				case 'k':
+					e.preventDefault();
+					togglePlay();
+					break;
+				case 'm':
+					e.preventDefault();
+					toggleMute();
+					break;
+				case 'f':
+					e.preventDefault();
+					toggleFullscreen();
+					break;
+				case 't':
+					e.preventDefault();
+					setTheaterMode(!theaterMode);
+					break;
+				case 'i':
+					e.preventDefault();
+					togglePiP();
+					break;
+				case 'arrowleft':
+					e.preventDefault();
+					video.currentTime = Math.max(0, video.currentTime - 5);
+					setCurrentTime(video.currentTime);
+					hasMarkedCompleted.current = false;
+					setSeekOverlay('left');
+					if (seekOverlayTimeoutRef.current) clearTimeout(seekOverlayTimeoutRef.current);
+					seekOverlayTimeoutRef.current = setTimeout(() => setSeekOverlay(null), 1000);
+					break;
+				case 'arrowright':
+					e.preventDefault();
+					video.currentTime = Math.min(video.duration, video.currentTime + 5);
+					setCurrentTime(video.currentTime);
+					hasMarkedCompleted.current = false;
+					setSeekOverlay('right');
+					if (seekOverlayTimeoutRef.current) clearTimeout(seekOverlayTimeoutRef.current);
+					seekOverlayTimeoutRef.current = setTimeout(() => setSeekOverlay(null), 1000);
+					break;
+				case 'j':
+					e.preventDefault();
+					video.currentTime = Math.max(0, video.currentTime - 10);
+					setCurrentTime(video.currentTime);
+					hasMarkedCompleted.current = false;
+					setSeekOverlay('left');
+					if (seekOverlayTimeoutRef.current) clearTimeout(seekOverlayTimeoutRef.current);
+					seekOverlayTimeoutRef.current = setTimeout(() => setSeekOverlay(null), 1000);
+					break;
+				case 'l':
+					e.preventDefault();
+					video.currentTime = Math.min(video.duration, video.currentTime + 10);
+					setCurrentTime(video.currentTime);
+					hasMarkedCompleted.current = false;
+					setSeekOverlay('right');
+					if (seekOverlayTimeoutRef.current) clearTimeout(seekOverlayTimeoutRef.current);
+					seekOverlayTimeoutRef.current = setTimeout(() => setSeekOverlay(null), 1000);
+					break;
+				case 'arrowup':
+					e.preventDefault();
+					setVolume(Math.min(1, volume + 0.05));
+					break;
+				case 'arrowdown':
+					e.preventDefault();
+					setVolume(Math.max(0, volume - 0.05));
+					break;
+			}
+		};
+
+		window.addEventListener('keydown', handleKeyDown);
+		return () => window.removeEventListener('keydown', handleKeyDown);
+	}, [togglePlay, toggleMute, toggleFullscreen, togglePiP, theaterMode, setTheaterMode, volume, setVolume]);
+
 	return (
-		<div
-			ref={containerRef}
-			className={cn('relative w-full bg-black group select-none dark', theaterMode ? 'h-full' : 'aspect-video')}
-			onMouseMove={handleMouseMove}
-			onMouseLeave={() => setShowControls(false)}
-		>
-			<video
-				ref={videoRef}
-				className="w-full h-full object-contain"
-				onPlay={() => setIsPlaying(true)}
-				onPause={() => setIsPlaying(false)}
-				onTimeUpdate={handleTimeUpdate}
-				onLoadedMetadata={handleLoadedMetadata}
-				onEnded={() => {
-					setIsPlaying(false);
-					onEnded?.();
-				}}
-			/>
-
-			{/* Interaction Overlay */}
-			<div className="absolute inset-0 z-10" onClick={handleTap} />
-
-			{/* Seek Feedback Overlays */}
-			{seekOverlay === 'left' && (
-				<div className="absolute left-0 top-0 bottom-0 w-1/3 z-20 flex flex-col items-center justify-center bg-white/10 backdrop-blur-[2px] rounded-r-full animate-in fade-in zoom-in duration-200">
-					<div className="flex flex-col items-center gap-2">
-						<ChevronsLeft className="w-12 h-12 text-white" />
-						<span className="text-white font-medium text-sm">10 {t('common.seconds')}</span>
-					</div>
-				</div>
+		<div className={cn('relative w-full group select-none dark', theaterMode ? 'h-full' : 'aspect-video')} onMouseMove={handleMouseMove} onMouseLeave={() => setShowControls(false)}>
+			{ambientMode && (
+				<canvas
+					ref={ambientCanvasRef}
+					className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[105%] h-[105%] opacity-10 blur-[20px] pointer-events-none z-[-1] transition-opacity duration-700"
+					width={50}
+					height={50}
+				/>
 			)}
-			{seekOverlay === 'right' && (
-				<div className="absolute right-0 top-0 bottom-0 w-1/3 z-20 flex flex-col items-center justify-center bg-white/10 backdrop-blur-[2px] rounded-l-full animate-in fade-in zoom-in duration-200">
-					<div className="flex flex-col items-center gap-2">
-						<ChevronsRight className="w-12 h-12 text-white" />
-						<span className="text-white font-medium text-sm">10 {t('common.seconds')}</span>
-					</div>
-				</div>
-			)}
+			<div ref={containerRef} className={cn('relative w-full h-full bg-black overflow-hidden', className)}>
+				<video
+					ref={videoRef}
+					className="w-full h-full object-contain relative z-10"
+					onPlay={() => setIsPlaying(true)}
+					onPause={() => setIsPlaying(false)}
+					onTimeUpdate={handleTimeUpdate}
+					onLoadedMetadata={handleLoadedMetadata}
+					onEnded={() => {
+						setIsPlaying(false);
+						onEnded?.();
+					}}
+				/>
 
-			{/* Center Play/Pause Button */}
-			<div className={cn('absolute inset-0 z-10 flex items-center justify-center pointer-events-none transition-opacity duration-300', showControls ? 'opacity-100' : 'opacity-0')}>
-				<div className="bg-black/50 w-14 h-14 rounded-full backdrop-blur-sm flex items-center justify-center">
-					{isPlaying ? <Pause className="w-8 h-8 text-white fill-white" /> : <Play className="w-8 h-8 text-white fill-white ml-1" />}
-				</div>
-			</div>
+				{/* Interaction Overlay */}
+				<div className="absolute inset-0 z-10" onClick={handleTap} />
 
-			{/* Custom Overlay Children (e.g. Up Next) */}
-			{children}
-
-			{/* Processing Overlay */}
-			{isProcessing && (
-				<div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm">
-					<div className="flex flex-col items-center gap-4">
-						<div className="relative w-16 h-16">
-							<div className="absolute inset-0 rounded-full border-4 border-white/20"></div>
-							<div className="absolute inset-0 rounded-full border-4 border-t-orange-600 animate-spin"></div>
+				{/* Seek Feedback Overlays */}
+				{seekOverlay === 'left' && (
+					<div className="absolute left-0 top-0 bottom-0 w-1/3 z-20 flex flex-col items-center justify-center bg-white/10 backdrop-blur-[2px] rounded-r-full animate-in fade-in zoom-in duration-200">
+						<div className="flex flex-col items-center gap-2">
+							<ChevronsLeft className="w-12 h-12 text-white" />
+							<span className="text-white font-medium text-sm">10 {t('common.seconds')}</span>
 						</div>
-						<div className="text-white text-lg font-medium">{t('common.processing_video')}</div>
-						<div className="text-white/60 text-sm">{t('common.processing_description')}</div>
 					</div>
-				</div>
-			)}
-
-			{/* Gradient Overlay */}
-			<div
-				className={cn(
-					'absolute inset-0 bg-linear-to-t from-black/80 via-transparent to-transparent transition-opacity duration-300 pointer-events-none',
-					showControls ? 'opacity-100' : 'opacity-0'
 				)}
-			/>
-
-			{/* Controls Container */}
-			<div className={cn('absolute bottom-0 left-0 right-0 px-4 pb-4 pt-10 flex flex-col gap-2 transition-opacity duration-300 z-30', showControls ? 'opacity-100' : 'opacity-0')}>
-				{/* Progress Bar */}
-				<div className="relative h-1 group/slider cursor-pointer flex items-center mb-2">
-					{/* Background */}
-					<div className="absolute inset-0 bg-white/20" />
-
-					{/* Buffered */}
-					<div className="absolute left-0 top-0 bottom-0 bg-white/40 transition-all duration-300" style={{ width: `${(buffered / (duration || 1)) * 100}%` }} />
-
-					{/* Played */}
-					<div className="absolute left-0 top-0 bottom-0 bg-orange-600 transition-all duration-100" style={{ width: `${(currentTime / (duration || 1)) * 100}%` }} />
-
-					{/* Input Range (Invisible but interactive) */}
-					<input type="range" min={0} max={duration || 100} value={currentTime} onChange={handleSeek} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
-
-					{/* Handle (Visible on hover/drag) */}
-					<div
-						className="absolute h-3.5 w-3.5 bg-orange-600 rounded-full scale-0 group-hover/slider:scale-100 transition-transform duration-200 pointer-events-none"
-						style={{ left: `${(currentTime / (duration || 1)) * 100}%`, transform: 'translateX(-50%)' }}
-					/>
-				</div>
-
-				<div className="flex items-center justify-between">
-					{/* Left Controls */}
-					<div className="flex items-center gap-4">
-						<div className="relative group/tooltip">
-							<Button variant="ghost" size="icon" className="text-white hover:bg-white/10 w-8 h-8 rounded-full" onClick={togglePlay}>
-								{isPlaying ? <Pause className="fill-white w-5 h-5" /> : <Play className="fill-white w-5 h-5" />}
-							</Button>
-							<VideoPlayerTooltip content={isPlaying ? `${t('common.pause')} (k)` : `${t('common.play')} (k)`} />
-						</div>
-
-						<div className="flex items-center gap-2 group/volume">
-							<div className="relative group/tooltip">
-								<Button variant="ghost" size="icon" className="text-white hover:bg-white/10 w-8 h-8 rounded-full" onClick={toggleMute}>
-									{isMuted || volume === 0 ? <VolumeX className="w-5 h-5" /> : volume < 0.5 ? <Volume1 className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-								</Button>
-								<VideoPlayerTooltip content={isMuted ? `${t('common.unmute')} (m)` : `${t('common.mute')} (m)`} />
-							</div>
-							<input
-								type="range"
-								min={0}
-								max={1}
-								step={0.05}
-								value={isMuted ? 0 : volume}
-								onChange={handleVolumeChange}
-								className="w-0 overflow-hidden group-hover/volume:w-20 transition-all duration-300 accent-white h-1 bg-white/30 rounded-full"
-							/>
-						</div>
-
-						<div className="text-white text-sm font-medium">
-							{formatTime(currentTime)} / {formatTime(duration)}
+				{seekOverlay === 'right' && (
+					<div className="absolute right-0 top-0 bottom-0 w-1/3 z-20 flex flex-col items-center justify-center bg-white/10 backdrop-blur-[2px] rounded-l-full animate-in fade-in zoom-in duration-200">
+						<div className="flex flex-col items-center gap-2">
+							<ChevronsRight className="w-12 h-12 text-white" />
+							<span className="text-white font-medium text-sm">10 {t('common.seconds')}</span>
 						</div>
 					</div>
+				)}
 
-					{/* Right Controls */}
-					<div className="flex items-center gap-2">
-						{showAutoplayToggle && (
-							<div className="hidden md:flex items-center gap-2 mr-2 group/tooltip relative">
-								<label className="relative inline-flex items-center cursor-pointer">
-									<input type="checkbox" className="sr-only peer" checked={!!autoplayEnabled} onChange={(e) => onAutoplayChange?.(e.target.checked)} />
-									<div className="w-9 h-5 bg-white/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-orange-600"></div>
-								</label>
-								<VideoPlayerTooltip content={`${t('common.autoplay')} ${autoplayEnabled ? t('common.on') : t('common.off')}`} />
+				{/* Center Play/Pause Button */}
+				<div className={cn('absolute inset-0 z-10 flex items-center justify-center pointer-events-none transition-opacity duration-300', showControls ? 'opacity-100' : 'opacity-0')}>
+					<div className="bg-black/50 w-14 h-14 rounded-full backdrop-blur-sm flex items-center justify-center">
+						{isPlaying ? <Pause className="w-8 h-8 text-white fill-white" /> : <Play className="w-8 h-8 text-white fill-white ml-1" />}
+					</div>
+				</div>
+
+				{/* Custom Overlay Children (e.g. Up Next) */}
+				{children}
+
+				{/* Processing Overlay */}
+				{isProcessing && (
+					<div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm">
+						<div className="flex flex-col items-center gap-4">
+							<div className="relative w-16 h-16">
+								<div className="absolute inset-0 rounded-full border-4 border-white/20"></div>
+								<div className="absolute inset-0 rounded-full border-4 border-t-orange-600 animate-spin"></div>
 							</div>
-						)}
+							<div className="text-white text-lg font-medium">{t('common.processing_video')}</div>
+							<div className="text-white/60 text-sm">{t('common.processing_description')}</div>
+						</div>
+					</div>
+				)}
 
-						{/* Settings Menu */}
-						<div className="relative group/tooltip">
-							<DropdownMenu>
-								<DropdownMenuTrigger asChild>
-									<Button variant="ghost" size="icon" className="text-white hover:bg-white/10 w-8 h-8 relative rounded-full">
-										<Settings className={cn('w-5 h-5 transition-transform duration-300', showControls ? 'rotate-0' : 'rotate-90')} />
-										{currentLevel !== -1 && <span className="absolute -top-0.5 -right-0.5 bg-orange-600 text-[10px] px-0.5 rounded-sm leading-tight">HD</span>}
+				{/* Gradient Overlay */}
+				<div
+					className={cn(
+						'absolute inset-0 bg-linear-to-t from-black/80 via-transparent to-transparent transition-opacity duration-300 pointer-events-none',
+						showControls ? 'opacity-100' : 'opacity-0'
+					)}
+				/>
+
+				{/* Controls Container */}
+				<div className={cn('absolute bottom-0 left-0 right-0 px-4 pb-4 pt-10 flex flex-col gap-2 transition-opacity duration-300 z-30', showControls ? 'opacity-100' : 'opacity-0')}>
+					{/* Progress Bar */}
+					<div className="relative h-1 group/slider cursor-pointer flex items-center mb-2">
+						{/* Background */}
+						<div className="absolute inset-0 bg-white/20" />
+
+						{/* Buffered */}
+						<div className="absolute left-0 top-0 bottom-0 bg-white/40 transition-all duration-300" style={{ width: `${(buffered / (duration || 1)) * 100}%` }} />
+
+						{/* Played */}
+						<div className="absolute left-0 top-0 bottom-0 bg-orange-600 transition-all duration-100" style={{ width: `${(currentTime / (duration || 1)) * 100}%` }} />
+
+						{/* Input Range (Invisible but interactive) */}
+						<input type="range" min={0} max={duration || 100} value={currentTime} onChange={handleSeek} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
+
+						{/* Handle (Visible on hover/drag) */}
+						<div
+							className="absolute h-3.5 w-3.5 bg-orange-600 rounded-full scale-0 group-hover/slider:scale-100 transition-transform duration-200 pointer-events-none"
+							style={{ left: `${(currentTime / (duration || 1)) * 100}%`, transform: 'translateX(-50%)' }}
+						/>
+					</div>
+
+					<div className="flex items-center justify-between">
+						{/* Left Controls */}
+						<div className="flex items-center gap-4">
+							<div className="relative group/tooltip">
+								<Button variant="ghost" size="icon" className="text-white hover:bg-white/10 w-8 h-8 rounded-full" onClick={togglePlay}>
+									{isPlaying ? <Pause className="fill-white w-5 h-5" /> : <Play className="fill-white w-5 h-5" />}
+								</Button>
+								<VideoPlayerTooltip content={isPlaying ? `${t('common.pause')} (K)` : `${t('common.play')} (K)`} />
+							</div>
+
+							<div className="flex items-center gap-2 group/volume">
+								<div className="relative group/tooltip">
+									<Button variant="ghost" size="icon" className="text-white hover:bg-white/10 w-8 h-8 rounded-full" onClick={toggleMute}>
+										{isMuted || volume === 0 ? <VolumeX className="w-5 h-5" /> : volume < 0.5 ? <Volume1 className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
 									</Button>
-								</DropdownMenuTrigger>
-								<DropdownMenuContent
-									container={isFullscreen ? containerRef.current : null}
-									side="top"
-									align="end"
-									className="w-64 bg-[#0f0f0f]/95 border-white/10 text-white backdrop-blur-md p-1.5 shadow-xl rounded-xl dark"
-								>
-									{showAutoplayToggle && (
+									<VideoPlayerTooltip content={isMuted ? `${t('common.unmute')} (M)` : `${t('common.mute')} (M)`} />
+								</div>
+								<input
+									type="range"
+									min={0}
+									max={1}
+									step={0.05}
+									value={isMuted ? 0 : volume}
+									onChange={handleVolumeChange}
+									className="w-0 overflow-hidden group-hover/volume:w-20 transition-all duration-300 accent-white h-1 bg-white/30 rounded-full"
+								/>
+							</div>
+
+							<div className="text-white text-sm font-medium">
+								{formatTime(currentTime)} / {formatTime(duration)}
+							</div>
+						</div>
+
+						{/* Right Controls */}
+						<div className="flex items-center gap-2">
+							{showAutoplayToggle && (
+								<div className="hidden md:flex items-center gap-2 mr-2 group/tooltip relative">
+									<label className="relative inline-flex items-center cursor-pointer">
+										<input type="checkbox" className="sr-only peer" checked={!!autoplayEnabled} onChange={(e) => onAutoplayChange?.(e.target.checked)} />
+										<div className="w-9 h-5 bg-white/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-orange-600"></div>
+									</label>
+									<VideoPlayerTooltip content={`${t('common.autoplay')} ${autoplayEnabled ? t('common.on') : t('common.off')}`} />
+								</div>
+							)}
+
+							{/* Settings Menu */}
+							<div className="relative group/tooltip">
+								<DropdownMenu>
+									<DropdownMenuTrigger asChild>
+										<Button variant="ghost" size="icon" className="text-white hover:bg-white/10 w-8 h-8 relative rounded-full">
+											<Settings className={cn('w-5 h-5 transition-transform duration-300', showControls ? 'rotate-0' : 'rotate-90')} />
+											{currentLevel !== -1 && <span className="absolute -top-0.5 -right-0.5 bg-orange-600 text-[10px] px-0.5 rounded-sm leading-tight">HD</span>}
+										</Button>
+									</DropdownMenuTrigger>
+									<DropdownMenuContent
+										container={isFullscreen ? containerRef.current : null}
+										side="top"
+										align="end"
+										className="w-64 bg-[#0f0f0f]/95 border-white/10 text-white backdrop-blur-md p-1.5 shadow-xl rounded-xl dark"
+									>
+										{showAutoplayToggle && (
+											<DropdownMenuItem
+												className="md:hidden flex items-center gap-3 px-3 py-2.5 text-sm hover:bg-white/10 focus:bg-white/10 cursor-pointer rounded-lg transition-colors outline-none"
+												onClick={(e) => {
+													e.preventDefault();
+													onAutoplayChange?.(!autoplayEnabled);
+												}}
+											>
+												<div className="flex items-center gap-2 w-full">
+													<span>{t('common.autoplay')}</span>
+													<div className="ml-auto relative inline-flex items-center cursor-pointer pointer-events-none">
+														<div className={cn('w-9 h-5 bg-white/20 rounded-full transition-colors', autoplayEnabled && 'bg-orange-600')}>
+															<div
+																className={cn(
+																	'absolute top-[2px] left-[2px] bg-white rounded-full h-4 w-4 transition-transform',
+																	autoplayEnabled && 'translate-x-full'
+																)}
+															/>
+														</div>
+													</div>
+												</div>
+											</DropdownMenuItem>
+										)}
 										<DropdownMenuItem
-											className="md:hidden flex items-center gap-3 px-3 py-2.5 text-sm hover:bg-white/10 focus:bg-white/10 cursor-pointer rounded-lg transition-colors outline-none"
+											className="flex items-center gap-3 px-3 py-2.5 text-sm hover:bg-white/10 focus:bg-white/10 cursor-pointer rounded-lg transition-colors outline-none"
 											onClick={(e) => {
 												e.preventDefault();
-												onAutoplayChange?.(!autoplayEnabled);
+												setAmbientMode(!ambientMode);
 											}}
 										>
 											<div className="flex items-center gap-2 w-full">
-												<span>{t('common.autoplay')}</span>
+												<Sparkles className="w-4 h-4" />
+												<span>{t('common.ambient_mode')}</span>
 												<div className="ml-auto relative inline-flex items-center cursor-pointer pointer-events-none">
-													<div className={cn('w-9 h-5 bg-white/20 rounded-full transition-colors', autoplayEnabled && 'bg-orange-600')}>
-														<div
-															className={cn('absolute top-[2px] left-[2px] bg-white rounded-full h-4 w-4 transition-transform', autoplayEnabled && 'translate-x-full')}
-														/>
+													<div className={cn('w-9 h-5 bg-white/20 rounded-full transition-colors', ambientMode && 'bg-orange-600')}>
+														<div className={cn('absolute top-[2px] left-[2px] bg-white rounded-full h-4 w-4 transition-transform', ambientMode && 'translate-x-full')} />
 													</div>
 												</div>
 											</div>
 										</DropdownMenuItem>
-									)}
-									<DropdownMenuSub>
-										<DropdownMenuSubTrigger className="flex items-center gap-3 px-3 py-2.5 text-sm hover:bg-white/10 focus:bg-white/10 cursor-pointer rounded-lg transition-colors outline-none">
-											<div className="flex items-center gap-2 w-full">
-												<span>{t('common.playback_speed')}</span>
-												<span className="text-white/50 text-sm ml-auto">{playbackRate === 1 ? t('common.normal') : `${playbackRate}x`}</span>
-											</div>
-										</DropdownMenuSubTrigger>
-										<DropdownMenuPortal container={isFullscreen ? containerRef.current : null}>
-											<DropdownMenuSubContent className="w-48 bg-[#0f0f0f]/95 border-white/10 text-white backdrop-blur-md p-1.5 shadow-xl rounded-xl max-h-[300px] overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent dark">
-												{speeds.map((speed) => (
+										<DropdownMenuSub>
+											<DropdownMenuSubTrigger className="flex items-center gap-3 px-3 py-2.5 text-sm hover:bg-white/10 focus:bg-white/10 cursor-pointer rounded-lg transition-colors outline-none">
+												<div className="flex items-center gap-2 w-full">
+													<span>{t('common.playback_speed')}</span>
+													<span className="text-white/50 text-sm ml-auto">{playbackRate === 1 ? t('common.normal') : `${playbackRate}x`}</span>
+												</div>
+											</DropdownMenuSubTrigger>
+											<DropdownMenuPortal container={isFullscreen ? containerRef.current : null}>
+												<DropdownMenuSubContent className="w-48 bg-[#0f0f0f]/95 border-white/10 text-white backdrop-blur-md p-1.5 shadow-xl rounded-xl max-h-[300px] overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent dark">
+													{speeds.map((speed) => (
+														<DropdownMenuItem
+															key={speed}
+															className="flex items-center gap-3 px-3 py-2.5 text-sm hover:bg-white/10 focus:bg-white/10 cursor-pointer rounded-lg transition-colors outline-none"
+															onClick={() => handleSpeedChange(speed)}
+														>
+															<div className="w-4 h-4 flex items-center justify-center shrink-0">{playbackRate === speed && <Check className="w-3.5 h-3.5" />}</div>
+															<span>{speed === 1 ? t('common.normal') : speed}</span>
+														</DropdownMenuItem>
+													))}
+												</DropdownMenuSubContent>
+											</DropdownMenuPortal>
+										</DropdownMenuSub>
+
+										<DropdownMenuSub>
+											<DropdownMenuSubTrigger className="flex items-center gap-3 px-3 py-2.5 text-sm hover:bg-white/10 focus:bg-white/10 cursor-pointer rounded-lg transition-colors outline-none">
+												<div className="flex items-center gap-2 w-full">
+													<span>{t('common.quality')}</span>
+													<span className="text-white/50 text-sm ml-auto">
+														{currentLevel === -1
+															? `${t('common.auto')} (${levels[hlsRef.current?.currentLevel || 0]?.height || '1080'}p)`
+															: `${levels[currentLevel]?.height}p`}
+													</span>
+												</div>
+											</DropdownMenuSubTrigger>
+											<DropdownMenuPortal container={isFullscreen ? containerRef.current : null}>
+												<DropdownMenuSubContent className="w-48 bg-[#0f0f0f]/95 border-white/10 text-white backdrop-blur-md p-1.5 shadow-xl rounded-xl max-h-[300px] overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent dark">
 													<DropdownMenuItem
-														key={speed}
 														className="flex items-center gap-3 px-3 py-2.5 text-sm hover:bg-white/10 focus:bg-white/10 cursor-pointer rounded-lg transition-colors outline-none"
-														onClick={() => handleSpeedChange(speed)}
+														onClick={() => handleQualityChange(-1)}
 													>
-														<div className="w-4 h-4 flex items-center justify-center shrink-0">{playbackRate === speed && <Check className="w-3.5 h-3.5" />}</div>
-														<span>{speed === 1 ? t('common.normal') : speed}</span>
+														<div className="w-4 h-4 flex items-center justify-center shrink-0">{currentLevel === -1 && <Check className="w-3.5 h-3.5" />}</div>
+														<span>{t('common.auto')}</span>
 													</DropdownMenuItem>
-												))}
-											</DropdownMenuSubContent>
-										</DropdownMenuPortal>
-									</DropdownMenuSub>
+													{levels.map((level, index) => (
+														<DropdownMenuItem
+															key={index}
+															className="flex items-center gap-3 px-3 py-2.5 text-sm hover:bg-white/10 focus:bg-white/10 cursor-pointer rounded-lg transition-colors outline-none"
+															onClick={() => handleQualityChange(index)}
+														>
+															<div className="w-4 h-4 flex items-center justify-center shrink-0">{currentLevel === index && <Check className="w-3.5 h-3.5" />}</div>
+															<span>
+																{level.height}p {level.height >= 720 && <sup className="text-[10px] ml-0.5">HD</sup>}
+																{level.height >= 2160 && <sup className="text-[10px] ml-0.5">4K</sup>}
+															</span>
+														</DropdownMenuItem>
+													))}
+												</DropdownMenuSubContent>
+											</DropdownMenuPortal>
+										</DropdownMenuSub>
+									</DropdownMenuContent>
+								</DropdownMenu>
+								<VideoPlayerTooltip content={t('common.settings')} />
+							</div>
 
-									<DropdownMenuSub>
-										<DropdownMenuSubTrigger className="flex items-center gap-3 px-3 py-2.5 text-sm hover:bg-white/10 focus:bg-white/10 cursor-pointer rounded-lg transition-colors outline-none">
-											<div className="flex items-center gap-2 w-full">
-												<span>{t('common.quality')}</span>
-												<span className="text-white/50 text-sm ml-auto">
-													{currentLevel === -1 ? `${t('common.auto')} (${levels[hlsRef.current?.currentLevel || 0]?.height || '1080'}p)` : `${levels[currentLevel]?.height}p`}
-												</span>
-											</div>
-										</DropdownMenuSubTrigger>
-										<DropdownMenuPortal container={isFullscreen ? containerRef.current : null}>
-											<DropdownMenuSubContent className="w-48 bg-[#0f0f0f]/95 border-white/10 text-white backdrop-blur-md p-1.5 shadow-xl rounded-xl max-h-[300px] overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent dark">
-												<DropdownMenuItem
-													className="flex items-center gap-3 px-3 py-2.5 text-sm hover:bg-white/10 focus:bg-white/10 cursor-pointer rounded-lg transition-colors outline-none"
-													onClick={() => handleQualityChange(-1)}
-												>
-													<div className="w-4 h-4 flex items-center justify-center shrink-0">{currentLevel === -1 && <Check className="w-3.5 h-3.5" />}</div>
-													<span>{t('common.auto')}</span>
-												</DropdownMenuItem>
-												{levels.map((level, index) => (
-													<DropdownMenuItem
-														key={index}
-														className="flex items-center gap-3 px-3 py-2.5 text-sm hover:bg-white/10 focus:bg-white/10 cursor-pointer rounded-lg transition-colors outline-none"
-														onClick={() => handleQualityChange(index)}
-													>
-														<div className="w-4 h-4 flex items-center justify-center shrink-0">{currentLevel === index && <Check className="w-3.5 h-3.5" />}</div>
-														<span>
-															{level.height}p {level.height >= 720 && <sup className="text-[10px] ml-0.5">HD</sup>}
-															{level.height >= 2160 && <sup className="text-[10px] ml-0.5">4K</sup>}
-														</span>
-													</DropdownMenuItem>
-												))}
-											</DropdownMenuSubContent>
-										</DropdownMenuPortal>
-									</DropdownMenuSub>
-								</DropdownMenuContent>
-							</DropdownMenu>
-							<VideoPlayerTooltip content={t('common.settings')} />
-						</div>
+							<div className="relative group/tooltip">
+								<Button variant="ghost" size="icon" className="text-white hover:bg-white/10 w-8 h-8 rounded-full" onClick={togglePiP}>
+									<PictureInPicture className="w-5 h-5" />
+								</Button>
+								<VideoPlayerTooltip content={`${t('common.pip')} (I)`} />
+							</div>
 
-						<div className="relative group/tooltip">
-							<Button variant="ghost" size="icon" className="text-white hover:bg-white/10 w-8 h-8 rounded-full" onClick={togglePiP}>
-								<PictureInPicture className="w-5 h-5" />
-							</Button>
-							<VideoPlayerTooltip content={`${t('common.pip')} (i)`} />
-						</div>
+							<div className="relative group/tooltip hidden md:flex">
+								<Button variant="ghost" size="icon" className="text-white hover:bg-white/10 w-8 h-8 rounded-full" onClick={() => setTheaterMode(!theaterMode)}>
+									<RectangleHorizontal className={cn('w-5 h-5', theaterMode ? 'fill-white' : '')} />
+								</Button>
+								<VideoPlayerTooltip content={theaterMode ? `${t('common.default_view')} (T)` : `${t('common.theater_mode')} (T)`} />
+							</div>
 
-						<div className="relative group/tooltip hidden md:flex">
-							<Button variant="ghost" size="icon" className="text-white hover:bg-white/10 w-8 h-8 rounded-full" onClick={() => setTheaterMode(!theaterMode)}>
-								<RectangleHorizontal className={cn('w-5 h-5', theaterMode ? 'fill-white' : '')} />
-							</Button>
-							<VideoPlayerTooltip content={theaterMode ? `${t('common.default_view')} (t)` : `${t('common.theater_mode')} (t)`} />
-						</div>
-
-						<div className="relative group/tooltip">
-							<Button variant="ghost" size="icon" className="text-white hover:bg-white/10 w-8 h-8 rounded-full" onClick={toggleFullscreen}>
-								{isFullscreen ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}
-							</Button>
-							<VideoPlayerTooltip content={isFullscreen ? `${t('common.exit_fullscreen')} (f)` : `${t('common.fullscreen')} (f)`} />
+							<div className="relative group/tooltip">
+								<Button variant="ghost" size="icon" className="text-white hover:bg-white/10 w-8 h-8 rounded-full" onClick={toggleFullscreen}>
+									{isFullscreen ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}
+								</Button>
+								<VideoPlayerTooltip content={isFullscreen ? `${t('common.exit_fullscreen')} (F)` : `${t('common.fullscreen')} (F)`} />
+							</div>
 						</div>
 					</div>
 				</div>

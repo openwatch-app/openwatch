@@ -3,7 +3,7 @@
 import { Menu, Search, Video, User, X, History, Trash2 } from 'lucide-react';
 import { NotificationCenter } from '~components/notification-center';
 import { useState, useRef, useEffect, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { authClient } from '~lib/auth-client';
 import GuestDropdown from './guest-dropdown';
 import { useTranslation } from '~lib/i18n';
@@ -13,23 +13,33 @@ import { Button } from './button';
 import { Badge } from './badge';
 import { Input } from './input';
 import Link from 'next/link';
+import { cn } from '~lib/utils';
 
 const NavbarContent = () => {
 	const { t } = useTranslation();
 	const { toggleSidebar, searchHistory, addToSearchHistory, removeFromSearchHistory } = useAppStore();
 	const { data: sessionData } = authClient.useSession();
 	const [isMounted, setIsMounted] = useState(false);
+	const [isScrolled, setIsScrolled] = useState(false);
 	const session = isMounted ? sessionData : null;
 
 	useEffect(() => {
 		setIsMounted(true);
+		const handleScroll = () => {
+			setIsScrolled(window.scrollY > 5);
+		};
+		window.addEventListener('scroll', handleScroll);
+		return () => window.removeEventListener('scroll', handleScroll);
 	}, []);
 	const [searchInput, setSearchInput] = useState('');
 	const [isFocused, setIsFocused] = useState(false);
 	const searchContainerRef = useRef<HTMLFormElement>(null);
 	const router = useRouter();
+	const pathname = usePathname();
 	const searchParams = useSearchParams();
 	const [selectedIndex, setSelectedIndex] = useState(-1);
+
+	const isWatchPage = pathname?.startsWith('/watch');
 
 	const removeFromHistory = (e: React.MouseEvent, item: string) => {
 		e.stopPropagation();
@@ -98,7 +108,12 @@ const NavbarContent = () => {
 	};
 
 	return (
-		<nav className="fixed top-0 left-0 right-0 h-14 bg-background z-50 flex items-center justify-between px-4">
+		<nav
+			className={cn(
+				'fixed top-0 left-0 right-0 h-14 z-50 flex items-center justify-between px-4 transition-colors duration-300 ease-in-out',
+				isWatchPage && !isScrolled ? 'bg-transparent' : 'bg-background'
+			)}
+		>
 			<div className="flex items-center">
 				<Button variant="ghost" size="icon" className="mr-2 hidden md:flex" onClick={toggleSidebar}>
 					<Menu className="h-5 w-5" />

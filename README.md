@@ -57,8 +57,8 @@ postgres_data:
 ### Core Experience
 
 - **Home Feed**: Personalized feed with filters (All, Recently uploaded, Watched)
-- **Shorts**: Vertical video feed with infinite scrolling and immersive mobile experience
-- **Video Player**: Adaptive streaming with multiple quality support
+- **Shorts**: Vertical video feed with infinite scrolling, touch gestures, and immersive mobile experience
+- **Video Player**: Adaptive streaming with multiple quality support, autoplay, ambient mode, theater mode, picture-in-picture, and keyboard shortcuts
 - **Search**: Advanced search with type filtering (Videos, Shorts, Channels, Playlists) and mixed results
 - **History**: Watch history tracking with pause functionality and support for external videos
 - **Playlists**: Create and manage personal playlists with visibility controls and autoplay support

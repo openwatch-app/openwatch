@@ -216,11 +216,12 @@ const Page = () => {
 				{/* Video Player */}
 				<div
 					className={cn(
-						'relative group bg-black transition-all duration-300 ease-in-out z-20',
-						theaterMode ? 'col-span-1 lg:col-span-2 w-full h-[72vh]' : 'aspect-video rounded-none lg:rounded-xl overflow-hidden mb-0 lg:mb-4 lg:col-start-1 lg:row-start-1'
+						'relative group transition-all duration-300 ease-in-out z-20',
+						theaterMode ? 'col-span-1 lg:col-span-2 w-full h-[72vh]' : 'aspect-video mb-0 lg:mb-4 lg:col-start-1 lg:row-start-1'
 					)}
 				>
 					<VideoPlayer
+						className={cn('bg-black overflow-hidden', theaterMode ? '' : 'rounded-none lg:rounded-xl')}
 						videoId={id}
 						videoUrl={video.videoUrl}
 						autoPlay
