@@ -8,8 +8,10 @@ import { Button } from '~components/button';
 import { useRouter } from 'next/navigation';
 import { Input } from '~components/input';
 import axios from 'axios';
+import { useTranslation } from '~lib/i18n';
 
 const CustomizationPage = () => {
+	const { t } = useTranslation();
 	const { data: session, isPending: sessionPending } = authClient.useSession();
 	const router = useRouter();
 	const [loading, setLoading] = useState(true);
@@ -181,10 +183,10 @@ const CustomizationPage = () => {
 	return (
 		<div className="max-w-5xl mx-auto pb-20">
 			<div className="flex items-center justify-between mb-6">
-				<h1 className="text-2xl font-bold">Channel customization</h1>
+				<h1 className="text-2xl font-bold">{t('studio.channel_customization')}</h1>
 				<div className="flex gap-2">
 					<Button variant="ghost" className="rounded-full font-medium" onClick={() => router.push(`/channel/${formData.handle || session?.user.id}`)}>
-						View channel
+						{t('studio.view_channel')}
 					</Button>
 					<Button
 						variant="secondary"
@@ -195,11 +197,11 @@ const CustomizationPage = () => {
 							setPendingDeletedFiles([]);
 						}}
 					>
-						Cancel
+						{t('common.cancel')}
 					</Button>
 					<Button className="rounded-full font-medium bg-[#3ea6ff] hover:bg-[#3ea6ff]/90 text-black px-6" disabled={!hasChanges || isUpdating} onClick={handleUpdate}>
 						{isUpdating && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-						Publish
+						{t('studio.publish')}
 					</Button>
 				</div>
 			</div>
@@ -208,8 +210,8 @@ const CustomizationPage = () => {
 				{/* Banner image */}
 				<section className="space-y-4">
 					<div className="space-y-1">
-						<h3 className="font-semibold text-base">Banner image</h3>
-						<p className="text-sm text-muted-foreground">This image will appear across the top of your channel</p>
+						<h3 className="font-semibold text-base">{t('studio.banner_image')}</h3>
+						<p className="text-sm text-muted-foreground">{t('studio.banner_description')}</p>
 					</div>
 					<div className="flex flex-col md:flex-row gap-6">
 						<div className="w-full md:w-[426px] aspect-video bg-[#1f1f1f] rounded-lg overflow-hidden relative group">
@@ -230,16 +232,16 @@ const CustomizationPage = () => {
 						</div>
 						<div className="flex-1 space-y-4 pt-2">
 							<p className="text-xs text-muted-foreground max-w-sm">
-								For the best results on all devices, use an image that's at least 2048 x 1152 pixels and 6MB or less. <HelpCircle className="h-3 w-3 inline cursor-help" />
+								{t('studio.banner_hint')} <HelpCircle className="h-3 w-3 inline cursor-help" />
 							</p>
 							<input type="file" ref={bannerInputRef} className="hidden" accept="image/*" onChange={(e) => handleFileChange(e, 'banner')} />
 							<div className="flex gap-4">
 								<Button variant="ghost" className="text-[#3ea6ff] hover:bg-[#3ea6ff]/10 p-0 h-auto font-medium" onClick={() => bannerInputRef.current?.click()}>
-									{formData.banner ? 'Change' : 'Upload'}
+									{formData.banner ? t('studio.change') : t('studio.upload')}
 								</Button>
 								{formData.banner && (
 									<Button variant="ghost" className="text-[#3ea6ff] hover:bg-[#3ea6ff]/10 p-0 h-auto font-medium" onClick={() => handleRemoveFile('banner')}>
-										Remove
+										{t('common.remove')}
 									</Button>
 								)}
 							</div>
@@ -250,8 +252,8 @@ const CustomizationPage = () => {
 				{/* Picture */}
 				<section className="space-y-4">
 					<div className="space-y-1">
-						<h3 className="font-semibold text-base">Picture</h3>
-						<p className="text-sm text-muted-foreground">Your profile picture will appear where your channel is presented on OpenWatch, like next to your videos and comments</p>
+						<h3 className="font-semibold text-base">{t('studio.picture')}</h3>
+						<p className="text-sm text-muted-foreground">{t('studio.picture_description')}</p>
 					</div>
 					<div className="flex flex-col md:flex-row gap-6">
 						<div className="w-[120px] h-[120px] bg-[#1f1f1f] rounded-full overflow-hidden shrink-0 flex items-center justify-center border border-[#3f3f3f] relative group">
@@ -267,17 +269,16 @@ const CustomizationPage = () => {
 						</div>
 						<div className="flex-1 space-y-4 pt-2">
 							<p className="text-xs text-muted-foreground max-w-sm">
-								It's recommended to use a picture that's at least 98 x 98 pixels and 4MB or less. Use a PNG or GIF (no animations) file. Make sure your picture follows the OpenWatch
-								Community Guidelines. <HelpCircle className="h-3 w-3 inline cursor-help" />
+								{t('studio.picture_hint')} <HelpCircle className="h-3 w-3 inline cursor-help" />
 							</p>
 							<input type="file" ref={avatarInputRef} className="hidden" accept="image/*" onChange={(e) => handleFileChange(e, 'avatar')} />
 							<div className="flex gap-4">
 								<Button variant="ghost" className="text-[#3ea6ff] hover:bg-[#3ea6ff]/10 p-0 h-auto font-medium" onClick={() => avatarInputRef.current?.click()}>
-									{formData.avatar ? 'Change' : 'Upload'}
+									{formData.avatar ? t('studio.change') : t('studio.upload')}
 								</Button>
 								{formData.avatar && (
 									<Button variant="ghost" className="text-[#3ea6ff] hover:bg-[#3ea6ff]/10 p-0 h-auto font-medium" onClick={() => handleRemoveFile('avatar')}>
-										Remove
+										{t('common.remove')}
 									</Button>
 								)}
 							</div>
@@ -288,14 +289,13 @@ const CustomizationPage = () => {
 				{/* Name */}
 				<section className="space-y-4">
 					<div className="space-y-1">
-						<h3 className="font-semibold text-base">Name</h3>
+						<h3 className="font-semibold text-base">{t('studio.name')}</h3>
 						<p className="text-xs text-muted-foreground max-w-2xl">
-							Choose a channel name that represents you and your content. Changes made to your name and picture are visible only on OpenWatch. You can change your name twice in 14 days.{' '}
-							<HelpCircle className="h-3 w-3 inline cursor-help" />
+							{t('studio.name_description')} <HelpCircle className="h-3 w-3 inline cursor-help" />
 						</p>
 					</div>
 					<Input
-						placeholder="Enter your channel name"
+						placeholder={t('studio.name')}
 						className="max-w-2xl h-12 bg-[#0f0f0f] border-[#3f3f3f] text-base"
 						value={formData.name}
 						onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -305,18 +305,18 @@ const CustomizationPage = () => {
 				{/* Handle */}
 				<section className="space-y-4">
 					<div className="space-y-1">
-						<h3 className="font-semibold text-base">Handle</h3>
-						<p className="text-xs text-muted-foreground max-w-2xl">Choose your unique handle by adding letters and numbers.</p>
+						<h3 className="font-semibold text-base">{t('studio.handle')}</h3>
+						<p className="text-xs text-muted-foreground max-w-2xl">{t('studio.handle_description')}</p>
 					</div>
 					<div className="space-y-2">
 						<Input
-							placeholder="Enter your handle"
+							placeholder={t('studio.handle')}
 							className="max-w-2xl h-12 bg-[#0f0f0f] border-[#3f3f3f] text-base"
 							value={formData.handle}
 							onChange={(e) => setFormData({ ...formData, handle: e.target.value })}
 						/>
 						<p className="text-xs text-muted-foreground">
-							{window.location.origin}/{formData.handle || '@yourhandle'}
+							{origin}/{formData.handle || t('studio.handlePlaceholder')}
 						</p>
 					</div>
 				</section>
@@ -324,13 +324,11 @@ const CustomizationPage = () => {
 				{/* Description */}
 				<section className="space-y-4">
 					<div className="space-y-1">
-						<h3 className="font-semibold text-base">Description</h3>
-						<p className="text-xs text-muted-foreground max-w-2xl">
-							Tell viewers about your channel. Your description will appear in the About section of your channel and search results, among other places.
-						</p>
+						<h3 className="font-semibold text-base">{t('studio.description')}</h3>
+						<p className="text-xs text-muted-foreground max-w-2xl">{t('studio.description_hint')}</p>
 					</div>
 					<Textarea
-						placeholder="Tell viewers about your channel"
+						placeholder={t('studio.description')}
 						className="max-w-2xl min-h-[160px] bg-[#0f0f0f] border-[#3f3f3f] text-base resize-none"
 						value={formData.description}
 						onChange={(e) => setFormData({ ...formData, description: e.target.value })}

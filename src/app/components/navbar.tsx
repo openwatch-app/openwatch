@@ -1,19 +1,21 @@
 'use client';
 
-import { NotificationCenter } from '~components/notification-center';
 import { Menu, Search, Video, User, X, History, Trash2 } from 'lucide-react';
-import { authClient } from '~lib/auth-client';
+import { NotificationCenter } from '~components/notification-center';
+import { useState, useRef, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useAppStore } from '../lib/store';
-import UserDropdown from './user-dropdown';
+import { authClient } from '~lib/auth-client';
 import GuestDropdown from './guest-dropdown';
+import { useTranslation } from '~lib/i18n';
+import UserDropdown from './user-dropdown';
+import { useAppStore } from '../lib/store';
 import { Button } from './button';
 import { Badge } from './badge';
-import { useState, useRef, useEffect, Suspense } from 'react';
 import { Input } from './input';
 import Link from 'next/link';
 
 const NavbarContent = () => {
+	const { t } = useTranslation();
 	const { toggleSidebar, searchHistory, addToSearchHistory, removeFromSearchHistory } = useAppStore();
 	const { data: sessionData } = authClient.useSession();
 	const [isMounted, setIsMounted] = useState(false);
@@ -107,7 +109,7 @@ const NavbarContent = () => {
 					</div>
 					<span className="text-xl font-bold tracking-tighter">OpenWatch</span>
 					<Badge variant="secondary" className="text-[10px] px-1.5 h-5 rounded-full uppercase">
-						beta
+						{t('common.beta')}
 					</Badge>
 				</Link>
 			</div>
@@ -116,7 +118,7 @@ const NavbarContent = () => {
 				<div className="flex w-full items-center ml-10 relative">
 					<div className="relative w-full flex">
 						<Input
-							placeholder="Search"
+							placeholder={t('navbar.search_placeholder')}
 							className="rounded-l-full rounded-r-none focus-visible:ring-0 border-r-0 shadow-none pl-4 pr-8"
 							value={searchInput}
 							onChange={(e) => {
@@ -155,7 +157,7 @@ const NavbarContent = () => {
 												selectedIndex === 0 ? 'text-white border-white' : ''
 											}`}
 										>
-											In this instance's network
+											{t('navbar.search_this_instance')}
 										</span>
 									</button>
 
@@ -175,14 +177,14 @@ const NavbarContent = () => {
 													selectedIndex === 1 ? 'text-white border-white' : ''
 												}`}
 											>
-												In the vidiverse
+												{t('navbar.search_vidiverse')}
 											</span>
 										</button>
 									)}
 								</>
 							) : (
 								<>
-									<div className="px-4 py-1 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Recent</div>
+									<div className="px-4 py-1 text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t('common.recent')}</div>
 									{searchHistory.map((item, index) => (
 										<button
 											key={item}
@@ -228,7 +230,7 @@ const NavbarContent = () => {
 						<Button variant="outline" className="rounded-full" asChild>
 							<Link href="/auth">
 								<User className="mr-2 h-5 w-5" />
-								Sign in
+								{t('navbar.sign_in')}
 							</Link>
 						</Button>
 					</>

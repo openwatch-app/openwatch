@@ -19,12 +19,16 @@ interface AppState {
 	addToSearchHistory: (query: string) => void;
 	removeFromSearchHistory: (query: string) => void;
 	clearSearchHistory: () => void;
+	language: string;
+	setLanguage: (lang: string) => void;
 }
 
 export const useAppStore = create<AppState>()(
 	persist(
 		(set, get) => ({
 			isSidebarOpen: true,
+			language: 'en',
+			setLanguage: (language: string) => set({ language }),
 			volume: 1,
 			setVolume: (volume: number) => set({ volume }),
 			isMuted: false,
@@ -57,7 +61,8 @@ export const useAppStore = create<AppState>()(
 				theaterMode: state.theaterMode,
 				autoplay: state.autoplay,
 				playbackRate: state.playbackRate,
-				searchHistory: state.searchHistory
+				searchHistory: state.searchHistory,
+				language: state.language
 			})
 		}
 	)

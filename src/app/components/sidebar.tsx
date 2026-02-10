@@ -1,9 +1,11 @@
 'use client';
 
 import { Avatar, AvatarFallback, AvatarImage } from './avatar';
-import { usePathname } from 'next/navigation';
 import { Home, History, ListVideo, Zap } from 'lucide-react';
+import { usePathname } from 'next/navigation';
+import SideBarFooter from './sidebar-footer';
 import { useEffect, useState } from 'react';
+import { useTranslation } from '~lib/i18n';
 import { ScrollArea } from './scroll-area';
 import { useAppStore } from '~lib/store';
 import { Separator } from './separator';
@@ -49,9 +51,8 @@ const SidebarItem = ({ icon: Icon, label, href, isActive, isCollapsed }: Sidebar
 
 const ExpandedSidebarContent = () => {
 	const [channels, setChannels] = useState<Channel[]>([]);
-	const [latestVersion, setLatestVersion] = useState<string | null>(null);
 	const pathname = usePathname();
-	const currentVersion = (process.env.NEXT_PUBLIC_APP_VERSION as string) || '0.0.0';
+	const { t } = useTranslation();
 
 	useEffect(() => {
 		const fetchChannels = async () => {
@@ -63,36 +64,22 @@ const ExpandedSidebarContent = () => {
 			}
 		};
 
-		const checkVersion = async () => {
-			try {
-				const response = await axios.get('https://raw.githubusercontent.com/openwatch-app/openwatch/refs/heads/main/package.json');
-				if (response.data && response.data.version) {
-					setLatestVersion(response.data.version);
-				}
-			} catch (e) {
-				console.error('Error fetching version:', e);
-			}
-		};
-
 		fetchChannels();
-		checkVersion();
 	}, []);
-
-	const isLatest = latestVersion ? currentVersion.replace('v', '') === latestVersion.replace('v', '') : true;
 
 	return (
 		<>
 			<ScrollArea className="flex-1 px-3 py-4">
 				<div className="space-y-1">
-					<SidebarItem icon={Home} label="Home" href="/" isActive={pathname === '/'} />
-					<SidebarItem icon={Zap} label="Shorts" href="/shorts" isActive={pathname?.startsWith('/shorts')} />
-					<SidebarItem icon={History} label="History" href="/history" isActive={pathname === '/history'} />
-					<SidebarItem icon={ListVideo} label="Playlists" href="/playlists" isActive={pathname === '/playlists'} />
+					<SidebarItem icon={Home} label={t('sidebar.home')} href="/" isActive={pathname === '/'} />
+					<SidebarItem icon={Zap} label={t('sidebar.shorts')} href="/shorts" isActive={pathname?.startsWith('/shorts')} />
+					<SidebarItem icon={History} label={t('sidebar.history')} href="/history" isActive={pathname === '/history'} />
+					<SidebarItem icon={ListVideo} label={t('sidebar.playlists')} href="/playlists" isActive={pathname === '/playlists'} />
 				</div>
 
 				<Separator className="my-4 bg-border/40" />
 
-				<div className="px-3 mb-2 text-xs font-semibold text-muted-foreground/70 uppercase tracking-wider">Subscriptions</div>
+				<div className="px-3 mb-2 text-xs font-semibold text-muted-foreground/70 uppercase tracking-wider">{t('sidebar.subscriptions')}</div>
 				<div className="space-y-1">
 					{channels.map((channel) => (
 						<Link key={channel.id} href={`/channel/${channel.handle || channel.id}`} className="w-full group">
@@ -108,53 +95,21 @@ const ExpandedSidebarContent = () => {
 				</div>
 			</ScrollArea>
 
-			<div className="p-4 mt-auto border-t bg-card/30 backdrop-blur-[2px]">
-				<div className="flex flex-col gap-3">
-					<Link
-						href="https://github.com/openwatch-app/openwatch/issues/new"
-						className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-2 group"
-						target="_blank"
-						rel="noopener noreferrer"
-					>
-						<span className="w-1.5 h-1.5 rounded-full bg-red-500/70 group-hover:bg-red-500 transition-colors" />
-						Report a BUG / Request a feature
-					</Link>
-
-					<div className="text-xs text-muted-foreground">
-						Powered by{' '}
-						<Link
-							href="https://github.com/openwatch-app/openwatch"
-							className="text-foreground font-medium hover:underline decoration-border underline-offset-2"
-							target="_blank"
-							rel="noopener noreferrer"
-						>
-							OpenWatch
-						</Link>
-					</div>
-
-					<div className="text-[10px] text-muted-foreground/50 flex items-center gap-1.5 font-mono">
-						<span>v{currentVersion}</span>
-						{latestVersion && !isLatest ? (
-							<span className="text-amber-500/90 font-medium bg-amber-500/10 px-1.5 py-0.5 rounded-[4px] text-[9px] border border-amber-500/20">Update: {latestVersion}</span>
-						) : (
-							<span className="text-emerald-500/60 ml-1">• latest</span>
-						)}
-					</div>
-				</div>
-			</div>
+			<SideBarFooter />
 		</>
 	);
 };
 
 const CollapsedSidebarContent = () => {
+	const { t } = useTranslation();
 	const pathname = usePathname();
 
 	return (
 		<div className="flex flex-col items-center py-2 w-full">
-			<SidebarItem icon={Home} label="Home" href="/" isActive={pathname === '/'} isCollapsed />
-			<SidebarItem icon={Zap} label="Shorts" href="/shorts" isActive={pathname?.startsWith('/shorts')} isCollapsed />
-			<SidebarItem icon={History} label="History" href="/history" isActive={pathname === '/history'} isCollapsed />
-			<SidebarItem icon={ListVideo} label="Playlists" href="/playlists" isActive={pathname === '/playlists'} isCollapsed />
+			<SidebarItem icon={Home} label={t('sidebar.home')} href="/" isActive={pathname === '/'} isCollapsed />
+			<SidebarItem icon={Zap} label={t('sidebar.shorts')} href="/shorts" isActive={pathname?.startsWith('/shorts')} isCollapsed />
+			<SidebarItem icon={History} label={t('sidebar.history')} href="/history" isActive={pathname === '/history'} isCollapsed />
+			<SidebarItem icon={ListVideo} label={t('sidebar.playlists')} href="/playlists" isActive={pathname === '/playlists'} isCollapsed />
 		</div>
 	);
 };

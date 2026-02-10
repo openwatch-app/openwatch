@@ -11,8 +11,10 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '~components/sheet'
 import { Button } from '~components/button';
 import { cn } from '~lib/utils';
 import { authClient } from '~lib/auth-client';
+import { useTranslation } from '~lib/i18n';
 
 const ShortsFeedPage = () => {
+	const { t } = useTranslation();
 	const params = useParams();
 	const router = useRouter();
 	const { data: session } = authClient.useSession();
@@ -172,7 +174,7 @@ const ShortsFeedPage = () => {
 					<Sheet open={showComments} onOpenChange={setShowComments}>
 						<SheetContent side="bottom" showCloseButton={false} className="h-[60vh] p-0 bg-background text-foreground border-t border-border z-60 rounded-t-xl flex flex-col mb-16">
 							<SheetHeader className="sr-only">
-								<SheetTitle>Comments</SheetTitle>
+								<SheetTitle>{t('comments.title')}</SheetTitle>
 							</SheetHeader>
 							{/* Drag Handle */}
 							<div className="w-full flex justify-center pt-3 pb-1 shrink-0">

@@ -1,8 +1,10 @@
 'use client';
 
 import { LayoutDashboard, Users, Settings } from 'lucide-react';
-import { authClient } from '~lib/auth-client';
 import { usePathname } from 'next/navigation';
+import { authClient } from '~lib/auth-client';
+import SideBarFooter from './sidebar-footer';
+import { useTranslation } from '~lib/i18n';
 import { ScrollArea } from './scroll-area';
 import { useAppStore } from '~lib/store';
 import { Button } from './button';
@@ -28,6 +30,7 @@ const SidebarItem = ({ icon: Icon, label, href, isActive }: SidebarItemProps) =>
 };
 
 const ConsoleSidebarContent = () => {
+	const { t } = useTranslation();
 	const { data: session } = authClient.useSession();
 	const pathname = usePathname();
 
@@ -37,17 +40,12 @@ const ConsoleSidebarContent = () => {
 		<>
 			<ScrollArea className="flex-1 px-3 pt-5">
 				<div className="space-y-0.5">
-					<SidebarItem icon={LayoutDashboard} label="Dashboard" href="/console" isActive={pathname === '/console'} />
-					<SidebarItem icon={Users} label="Users" href="/console/users" isActive={pathname === '/console/users'} />
-					<SidebarItem icon={Settings} label="Settings" href="/console/settings" isActive={pathname === '/console/settings'} />
+					<SidebarItem icon={LayoutDashboard} label={t('console.sidebar.dashboard')} href="/console" isActive={pathname === '/console'} />
+					<SidebarItem icon={Users} label={t('console.sidebar.users')} href="/console/users" isActive={pathname === '/console/users'} />
+					<SidebarItem icon={Settings} label={t('console.sidebar.settings')} href="/console/settings" isActive={pathname === '/console/settings'} />
 				</div>
 			</ScrollArea>
-			<div className="py-4 px-2 text-xs text-muted-foreground text-center whitespace-nowrap">
-				Developed with ☕ and ❤️ by{' '}
-				<a href="https://github.com/ge0rg3e" target="_blank" rel="noreferrer" className="underline">
-					Ge0rg3e
-				</a>
-			</div>
+			<SideBarFooter />
 		</>
 	);
 };

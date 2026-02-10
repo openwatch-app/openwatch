@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '~components/avatar';
 import { Button } from '~components/button';
 import { authClient } from '~lib/auth-client';
 import { Smile } from 'lucide-react';
+import { useTranslation } from '~lib/i18n';
 
 interface CommentInputProps {
 	videoId: string;
@@ -16,6 +17,7 @@ interface CommentInputProps {
 }
 
 export const CommentInput = ({ videoId, parentId, onCommentAdded, onCancel, autoFocus }: CommentInputProps) => {
+	const { t } = useTranslation();
 	const { data: session } = authClient.useSession();
 	const [content, setContent] = useState('');
 	const [loading, setLoading] = useState(false);
@@ -39,7 +41,7 @@ export const CommentInput = ({ videoId, parentId, onCommentAdded, onCancel, auto
 	};
 
 	if (!session) {
-		return <div className="flex items-center gap-4 p-4 text-sm text-muted-foreground">Please sign in to comment.</div>;
+		return <div className="flex items-center gap-4 p-4 text-sm text-muted-foreground">{t('comments.sign_in_to_comment')}</div>;
 	}
 
 	return (
@@ -52,7 +54,7 @@ export const CommentInput = ({ videoId, parentId, onCommentAdded, onCancel, auto
 				<div className="relative">
 					<input
 						type="text"
-						placeholder="Add a comment..."
+						placeholder={t('comments.placeholder')}
 						value={content}
 						onChange={(e) => setContent(e.target.value)}
 						onFocus={() => setIsFocused(true)}
@@ -77,7 +79,7 @@ export const CommentInput = ({ videoId, parentId, onCommentAdded, onCancel, auto
 								disabled={loading}
 								className="rounded-full"
 							>
-								Cancel
+								{t('comments.cancel')}
 							</Button>
 							<Button
 								size="sm"
@@ -85,7 +87,7 @@ export const CommentInput = ({ videoId, parentId, onCommentAdded, onCancel, auto
 								disabled={!content.trim() || loading}
 								className="rounded-full bg-primary hover:bg-primary/90 text-white disabled:bg-zinc-200 disabled:text-zinc-500 dark:disabled:bg-zinc-700"
 							>
-								{loading ? 'Posting...' : parentId ? 'Reply' : 'Comment'}
+								{loading ? t('comments.posting') : parentId ? t('comments.reply') : t('comments.post')}
 							</Button>
 						</div>
 					</div>

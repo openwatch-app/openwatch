@@ -3,23 +3,30 @@ import { MoreVertical } from 'lucide-react';
 import { Card, CardContent } from './card';
 import { Button } from './button';
 import { Video } from '../types';
+import { useTranslation } from '~lib/i18n';
 import Link from 'next/link';
 import Image from 'next/image';
 import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+import 'dayjs/locale/ro';
+
+dayjs.extend(relativeTime);
 
 interface VideoCardProps {
 	video: Video;
 }
 
-const safeFromNow = (input: string | Date) => {
-	const ts = dayjs(input);
-	if (!ts.isValid()) return '';
-	const now = dayjs();
-	const futureOffset = ts.diff(now);
-	return ts.subtract(futureOffset > 0 ? futureOffset : 0, 'ms').fromNow();
-};
-
 const VideoCard = ({ video }: VideoCardProps) => {
+	const { t, language } = useTranslation();
+
+	const safeFromNow = (input: string | Date) => {
+		const ts = dayjs(input).locale(language === 'ro' ? 'ro' : 'en');
+		if (!ts.isValid()) return '';
+		const now = dayjs();
+		const futureOffset = ts.diff(now);
+		return ts.subtract(futureOffset > 0 ? futureOffset : 0, 'ms').fromNow();
+	};
+
 	return (
 		<Card className="border-0 bg-transparent shadow-none">
 			<CardContent className="p-0">
@@ -68,7 +75,9 @@ const VideoCard = ({ video }: VideoCardProps) => {
 								{video.channel.name}
 							</Link>
 							<div className="flex items-center">
-								<span>{video.views} views</span>
+								<span>
+									{video.views} {t('common.views')}
+								</span>
 								<span className="mx-1">•</span>
 								<span>{safeFromNow(video.uploadedAt)}</span>
 							</div>

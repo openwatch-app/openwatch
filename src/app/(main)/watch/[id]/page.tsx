@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '~components/avatar';
 import { UpNextOverlay } from '~components/video-player/up-next-overlay';
 import { PlaylistSidebar } from '~app/components/watch/playlist-sidebar';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
+import { useTranslation } from '~lib/i18n';
 import { VideoPlayer } from '~components/video-player/video-player';
 import { SubscribeButton } from '~components/subscribe-button';
 import { authClient } from '~lib/auth-client';
@@ -21,6 +22,7 @@ import dayjs from 'dayjs';
 import '~lib/dayjs-config';
 
 const Page = () => {
+	const { t, language } = useTranslation();
 	const router = useRouter();
 	const params = useParams();
 	const searchParams = useSearchParams();
@@ -169,7 +171,7 @@ const Page = () => {
 				}
 			} catch (err: any) {
 				console.error('Error fetching video data:', err);
-				setError(err.response?.data?.error || 'Failed to load video');
+				setError(err.response?.data?.error || 'common.error_loading');
 			} finally {
 				setLoading(false);
 			}
@@ -199,7 +201,7 @@ const Page = () => {
 	}
 
 	if (error || !video) {
-		return <div className="p-10 text-center text-orange-600">{error || 'Video not found'}</div>;
+		return <div className="p-10 text-center text-orange-600">{error ? t(error) : t('common.video_not_found')}</div>;
 	}
 
 	return (
@@ -254,7 +256,9 @@ const Page = () => {
 								<Link href={`/channel/${video.channel.handle || video.channel.id}`}>
 									<h3 className="font-semibold cursor-pointer hover:text-foreground/80 truncate">{video.channel.name}</h3>
 								</Link>
-								<p className="text-xs text-muted-foreground truncate">{video.channel.subscribers} subscribers</p>
+								<p className="text-xs text-muted-foreground truncate">
+									{video.channel.subscribers} {t('common.subscribers')}
+								</p>
 							</div>
 							{!isOwner && (
 								<SubscribeButton
@@ -318,13 +322,13 @@ const Page = () => {
 
 								<Button variant="secondary" className="rounded-full gap-2" onClick={handleShare}>
 									{isCopied ? <Check className="h-4 w-4" /> : <Share2 className="h-4 w-4" />}
-									<span>{isCopied ? 'Copied' : 'Share'}</span>
+									<span>{isCopied ? t('common.copied') : t('common.share')}</span>
 								</Button>
 
 								<SaveToPlaylist videoId={id}>
 									<Button variant="secondary" className="rounded-full gap-2">
 										<ListPlus className="h-4 w-4" />
-										<span>Save</span>
+										<span>{t('common.save')}</span>
 									</Button>
 								</SaveToPlaylist>
 							</div>
@@ -337,25 +341,31 @@ const Page = () => {
 						onClick={() => !isDescriptionExpanded && setIsDescriptionExpanded(true)}
 					>
 						<div className="font-medium mb-1 flex items-center gap-2">
-							<span>{video.views} views</span>
+							<span>
+								{video.views} {t('common.views')}
+							</span>
 							<span>•</span>
-							<span>{dayjs(video.uploadedAt).fromNow()}</span>
+							<span>
+								{dayjs(video.uploadedAt)
+									.locale(language === 'ro' ? 'ro' : 'en')
+									.fromNow()}
+							</span>
 						</div>
 						<div className="whitespace-pre-wrap text-muted-foreground">
 							{isDescriptionExpanded
-								? video.description || 'No description provided.'
-								: (video.description?.slice(0, 10) || 'No description provided.') + (video.description && video.description.length > 150 ? '...' : '')}
+								? video.description || t('common.no_description')
+								: (video.description?.slice(0, 150) || t('common.no_description')) + (video.description && video.description.length > 150 ? '...' : '')}
 						</div>
-						{video.description && video.description.length > 10 && (
-							<div
-								className="mt-2 font-medium cursor-pointer w-fit"
+						{video.description && video.description.length > 150 && (
+							<button
+								className="mt-2 font-bold hover:text-foreground transition-colors"
 								onClick={(e) => {
 									e.stopPropagation();
 									setIsDescriptionExpanded(!isDescriptionExpanded);
 								}}
 							>
-								{isDescriptionExpanded ? 'Show less' : '...more'}
-							</div>
+								{isDescriptionExpanded ? t('common.show_less') : t('common.show_more')}
+							</button>
 						)}
 					</div>
 
@@ -396,7 +406,7 @@ const Page = () => {
 								className={cn('rounded-lg whitespace-nowrap', selectedTab === 'all' ? 'bg-foreground text-background hover:bg-foreground/90' : '')}
 								onClick={() => setSelectedTab('all')}
 							>
-								All
+								{t('watch.tabs.all')}
 							</Button>
 							<Button
 								variant={selectedTab === 'channel' ? 'default' : 'secondary'}
@@ -404,7 +414,7 @@ const Page = () => {
 								className={cn('rounded-lg whitespace-nowrap', selectedTab === 'channel' ? 'bg-foreground text-background hover:bg-foreground/90' : '')}
 								onClick={() => setSelectedTab('channel')}
 							>
-								From {video.channel.name}
+								{t('watch.tabs.from_channel', { name: video.channel.name })}
 							</Button>
 							<Button
 								variant={selectedTab === 'related' ? 'default' : 'secondary'}
@@ -412,7 +422,7 @@ const Page = () => {
 								className={cn('rounded-lg whitespace-nowrap', selectedTab === 'related' ? 'bg-foreground text-background hover:bg-foreground/90' : '')}
 								onClick={() => setSelectedTab('related')}
 							>
-								Related
+								{t('watch.tabs.related')}
 							</Button>
 						</div>
 					</div>
@@ -430,7 +440,12 @@ const Page = () => {
 								<div className="text-xs text-muted-foreground">
 									<div>{recVideo.channel.name}</div>
 									<div>
-										{recVideo.views} views • {dayjs(recVideo.uploadedAt).fromNow()}
+										{t('common.views_and_date', {
+											views: recVideo.views,
+											date: dayjs(recVideo.uploadedAt)
+												.locale(language === 'ro' ? 'ro' : 'en')
+												.fromNow()
+										})}
 									</div>
 								</div>
 							</div>

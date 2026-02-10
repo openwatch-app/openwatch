@@ -1,15 +1,20 @@
 import { Avatar, AvatarFallback, AvatarImage } from './avatar';
-import { Button } from './button';
-import Link from 'next/link';
-import { Channel } from '../types';
 import { SubscribeButton } from './subscribe-button';
+import { formatCompactNumber } from '~lib/utils';
+import { useTranslation } from '~lib/i18n';
+import { useAppStore } from '~lib/store';
+import { Button } from './button';
+import { Channel } from '../types';
 import { useState } from 'react';
+import Link from 'next/link';
 
 interface ChannelResultCardProps {
 	channel: Channel;
 }
 
 const ChannelResultCard = ({ channel: initialChannel }: ChannelResultCardProps) => {
+	const { t } = useTranslation();
+	const { language } = useAppStore();
 	const [channel, setChannel] = useState(initialChannel);
 
 	return (
@@ -33,21 +38,25 @@ const ChannelResultCard = ({ channel: initialChannel }: ChannelResultCardProps) 
 					{channel.isExternal && channel.host && (
 						<>
 							<span className="mx-1">•</span>
-							<span className="text-xs bg-muted px-1.5 py-0.5 rounded">Source: {channel.host}</span>
+							<span className="text-xs bg-muted px-1.5 py-0.5 rounded">
+								{t('search.filters.source')}: {channel.host}
+							</span>
 						</>
 					)}
 					<span className="mx-1">•</span>
-					<span>{channel.subscribers} subscribers</span>
+					<span>
+						{formatCompactNumber(parseInt(channel.subscribers.replace(/,/g, '') || '0'), language)} {t('common.subscribers')}
+					</span>
 				</div>
 
-				<p className="text-sm text-muted-foreground line-clamp-2 max-w-2xl mt-1">{channel.description || `Welcome to ${channel.name}'s channel.`}</p>
+				<p className="text-sm text-muted-foreground line-clamp-2 max-w-2xl mt-1">{channel.description || t('common.channel_welcome', { name: channel.name })}</p>
 			</div>
 
 			{/* Action */}
 			<div className="shrink-0 mt-4 md:mt-0">
 				{channel.isExternal ? (
 					<Button disabled variant="secondary" className="rounded-full px-6 font-medium opacity-70 cursor-not-allowed">
-						Subscribe
+						{t('common.subscribe')}
 					</Button>
 				) : (
 					<SubscribeButton

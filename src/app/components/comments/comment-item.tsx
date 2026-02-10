@@ -7,11 +7,17 @@ import { CommentInput } from './comment-input';
 import { authClient } from '~lib/auth-client';
 import { Button } from '~components/button';
 import { Comment } from '~app/types';
+import { useTranslation } from '~lib/i18n';
+import { useAppStore } from '~lib/store';
 import { useState } from 'react';
 import { cn } from '~lib/utils';
 import Link from 'next/link';
 import axios from 'axios';
 import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+import 'dayjs/locale/ro';
+
+dayjs.extend(relativeTime);
 
 interface CommentItemProps {
 	comment: Comment;
@@ -23,9 +29,19 @@ interface CommentItemProps {
 }
 
 export const CommentItem = ({ comment, videoId, isVideoOwner, onDelete, onUpdate, isReply = false }: CommentItemProps) => {
+	const { t } = useTranslation();
+	const { language } = useAppStore();
 	const { data: session } = authClient.useSession();
 	const [isReplying, setIsReplying] = useState(false);
 	const [showReplies, setShowReplies] = useState(false);
+
+	const safeFromNow = (input: string | Date) => {
+		const ts = dayjs(input).locale(language);
+		if (!ts.isValid()) return '';
+		const now = dayjs().locale(language);
+		const futureOffset = ts.diff(now);
+		return ts.subtract(futureOffset > 0 ? futureOffset : 0, 'ms').fromNow();
+	};
 
 	const isAuthor = session?.user?.id === comment.user.id;
 
@@ -81,7 +97,7 @@ export const CommentItem = ({ comment, videoId, isVideoOwner, onDelete, onUpdate
 	};
 
 	const handleDelete = async () => {
-		if (!confirm('Are you sure you want to delete this comment?')) return;
+		if (!confirm(t('comments.delete_confirm'))) return;
 		try {
 			await axios.delete(`/api/comments/${comment.id}`);
 			onDelete(comment.id);
@@ -114,10 +130,10 @@ export const CommentItem = ({ comment, videoId, isVideoOwner, onDelete, onUpdate
 						<Link href={`/channel/${comment.user.id}`} className={cn('font-semibold text-sm hover:text-zinc-300 transition-colors', comment.isPinned && 'bg-secondary px-1 rounded')}>
 							{comment.user.name}
 						</Link>
-						<span className="text-xs text-muted-foreground">{dayjs(comment.createdAt).fromNow()}</span>
+						<span className="text-xs text-muted-foreground">{safeFromNow(comment.createdAt)}</span>
 						{comment.isPinned && (
 							<div className="flex items-center gap-1 text-xs text-muted-foreground">
-								<Pin className="h-3 w-3" /> Pinned by creator
+								<Pin className="h-3 w-3" /> {t('comments.pinned_by')}
 							</div>
 						)}
 					</div>
@@ -151,7 +167,7 @@ export const CommentItem = ({ comment, videoId, isVideoOwner, onDelete, onUpdate
 						)}
 
 						<Button variant="ghost" size="sm" className="h-8 rounded-full text-xs hover:bg-secondary ml-2" onClick={() => setIsReplying(!isReplying)}>
-							Reply
+							{t('comments.reply')}
 						</Button>
 
 						{(isAuthor || isVideoOwner) && (
@@ -165,16 +181,16 @@ export const CommentItem = ({ comment, videoId, isVideoOwner, onDelete, onUpdate
 									{isVideoOwner && (
 										<>
 											<DropdownMenuItem onClick={handlePin}>
-												<Pin className="mr-2 h-4 w-4" /> {comment.isPinned ? 'Unpin' : 'Pin'}
+												<Pin className="mr-2 h-4 w-4" /> {comment.isPinned ? t('comments.unpin') : t('comments.pin')}
 											</DropdownMenuItem>
 											<DropdownMenuItem onClick={handleHeart}>
 												<Heart className={cn('mr-2 h-4 w-4', comment.isHearted && 'fill-primary text-primary')} />
-												{comment.isHearted ? 'Unheart' : 'Heart'}
+												{comment.isHearted ? t('comments.unheart') : t('comments.heart')}
 											</DropdownMenuItem>
 										</>
 									)}
 									<DropdownMenuItem onClick={handleDelete} className="text-primary focus:text-primary">
-										<Trash2 className="mr-2 h-4 w-4" /> Delete
+										<Trash2 className="mr-2 h-4 w-4" /> {t('comments.delete')}
 									</DropdownMenuItem>
 								</DropdownMenuContent>
 							</DropdownMenu>
@@ -197,7 +213,7 @@ export const CommentItem = ({ comment, videoId, isVideoOwner, onDelete, onUpdate
 							onClick={() => setShowReplies(true)}
 						>
 							<ChevronDown className="h-5 w-5 mr-2" />
-							{comment.replies.length} replies
+							{t('comments.replies_count', { count: comment.replies.length })}
 						</Button>
 					)}
 				</div>

@@ -3,18 +3,20 @@
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Button } from '~components/button';
 import { cn } from '~lib/utils';
+import { useTranslation } from '~lib/i18n';
 
 const SearchFilters = () => {
+	const { t } = useTranslation();
 	const searchParams = useSearchParams();
 	const router = useRouter();
 	const currentType = searchParams.get('type') || 'all';
 
 	const filters = [
-		{ id: 'all', label: 'All' },
-		{ id: 'short', label: 'Shorts' },
-		{ id: 'video', label: 'Videos' },
-		{ id: 'channel', label: 'Channels' },
-		{ id: 'playlist', label: 'Playlists' }
+		{ id: 'all', label: t('search.filters.all') },
+		{ id: 'short', label: t('common.shorts') },
+		{ id: 'video', label: t('search.filters.videos') },
+		{ id: 'channel', label: t('search.filters.channels') },
+		{ id: 'playlist', label: t('search.filters.playlists') }
 	];
 
 	const handleTypeChange = (value: string) => {

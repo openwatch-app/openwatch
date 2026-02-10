@@ -3,6 +3,7 @@
 import { Play, Pause, Volume2, VolumeX, Volume1, Settings, Maximize, Minimize, PictureInPicture, Check, Volume, ChevronsLeft, ChevronsRight, RectangleHorizontal } from 'lucide-react';
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Button } from '~components/button';
+import { useTranslation } from '~lib/i18n';
 import { useAppStore } from '~lib/store';
 import { cn } from '~lib/utils';
 import Hls from 'hls.js';
@@ -44,6 +45,7 @@ const VideoPlayerTooltip = ({ content, className }: { content: React.ReactNode; 
 );
 
 export const VideoPlayer = ({ videoId, videoUrl, autoPlay = false, initialTime = 0, onEnded, children, showAutoplayToggle, autoplayEnabled, onAutoplayChange }: VideoPlayerProps) => {
+	const { t } = useTranslation();
 	const videoRef = useRef<HTMLVideoElement>(null);
 	const containerRef = useRef<HTMLDivElement>(null);
 	const hlsRef = useRef<Hls | null>(null);
@@ -541,7 +543,7 @@ export const VideoPlayer = ({ videoId, videoUrl, autoPlay = false, initialTime =
 				<div className="absolute left-0 top-0 bottom-0 w-1/3 z-20 flex flex-col items-center justify-center bg-white/10 backdrop-blur-[2px] rounded-r-full animate-in fade-in zoom-in duration-200">
 					<div className="flex flex-col items-center gap-2">
 						<ChevronsLeft className="w-12 h-12 text-white" />
-						<span className="text-white font-medium text-sm">10 seconds</span>
+						<span className="text-white font-medium text-sm">10 {t('common.seconds')}</span>
 					</div>
 				</div>
 			)}
@@ -549,7 +551,7 @@ export const VideoPlayer = ({ videoId, videoUrl, autoPlay = false, initialTime =
 				<div className="absolute right-0 top-0 bottom-0 w-1/3 z-20 flex flex-col items-center justify-center bg-white/10 backdrop-blur-[2px] rounded-l-full animate-in fade-in zoom-in duration-200">
 					<div className="flex flex-col items-center gap-2">
 						<ChevronsRight className="w-12 h-12 text-white" />
-						<span className="text-white font-medium text-sm">10 seconds</span>
+						<span className="text-white font-medium text-sm">10 {t('common.seconds')}</span>
 					</div>
 				</div>
 			)}
@@ -572,8 +574,8 @@ export const VideoPlayer = ({ videoId, videoUrl, autoPlay = false, initialTime =
 							<div className="absolute inset-0 rounded-full border-4 border-white/20"></div>
 							<div className="absolute inset-0 rounded-full border-4 border-t-orange-600 animate-spin"></div>
 						</div>
-						<div className="text-white text-lg font-medium">Processing Video...</div>
-						<div className="text-white/60 text-sm">This might take a moment</div>
+						<div className="text-white text-lg font-medium">{t('common.processing_video')}</div>
+						<div className="text-white/60 text-sm">{t('common.processing_description')}</div>
 					</div>
 				</div>
 			)}
@@ -616,7 +618,7 @@ export const VideoPlayer = ({ videoId, videoUrl, autoPlay = false, initialTime =
 							<Button variant="ghost" size="icon" className="text-white hover:bg-white/10 w-8 h-8 rounded-full" onClick={togglePlay}>
 								{isPlaying ? <Pause className="fill-white w-5 h-5" /> : <Play className="fill-white w-5 h-5" />}
 							</Button>
-							<VideoPlayerTooltip content={isPlaying ? 'Pause (k)' : 'Play (k)'} />
+							<VideoPlayerTooltip content={isPlaying ? `${t('common.pause')} (k)` : `${t('common.play')} (k)`} />
 						</div>
 
 						<div className="flex items-center gap-2 group/volume">
@@ -624,7 +626,7 @@ export const VideoPlayer = ({ videoId, videoUrl, autoPlay = false, initialTime =
 								<Button variant="ghost" size="icon" className="text-white hover:bg-white/10 w-8 h-8 rounded-full" onClick={toggleMute}>
 									{isMuted || volume === 0 ? <VolumeX className="w-5 h-5" /> : volume < 0.5 ? <Volume1 className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
 								</Button>
-								<VideoPlayerTooltip content={isMuted ? 'Unmute (m)' : 'Mute (m)'} />
+								<VideoPlayerTooltip content={isMuted ? `${t('common.unmute')} (m)` : `${t('common.mute')} (m)`} />
 							</div>
 							<input
 								type="range"
@@ -650,7 +652,7 @@ export const VideoPlayer = ({ videoId, videoUrl, autoPlay = false, initialTime =
 									<input type="checkbox" className="sr-only peer" checked={!!autoplayEnabled} onChange={(e) => onAutoplayChange?.(e.target.checked)} />
 									<div className="w-9 h-5 bg-white/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-orange-600"></div>
 								</label>
-								<VideoPlayerTooltip content={`Autoplay is ${autoplayEnabled ? 'on' : 'off'}`} />
+								<VideoPlayerTooltip content={`${t('common.autoplay')} ${autoplayEnabled ? t('common.on') : t('common.off')}`} />
 							</div>
 						)}
 
@@ -678,7 +680,7 @@ export const VideoPlayer = ({ videoId, videoUrl, autoPlay = false, initialTime =
 											}}
 										>
 											<div className="flex items-center gap-2 w-full">
-												<span>Autoplay</span>
+												<span>{t('common.autoplay')}</span>
 												<div className="ml-auto relative inline-flex items-center cursor-pointer pointer-events-none">
 													<div className={cn('w-9 h-5 bg-white/20 rounded-full transition-colors', autoplayEnabled && 'bg-orange-600')}>
 														<div
@@ -692,8 +694,8 @@ export const VideoPlayer = ({ videoId, videoUrl, autoPlay = false, initialTime =
 									<DropdownMenuSub>
 										<DropdownMenuSubTrigger className="flex items-center gap-3 px-3 py-2.5 text-sm hover:bg-white/10 focus:bg-white/10 cursor-pointer rounded-lg transition-colors outline-none">
 											<div className="flex items-center gap-2 w-full">
-												<span>Playback speed</span>
-												<span className="text-white/50 text-sm ml-auto">{playbackRate === 1 ? 'Normal' : `${playbackRate}x`}</span>
+												<span>{t('common.playback_speed')}</span>
+												<span className="text-white/50 text-sm ml-auto">{playbackRate === 1 ? t('common.normal') : `${playbackRate}x`}</span>
 											</div>
 										</DropdownMenuSubTrigger>
 										<DropdownMenuPortal container={isFullscreen ? containerRef.current : null}>
@@ -705,7 +707,7 @@ export const VideoPlayer = ({ videoId, videoUrl, autoPlay = false, initialTime =
 														onClick={() => handleSpeedChange(speed)}
 													>
 														<div className="w-4 h-4 flex items-center justify-center shrink-0">{playbackRate === speed && <Check className="w-3.5 h-3.5" />}</div>
-														<span>{speed === 1 ? 'Normal' : speed}</span>
+														<span>{speed === 1 ? t('common.normal') : speed}</span>
 													</DropdownMenuItem>
 												))}
 											</DropdownMenuSubContent>
@@ -715,9 +717,9 @@ export const VideoPlayer = ({ videoId, videoUrl, autoPlay = false, initialTime =
 									<DropdownMenuSub>
 										<DropdownMenuSubTrigger className="flex items-center gap-3 px-3 py-2.5 text-sm hover:bg-white/10 focus:bg-white/10 cursor-pointer rounded-lg transition-colors outline-none">
 											<div className="flex items-center gap-2 w-full">
-												<span>Quality</span>
+												<span>{t('common.quality')}</span>
 												<span className="text-white/50 text-sm ml-auto">
-													{currentLevel === -1 ? `Auto (${levels[hlsRef.current?.currentLevel || 0]?.height || '1080'}p)` : `${levels[currentLevel]?.height}p`}
+													{currentLevel === -1 ? `${t('common.auto')} (${levels[hlsRef.current?.currentLevel || 0]?.height || '1080'}p)` : `${levels[currentLevel]?.height}p`}
 												</span>
 											</div>
 										</DropdownMenuSubTrigger>
@@ -728,7 +730,7 @@ export const VideoPlayer = ({ videoId, videoUrl, autoPlay = false, initialTime =
 													onClick={() => handleQualityChange(-1)}
 												>
 													<div className="w-4 h-4 flex items-center justify-center shrink-0">{currentLevel === -1 && <Check className="w-3.5 h-3.5" />}</div>
-													<span>Auto</span>
+													<span>{t('common.auto')}</span>
 												</DropdownMenuItem>
 												{levels.map((level, index) => (
 													<DropdownMenuItem
@@ -748,28 +750,28 @@ export const VideoPlayer = ({ videoId, videoUrl, autoPlay = false, initialTime =
 									</DropdownMenuSub>
 								</DropdownMenuContent>
 							</DropdownMenu>
-							<VideoPlayerTooltip content="Settings" />
+							<VideoPlayerTooltip content={t('common.settings')} />
 						</div>
 
 						<div className="relative group/tooltip">
 							<Button variant="ghost" size="icon" className="text-white hover:bg-white/10 w-8 h-8 rounded-full" onClick={togglePiP}>
 								<PictureInPicture className="w-5 h-5" />
 							</Button>
-							<VideoPlayerTooltip content="Picture in Picture (i)" />
+							<VideoPlayerTooltip content={`${t('common.pip')} (i)`} />
 						</div>
 
 						<div className="relative group/tooltip hidden md:flex">
 							<Button variant="ghost" size="icon" className="text-white hover:bg-white/10 w-8 h-8 rounded-full" onClick={() => setTheaterMode(!theaterMode)}>
 								<RectangleHorizontal className={cn('w-5 h-5', theaterMode ? 'fill-white' : '')} />
 							</Button>
-							<VideoPlayerTooltip content={theaterMode ? 'Default view (t)' : 'Theater mode (t)'} />
+							<VideoPlayerTooltip content={theaterMode ? `${t('common.default_view')} (t)` : `${t('common.theater_mode')} (t)`} />
 						</div>
 
 						<div className="relative group/tooltip">
 							<Button variant="ghost" size="icon" className="text-white hover:bg-white/10 w-8 h-8 rounded-full" onClick={toggleFullscreen}>
 								{isFullscreen ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}
 							</Button>
-							<VideoPlayerTooltip content={isFullscreen ? 'Exit full screen (f)' : 'Full screen (f)'} />
+							<VideoPlayerTooltip content={isFullscreen ? `${t('common.exit_fullscreen')} (f)` : `${t('common.fullscreen')} (f)`} />
 						</div>
 					</div>
 				</div>

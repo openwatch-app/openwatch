@@ -1,6 +1,7 @@
 'use client';
 
 import { authClient } from '~app/lib/auth-client';
+import { useTranslation } from '~lib/i18n';
 import { useRouter } from 'next/navigation';
 import { Button } from '~components/button';
 import { Input } from '~components/input';
@@ -10,6 +11,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 
 const AuthPage = () => {
+	const { t } = useTranslation();
 	const [currentView, setCurrentView] = useState<'email' | 'password'>('email');
 	const [showPassword, setShowPassword] = useState(false);
 	const [isSigningUp, setIsSigningUp] = useState(false);
@@ -28,7 +30,7 @@ const AuthPage = () => {
 		e.preventDefault();
 		setErrorMessage('');
 		if (!isValidEmail(email)) {
-			setErrorMessage('Please enter a valid email address.');
+			setErrorMessage(t('auth.error_invalid_email'));
 			return;
 		}
 		setCurrentView('password');
@@ -39,7 +41,7 @@ const AuthPage = () => {
 		setErrorMessage('');
 
 		if (!isValidEmail(email)) {
-			setErrorMessage('Please enter a valid email address first.');
+			setErrorMessage(t('auth.error_invalid_email_first'));
 			return;
 		}
 
@@ -57,7 +59,7 @@ const AuthPage = () => {
 				const { error: signUpError } = await authClient.signUp.email({ name, email, password });
 
 				if (signUpError) {
-					setErrorMessage(signUpError.message || 'An unknown sign-up error occurred.');
+					setErrorMessage(signUpError.message || t('auth.error_unknown_signup'));
 					setLoading(false);
 					return;
 				}
@@ -68,7 +70,7 @@ const AuthPage = () => {
 				});
 
 				if (signInError) {
-					setErrorMessage(signInError.message || 'An unknown sign-in error occurred.');
+					setErrorMessage(signInError.message || t('auth.error_unknown_signin'));
 					setLoading(false);
 					return;
 				}
@@ -79,14 +81,14 @@ const AuthPage = () => {
 				});
 
 				if (signInError) {
-					setErrorMessage(signInError.message || 'An unknown sign-in error occurred.');
+					setErrorMessage(signInError.message || t('auth.error_unknown_signin'));
 					setLoading(false);
 					return;
 				}
 			}
 			router.push('/');
 		} catch (error: any) {
-			setErrorMessage(error.message || 'An unexpected error occurred.');
+			setErrorMessage(error.message || t('auth.error_unexpected'));
 		} finally {
 			setLoading(false);
 		}
@@ -105,17 +107,17 @@ const AuthPage = () => {
 
 					{currentView === 'email' && (
 						<>
-							<h1 className="text-2xl font-normal text-foreground">Sign in</h1>
-							<p className="text-base text-muted-foreground">to continue to OpenWatch</p>
+							<h1 className="text-2xl font-normal text-foreground">{t('auth.sign_in')}</h1>
+							<p className="text-base text-muted-foreground">{t('auth.sign_in_description')}</p>
 						</>
 					)}
 					{currentView === 'password' && (
 						<>
-							<h1 className="text-2xl font-normal text-foreground">{isSigningUp ? 'Create Account' : 'Welcome'}</h1>
+							<h1 className="text-2xl font-normal text-foreground">{isSigningUp ? t('auth.create_account') : t('auth.welcome')}</h1>
 							<div className="flex items-center gap-2 rounded-full border border-border/50 bg-muted/50 px-3 py-1 text-sm text-muted-foreground mt-2">
 								<span className="max-w-[200px] truncate">{email}</span>
 								<button onClick={() => setCurrentView('email')} className="hover:text-foreground font-medium">
-									Edit
+									{t('auth.edit')}
 								</button>
 							</div>
 						</>
@@ -130,24 +132,24 @@ const AuthPage = () => {
 							<div className="space-y-2">
 								<Input
 									type="email"
-									placeholder="Email"
+									placeholder={t('auth.email')}
 									value={email}
 									onChange={(e) => setEmail(e.target.value)}
 									required
 									className="h-14 w-full rounded-lg border-input bg-background px-4 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
 								/>
 								<Link href="#" className="inline-block text-sm font-medium text-blue-500 hover:text-blue-400">
-									Forgot email?
+									{t('auth.forgot_email')}
 								</Link>
 							</div>
 						</div>
 
 						<div className="flex items-center justify-between pt-2">
 							<Link href="#" onClick={handleCreateAccountClick} className="text-sm font-medium text-blue-500 hover:text-blue-400">
-								Create account
+								{t('auth.create_account')}
 							</Link>
 							<Button type="submit" className="h-10 rounded-full px-8 font-medium" disabled={loading || !email}>
-								Next
+								{t('auth.next')}
 							</Button>
 						</div>
 					</form>
@@ -157,7 +159,7 @@ const AuthPage = () => {
 							{isSigningUp && (
 								<Input
 									type="text"
-									placeholder="Name"
+									placeholder={t('auth.name')}
 									value={name}
 									onChange={(e) => setName(e.target.value)}
 									required
@@ -168,7 +170,7 @@ const AuthPage = () => {
 							<div className="relative">
 								<Input
 									type={showPassword ? 'text' : 'password'}
-									placeholder="Enter your password"
+									placeholder={t('auth.enter_password')}
 									value={password}
 									onChange={(e) => setPassword(e.target.value)}
 									required
@@ -179,20 +181,20 @@ const AuthPage = () => {
 									onClick={() => setShowPassword(!showPassword)}
 									className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium text-primary hover:text-primary/90"
 								>
-									{showPassword ? 'Hide' : 'Show'}
+									{showPassword ? t('auth.hide_password') : t('auth.show_password')}
 								</button>
 							</div>
 
 							{!isSigningUp && (
 								<Link href="#" className="inline-block text-sm font-medium text-primary hover:text-primary/90">
-									Forgot password?
+									{t('auth.forgot_password')}
 								</Link>
 							)}
 						</div>
 
 						<div className="flex items-center justify-end pt-2">
 							<Button type="submit" className="h-10 rounded-full px-8 font-medium" disabled={loading}>
-								{isSigningUp ? 'Sign up' : 'Sign in'}
+								{isSigningUp ? t('auth.sign_up') : t('auth.sign_in')}
 							</Button>
 						</div>
 					</form>

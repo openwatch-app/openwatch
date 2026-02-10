@@ -1,19 +1,20 @@
 'use client';
 
+import PlaylistResultCard from '~components/playlist-result-card';
 import ChannelResultCard from '~components/channel-result-card';
 import SearchResultCard from '~components/search-result-card';
-import PlaylistResultCard from '~components/playlist-result-card';
 import SearchFilters from '~components/search-filters';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Video, Channel } from '~app/types';
+import { useTranslation } from '~lib/i18n';
 import { Loader2 } from 'lucide-react';
 import { Suspense } from 'react';
 import axios from 'axios';
 
 const Content = () => {
+	const { t } = useTranslation();
 	const searchParams = useSearchParams();
-	const router = useRouter();
 	const query = searchParams.get('query');
 	const source = searchParams.get('source') || 'local';
 	const type = searchParams.get('type') || 'all';
@@ -53,7 +54,9 @@ const Content = () => {
 				</div>
 			) : results.length === 0 ? (
 				<div className="text-center py-20">
-					<p className="text-muted-foreground">No results found for "{query}"</p>
+					<p className="text-muted-foreground">
+						{t('search.no_results')} "{query}"
+					</p>
 				</div>
 			) : (
 				results.map((item) => {
@@ -71,8 +74,9 @@ const Content = () => {
 };
 
 const Page = () => {
+	const { t } = useTranslation();
 	return (
-		<Suspense fallback={<div>Loading results...</div>}>
+		<Suspense fallback={<div>{t('search.loading')}</div>}>
 			<Content />
 		</Suspense>
 	);

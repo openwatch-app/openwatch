@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import axios from 'axios';
-import { Comment } from '~app/types';
-import { CommentItem } from './comment-item';
-import { CommentInput } from './comment-input';
-import { Loader2, AlignLeft } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '~components/dropdown-menu';
+import { Loader2, AlignLeft } from 'lucide-react';
+import { CommentInput } from './comment-input';
+import { CommentItem } from './comment-item';
+import { useEffect, useState } from 'react';
+import { useTranslation } from '~lib/i18n';
+import { Comment } from '~app/types';
+import axios from 'axios';
 
 interface CommentSectionProps {
 	videoId: string;
@@ -17,6 +18,7 @@ interface CommentSectionProps {
 }
 
 export const CommentSection = ({ videoId, videoOwnerId, currentUserId, variant = 'default', onClose }: CommentSectionProps) => {
+	const { t } = useTranslation();
 	const [comments, setComments] = useState<Comment[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [sort, setSort] = useState<'top' | 'newest'>('top');
@@ -67,7 +69,9 @@ export const CommentSection = ({ videoId, videoOwnerId, currentUserId, variant =
 			<div className="flex flex-col h-full bg-[#0f0f0f] text-white">
 				{/* Header */}
 				<div className="flex items-center justify-between p-4 border-b border-white/10 shrink-0">
-					<h3 className="text-xl font-bold">Comments {countComments(comments)}</h3>
+					<h3 className="text-xl font-bold">
+						{t('comments.title')} {countComments(comments)}
+					</h3>
 					<div className="flex items-center gap-2">
 						<DropdownMenu>
 							<DropdownMenuTrigger asChild>
@@ -75,18 +79,29 @@ export const CommentSection = ({ videoId, videoOwnerId, currentUserId, variant =
 									<AlignLeft className="h-5 w-5" />
 								</div>
 							</DropdownMenuTrigger>
-							<DropdownMenuContent align="end" className="w-48 bg-[#282828] border-white/10 text-white z-[100]">
+							<DropdownMenuContent align="end" className="w-48 bg-[#282828] border-white/10 text-white z-50">
 								<DropdownMenuItem onClick={() => setSort('top')} className="hover:bg-white/10 cursor-pointer">
-									Top comments
+									{t('comments.top_comments')}
 								</DropdownMenuItem>
 								<DropdownMenuItem onClick={() => setSort('newest')} className="hover:bg-white/10 cursor-pointer">
-									Newest first
+									{t('comments.newest_first')}
 								</DropdownMenuItem>
 							</DropdownMenuContent>
 						</DropdownMenu>
 						{onClose && (
 							<div onClick={onClose} className="p-2 hover:bg-white/10 rounded-full cursor-pointer transition-colors">
-								<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+								<svg
+									xmlns="http://www.w3.org/2000/svg"
+									width="24"
+									height="24"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									strokeWidth="2"
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									className="w-6 h-6"
+								>
 									<line x1="18" y1="6" x2="6" y2="18"></line>
 									<line x1="6" y1="6" x2="18" y2="18"></line>
 								</svg>
@@ -113,20 +128,22 @@ export const CommentSection = ({ videoId, videoOwnerId, currentUserId, variant =
 	return (
 		<div className="w-full max-w-6xl mt-6">
 			<div className="flex items-center gap-8 mb-6">
-				<h3 className="text-xl font-bold">{countComments(comments)} Comments</h3>
+				<h3 className="text-xl font-bold">
+					{countComments(comments)} {t('comments.title')}
+				</h3>
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>
 						<div className="flex items-center gap-2 font-semibold text-sm cursor-pointer hover:bg-secondary/50 px-2 py-1 rounded">
 							<AlignLeft className="h-5 w-5" />
-							<span>Sort by</span>
+							<span>{t('comments.sort_by')}</span>
 						</div>
 					</DropdownMenuTrigger>
 					<DropdownMenuContent align="start">
 						<DropdownMenuItem onClick={() => setSort('top')} className={sort === 'top' ? 'bg-secondary' : ''}>
-							Top comments
+							{t('comments.top_comments')}
 						</DropdownMenuItem>
 						<DropdownMenuItem onClick={() => setSort('newest')} className={sort === 'newest' ? 'bg-secondary' : ''}>
-							Newest first
+							{t('comments.newest_first')}
 						</DropdownMenuItem>
 					</DropdownMenuContent>
 				</DropdownMenu>

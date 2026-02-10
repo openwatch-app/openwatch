@@ -8,6 +8,7 @@ import { Button } from '~components/button';
 import { Play, Shuffle, Share2, Loader2, Pencil, Trash2, AlertCircle } from 'lucide-react';
 import { cn, normalizeViewCount } from '~lib/utils';
 import { authClient } from '~lib/auth-client';
+import { useTranslation } from '~lib/i18n';
 import Image from 'next/image';
 import dayjs from 'dayjs';
 import { PlaylistVideoItem } from '~app/components/playlists/playlist-video-item';
@@ -32,6 +33,7 @@ interface Playlist {
 }
 
 const PlaylistPage = () => {
+	const { t } = useTranslation();
 	const params = useParams();
 	const router = useRouter();
 	const { data: session } = authClient.useSession();
@@ -119,7 +121,7 @@ const PlaylistPage = () => {
 	const handleShare = () => {
 		const shareUrl = `${window.location.origin}/playlist/${id}`;
 		navigator.clipboard.writeText(shareUrl);
-		alert('Playlist URL copied to clipboard');
+		alert(t('playlists.page.share_copied'));
 	};
 
 	const handlePlaylistUpdate = (updatedPlaylist: any) => {
@@ -141,9 +143,9 @@ const PlaylistPage = () => {
 		return (
 			<div className="flex flex-col h-[50vh] items-center justify-center gap-4">
 				<AlertCircle className="h-12 w-12 text-destructive" />
-				<p className="text-lg text-muted-foreground">{error || 'Playlist not found'}</p>
+				<p className="text-lg text-muted-foreground">{error || t('common.no_playlists_found')}</p>
 				<Button variant="outline" onClick={() => router.push('/')}>
-					Go Home
+					{t('common.go_home')}
 				</Button>
 			</div>
 		);
@@ -164,7 +166,7 @@ const PlaylistPage = () => {
 						<div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors" />
 						<div className="absolute bottom-4 right-4 bg-black/80 text-white text-xs px-2 py-1 rounded-md flex items-center gap-1">
 							<ListPlusIcon className="w-3 h-3" />
-							<span>{playlist.videoCount} videos</span>
+							<span>{t('playlists.page.videos_count', { count: playlist.videoCount })}</span>
 						</div>
 					</div>
 
@@ -179,11 +181,17 @@ const PlaylistPage = () => {
 								</h3>
 							</div>
 							<div className="flex items-center gap-2 text-xs">
-								<span>{playlist.visibility === 'public' ? 'Public' : playlist.visibility === 'unlisted' ? 'Unlisted' : 'Private'}</span>
+								<span>
+									{playlist.visibility === 'public'
+										? t('common.visibility.public')
+										: playlist.visibility === 'unlisted'
+											? t('common.visibility.unlisted')
+											: t('common.visibility.private')}
+								</span>
 								<span>•</span>
-								<span>{playlist.videoCount} videos</span>
+								<span>{t('playlists.page.videos_count', { count: playlist.videoCount })}</span>
 								<span>•</span>
-								<span>Updated {dayjs(playlist.updatedAt).format('MMM D, YYYY')}</span>
+								<span>{t('playlists.page.updated', { date: dayjs(playlist.updatedAt).format('MMM D, YYYY') })}</span>
 							</div>
 						</div>
 					</div>
@@ -192,18 +200,18 @@ const PlaylistPage = () => {
 					<div className="flex gap-2">
 						<Button className="flex-1 rounded-full gap-2" disabled={playlist.videoCount === 0} onClick={() => firstVideo && router.push(`/watch/${firstVideo.id}?list=${playlist.id}`)}>
 							<Play className="w-4 h-4 fill-current" />
-							<span>Play all</span>
+							<span>{t('playlists.page.play_all')}</span>
 						</Button>
 						<Button variant="secondary" className="flex-1 rounded-full gap-2" disabled={playlist.videoCount === 0} onClick={handleShuffle}>
 							<Shuffle className="w-4 h-4" />
-							<span>Shuffle</span>
+							<span>{t('playlists.page.shuffle')}</span>
 						</Button>
 					</div>
 
 					{/* Additional Actions */}
 					<div className="flex items-center gap-2">
 						{isOwner && (
-							<Button variant="ghost" size="icon" className="rounded-full" onClick={() => setIsEditOpen(true)} title="Edit playlist">
+							<Button variant="ghost" size="icon" className="rounded-full" onClick={() => setIsEditOpen(true)} title={t('playlists.page.edit')}>
 								<Pencil className="w-5 h-5" />
 							</Button>
 						)}
@@ -214,12 +222,12 @@ const PlaylistPage = () => {
 								className="rounded-full text-destructive hover:text-destructive hover:bg-destructive/10"
 								onClick={handleDeletePlaylist}
 								disabled={deleting}
-								title="Delete playlist"
+								title={t('playlists.page.delete')}
 							>
 								{deleting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Trash2 className="w-5 h-5" />}
 							</Button>
 						)}
-						<Button variant="ghost" size="icon" className="rounded-full" onClick={handleShare} title="Share">
+						<Button variant="ghost" size="icon" className="rounded-full" onClick={handleShare} title={t('playlists.page.share')}>
 							<Share2 className="w-5 h-5" />
 						</Button>
 					</div>
@@ -235,10 +243,10 @@ const PlaylistPage = () => {
 			<div className="flex-1 min-w-0">
 				{playlist.videoCount === 0 ? (
 					<div className="flex flex-col items-center justify-center py-20 text-muted-foreground gap-2">
-						<p>No videos in this playlist yet.</p>
+						<p>{t('playlists.page.no_videos')}</p>
 						{isOwner && (
 							<Button variant="link" onClick={() => router.push('/')}>
-								Browse videos to add
+								{t('playlists.page.browse_videos')}
 							</Button>
 						)}
 					</div>

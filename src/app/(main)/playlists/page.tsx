@@ -6,8 +6,10 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import axios from 'axios';
+import { useTranslation } from '~lib/i18n';
 
 const PlaylistsPage = () => {
+	const { t } = useTranslation();
 	const router = useRouter();
 	const { data: session, isPending: isAuthPending } = authClient.useSession();
 	const [playlists, setPlaylists] = useState<any[]>([]);
@@ -46,13 +48,13 @@ const PlaylistsPage = () => {
 
 	return (
 		<div className="flex flex-col w-full min-h-screen bg-background p-6 md:p-8 max-w-[1600px] mx-auto">
-			<h1 className="text-2xl font-bold mb-6">Playlists</h1>
+			<h1 className="text-2xl font-bold mb-6">{t('sidebar.playlists')}</h1>
 
 			{/* Grid */}
 			<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
 				{playlists.length === 0 ? (
 					<div className="col-span-full flex flex-col items-center justify-center py-20 text-muted-foreground">
-						<p className="text-lg">No playlists found</p>
+						<p className="text-lg">{t('common.no_playlists_found')}</p>
 					</div>
 				) : (
 					playlists.map((playlist) => <PlaylistCard key={playlist.id} playlist={playlist} />)

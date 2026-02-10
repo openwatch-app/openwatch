@@ -3,6 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { MoreVertical, Trash2 } from 'lucide-react';
 import { Button } from '../button';
+import { useTranslation } from '~lib/i18n';
 import { cn } from '~lib/utils';
 import dayjs from 'dayjs';
 
@@ -14,6 +15,7 @@ interface PlaylistVideoItemProps {
 }
 
 export const PlaylistVideoItem = ({ video, index, isOwner, onRemove }: PlaylistVideoItemProps) => {
+	const { t } = useTranslation();
 	return (
 		<div className="flex gap-3 p-2 rounded-xl hover:bg-secondary/50 group items-center">
 			{/* Index */}
@@ -35,9 +37,7 @@ export const PlaylistVideoItem = ({ video, index, isOwner, onRemove }: PlaylistV
 						{video.channel.name}
 					</Link>
 					<span className="hidden sm:inline">•</span>
-					<span>{video.views} views</span>
-					<span>•</span>
-					<span>{dayjs(video.uploadedAt).fromNow()}</span>
+					<span>{t('common.views_and_date', { views: video.views, date: dayjs(video.uploadedAt).fromNow() })}</span>
 				</div>
 			</div>
 
@@ -52,7 +52,7 @@ export const PlaylistVideoItem = ({ video, index, isOwner, onRemove }: PlaylistV
 							e.preventDefault();
 							onRemove();
 						}}
-						title="Remove from playlist"
+						title={t('playlists.page.remove_from_playlist')}
 					>
 						<Trash2 className="h-4 w-4" />
 					</Button>

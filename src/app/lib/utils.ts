@@ -33,9 +33,9 @@ export const normalizeViewCount = (views: string | null | undefined): number => 
 	}
 };
 
-export const formatCompactNumber = (num: number): string => {
-	return Intl.NumberFormat('en-US', {
+export const formatCompactNumber = (num: number | string, locale: string = 'en-US'): string => {
+	return Intl.NumberFormat(locale, {
 		notation: 'compact',
 		maximumFractionDigits: 1
-	}).format(num);
+	}).format(Number(num));
 };

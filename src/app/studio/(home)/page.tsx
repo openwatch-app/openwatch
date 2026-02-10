@@ -8,8 +8,10 @@ import { useEffect, useState } from 'react';
 import { Video } from '~app/types';
 import Link from 'next/link';
 import axios from 'axios';
+import { useTranslation } from '~lib/i18n';
 
 const Page = () => {
+	const { t } = useTranslation();
 	const { data: session, isPending: isSessionLoading } = authClient.useSession();
 	const [videos, setVideos] = useState<Video[]>([]);
 	const [loading, setLoading] = useState(true);
@@ -45,26 +47,26 @@ const Page = () => {
 
 	return (
 		<div className="h-full flex flex-col">
-			<h1 className="text-2xl font-bold mb-6">Channel content</h1>
+			<h1 className="text-2xl font-bold mb-6">{t('studio.channel_content')}</h1>
 
 			<div className="border rounded-md">
 				<Table>
 					<TableHeader>
 						<TableRow>
-							<TableHead className="w-[400px]">Video</TableHead>
-							<TableHead>Visibility</TableHead>
-							<TableHead>Restrictions</TableHead>
-							<TableHead>Date</TableHead>
-							<TableHead className="text-right">Views</TableHead>
-							<TableHead className="text-right">Comments</TableHead>
-							<TableHead className="text-right">Likes (vs. dislikes)</TableHead>
+							<TableHead className="w-[400px]">{t('studio.video')}</TableHead>
+							<TableHead>{t('studio.visibility')}</TableHead>
+							<TableHead>{t('studio.restrictions')}</TableHead>
+							<TableHead>{t('studio.date')}</TableHead>
+							<TableHead className="text-right">{t('studio.views')}</TableHead>
+							<TableHead className="text-right">{t('studio.comments')}</TableHead>
+							<TableHead className="text-right">{t('studio.likes_vs_dislikes')}</TableHead>
 						</TableRow>
 					</TableHeader>
 					<TableBody>
 						{videos.length === 0 ? (
 							<TableRow>
 								<TableCell colSpan={7} className="h-24 text-center">
-									No videos found
+									{t('studio.no_videos_found')}
 								</TableCell>
 							</TableRow>
 						) : (
@@ -85,15 +87,15 @@ const Page = () => {
 											</div>
 											<div className="flex flex-col gap-1">
 												<div className="font-medium line-clamp-1">{video.title}</div>
-												<div className="text-xs text-muted-foreground line-clamp-2">{video.description || 'Add description'}</div>
+												<div className="text-xs text-muted-foreground line-clamp-2">{video.description || t('studio.add_description')}</div>
 												<div className="flex gap-2 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
 													<Link href={`/studio/video/${video.id}`}>
-														<Button variant="ghost" size="icon" className="h-6 w-6" title="Details">
+														<Button variant="ghost" size="icon" className="h-6 w-6" title={t('studio.details')}>
 															<Pencil className="h-4 w-4" />
 														</Button>
 													</Link>
 													<Link href={`/watch/${video.id}`} target="_blank">
-														<Button variant="ghost" size="icon" className="h-6 w-6" title="View on YouTube">
+														<Button variant="ghost" size="icon" className="h-6 w-6" title={t('studio.view_on_site')}>
 															<Eye className="h-4 w-4" />
 														</Button>
 													</Link>

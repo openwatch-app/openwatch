@@ -6,11 +6,15 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Input } from '~components/input';
 import { Video } from '~app/types';
-import { cn } from '~lib/utils';
+import { cn, formatCompactNumber } from '~lib/utils';
 import axios from 'axios';
 import { authClient } from '~lib/auth-client';
+import { useTranslation } from '~lib/i18n';
+import { useAppStore } from '~lib/store';
 
 const Page = () => {
+	const { t } = useTranslation();
+	const { language } = useAppStore();
 	const { data: session, isPending: isSessionLoading } = authClient.useSession();
 	const [videos, setVideos] = useState<Video[]>([]);
 	const [loading, setLoading] = useState(true);
@@ -52,7 +56,7 @@ const Page = () => {
 	};
 
 	const handleClearHistory = async () => {
-		if (!confirm('Are you sure you want to clear your watch history?')) return;
+		if (!confirm(t('history.clear_confirm'))) return;
 		try {
 			setClearing(true);
 			await axios.delete('/api/history/clear');
@@ -80,14 +84,14 @@ const Page = () => {
 		<div className="flex flex-col md:flex-row gap-8 p-6 max-w-[1600px] mx-auto min-h-screen">
 			{/* Left: Video List */}
 			<div className="flex-1">
-				<h1 className="text-2xl font-bold mb-6">Watch history</h1>
+				<h1 className="text-2xl font-bold mb-6">{t('history.title')}</h1>
 
 				{loading ? (
 					<div className="flex justify-center py-10">
 						<Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
 					</div>
 				) : filteredVideos.length === 0 ? (
-					<div className="text-muted-foreground text-center py-10">{searchQuery ? 'No videos found matching your search.' : 'No watch history yet.'}</div>
+					<div className="text-muted-foreground text-center py-10">{searchQuery ? t('history.no_results') : t('history.no_history')}</div>
 				) : (
 					<div className="space-y-4">
 						{filteredVideos.map((video) => (
@@ -133,7 +137,9 @@ const Page = () => {
 											{video.channel.name}
 										</span>
 										<span className="mx-1">•</span>
-										<span>{video.views} views</span>
+										<span>
+											{formatCompactNumber(video.views, language)} {t('common.views')}
+										</span>
 									</div>
 									<p className="text-xs text-muted-foreground line-clamp-2 hidden sm:block">{video.description}</p>
 								</div>
@@ -148,7 +154,7 @@ const Page = () => {
 				<div className="relative">
 					<Search className="absolute left-0 top-2.5 h-4 w-4 text-muted-foreground" />
 					<Input
-						placeholder="Search watch history"
+						placeholder={t('history.search_placeholder')}
 						className="pl-8 pr-0 border-0 border-b border-border rounded-none focus-visible:ring-0 focus-visible:border-primary bg-transparent dark:bg-transparent shadow-none h-auto py-2"
 						value={searchQuery}
 						onChange={(e) => setSearchQuery(e.target.value)}
@@ -158,18 +164,18 @@ const Page = () => {
 				<div className="space-y-1">
 					<Button variant="ghost" className="w-full justify-start text-muted-foreground hover:text-foreground px-2" onClick={handleClearHistory} disabled={clearing || videos.length === 0}>
 						<Trash2 className="mr-3 h-5 w-5" />
-						Clear all watch history
+						{t('history.clear_all')}
 					</Button>
 					<Button variant="ghost" className="w-full justify-start text-muted-foreground hover:text-foreground px-2" onClick={handleTogglePause}>
 						{isPaused ? (
 							<>
 								<PlayCircle className="mr-3 h-5 w-5" />
-								Turn on watch history
+								{t('history.turn_on')}
 							</>
 						) : (
 							<>
 								<PauseCircle className="mr-3 h-5 w-5" />
-								Pause watch history
+								{t('history.pause')}
 							</>
 						)}
 					</Button>

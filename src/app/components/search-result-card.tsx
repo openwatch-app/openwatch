@@ -1,4 +1,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from './avatar';
+import { formatCompactNumber } from '~lib/utils';
+import { useTranslation } from '~lib/i18n';
+import { useAppStore } from '~lib/store';
 import { Video } from '../types';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -8,15 +11,18 @@ interface SearchResultCardProps {
 	video: Video;
 }
 
-const safeFromNow = (input: string | Date) => {
-	const ts = dayjs(input);
-	if (!ts.isValid()) return '';
-	const now = dayjs();
-	const futureOffset = ts.diff(now);
-	return ts.subtract(futureOffset > 0 ? futureOffset : 0, 'ms').fromNow();
-};
-
 const SearchResultCard = ({ video }: SearchResultCardProps) => {
+	const { t } = useTranslation();
+	const { language } = useAppStore();
+
+	const safeFromNow = (input: string | Date) => {
+		const ts = dayjs(input).locale(language);
+		if (!ts.isValid()) return '';
+		const now = dayjs().locale(language);
+		const futureOffset = ts.diff(now);
+		return ts.subtract(futureOffset > 0 ? futureOffset : 0, 'ms').fromNow();
+	};
+
 	return (
 		<div className="flex flex-col md:flex-row gap-4 w-full group">
 			{/* Thumbnail Container */}
@@ -44,7 +50,9 @@ const SearchResultCard = ({ video }: SearchResultCardProps) => {
 				</Link>
 
 				<div className="text-xs text-muted-foreground flex items-center mb-2">
-					<span>{video.views} views</span>
+					<span>
+						{formatCompactNumber(video.views, language)} {t('common.views')}
+					</span>
 					<span className="mx-1">•</span>
 					<span>{safeFromNow(video.uploadedAt)}</span>
 				</div>

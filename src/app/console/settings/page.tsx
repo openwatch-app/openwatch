@@ -5,8 +5,10 @@ import { useEffect, useState } from 'react';
 import { Button } from '~components/button';
 import { Loader2 } from 'lucide-react';
 import axios from 'axios';
+import { useTranslation } from '~lib/i18n';
 
 const Page = () => {
+	const { t } = useTranslation();
 	const [settings, setSettings] = useState<Record<string, string>>({});
 	const [loading, setLoading] = useState(true);
 
@@ -50,38 +52,42 @@ const Page = () => {
 	return (
 		<div className="flex flex-col gap-6">
 			<div>
-				<h1 className="text-3xl font-bold tracking-tight">System Settings</h1>
-				<p className="text-muted-foreground">Configure global platform settings.</p>
+				<h1 className="text-3xl font-bold tracking-tight">{t('console.settings.title')}</h1>
+				<p className="text-muted-foreground">{t('console.settings.description')}</p>
 			</div>
 
 			<Card>
 				<CardHeader>
-					<CardTitle>Registration</CardTitle>
-					<CardDescription>Control whether new users can sign up for the platform.</CardDescription>
+					<CardTitle>{t('console.settings.registration.title')}</CardTitle>
+					<CardDescription>{t('console.settings.registration.description')}</CardDescription>
 				</CardHeader>
 				<CardContent className="flex items-center justify-between">
 					<div className="space-y-0.5">
-						<div className="font-medium">Enable Registration</div>
-						<div className="text-sm text-muted-foreground">{registrationEnabled ? 'Anyone can create an account.' : 'New user registration is disabled.'}</div>
+						<div className="font-medium">{t('console.settings.registration.label')}</div>
+						<div className="text-sm text-muted-foreground">
+							{registrationEnabled ? t('console.settings.registration.enabled_desc') : t('console.settings.registration.disabled_desc')}
+						</div>
 					</div>
 					<Button variant={registrationEnabled ? 'default' : 'destructive'} onClick={() => updateSetting('registration_enabled', registrationEnabled ? 'false' : 'true')}>
-						{registrationEnabled ? 'Enabled' : 'Disabled'}
+						{registrationEnabled ? t('console.settings.status.enabled') : t('console.settings.status.disabled')}
 					</Button>
 				</CardContent>
 			</Card>
 
 			<Card>
 				<CardHeader>
-					<CardTitle>Uploads</CardTitle>
-					<CardDescription>Control whether users can upload new videos.</CardDescription>
+					<CardTitle>{t('console.settings.uploads.title')}</CardTitle>
+					<CardDescription>{t('console.settings.uploads.description')}</CardDescription>
 				</CardHeader>
 				<CardContent className="flex items-center justify-between">
 					<div className="space-y-0.5">
-						<div className="font-medium">Enable Uploads</div>
-						<div className="text-sm text-muted-foreground">{uploadEnabled ? 'Users can upload videos.' : 'Video uploads are disabled globally.'}</div>
+						<div className="font-medium">{t('console.settings.uploads.label')}</div>
+						<div className="text-sm text-muted-foreground">
+							{uploadEnabled ? t('console.settings.uploads.enabled_desc') : t('console.settings.uploads.disabled_desc')}
+						</div>
 					</div>
 					<Button variant={uploadEnabled ? 'default' : 'destructive'} onClick={() => updateSetting('upload_enabled', uploadEnabled ? 'false' : 'true')}>
-						{uploadEnabled ? 'Enabled' : 'Disabled'}
+						{uploadEnabled ? t('console.settings.status.enabled') : t('console.settings.status.disabled')}
 					</Button>
 				</CardContent>
 			</Card>

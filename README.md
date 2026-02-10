@@ -92,6 +92,11 @@ postgres_data:
 - **System Settings**: Configure global application settings
 - **Statistics**: Platform-wide metrics for users, videos, and engagement
 
+## Localization
+
+- **Multi-language Support**: Fully localized in English and Romanian
+- **Contribute**: Want to add a new language or improve existing ones? Check out our [Language Contribution Guide](./CONTRIBUTING_I18N.md).
+
 ## Tech Stack
 
 - **Framework**: Next.js 16 (React 19)

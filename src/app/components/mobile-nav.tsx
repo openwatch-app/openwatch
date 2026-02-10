@@ -7,6 +7,7 @@ import { cn } from '~lib/utils';
 import { useState, useEffect, useRef } from 'react';
 import { Input } from './input';
 import { Button } from './button';
+import { useTranslation } from '~lib/i18n';
 import { useAppStore } from '~lib/store';
 
 interface MobileNavItemProps {
@@ -35,6 +36,7 @@ const MobileNavItem = ({ icon: Icon, label, href, isActive, onClick }: MobileNav
 };
 
 export const MobileNav = () => {
+	const { t } = useTranslation();
 	const pathname = usePathname();
 	const router = useRouter();
 	const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -68,11 +70,11 @@ export const MobileNav = () => {
 		<>
 			<nav className="fixed bottom-0 left-0 right-0 z-50 h-16 bg-background border-t border-border md:hidden">
 				<div className="flex items-center justify-around h-full">
-					<MobileNavItem icon={Home} label="Home" href="/" isActive={pathname === '/'} />
-					<MobileNavItem icon={Zap} label="Shorts" href="/shorts" isActive={pathname?.startsWith('/shorts')} />
-					<MobileNavItem icon={Search} label="Search" onClick={() => setIsSearchOpen(true)} />
-					<MobileNavItem icon={History} label="History" href="/history" isActive={pathname === '/history'} />
-					<MobileNavItem icon={ListVideo} label="Playlists" href="/playlists" isActive={pathname === '/playlists'} />
+					<MobileNavItem icon={Home} label={t('sidebar.home')} href="/" isActive={pathname === '/'} />
+					<MobileNavItem icon={Zap} label={t('sidebar.shorts')} href="/shorts" isActive={pathname?.startsWith('/shorts')} />
+					<MobileNavItem icon={Search} label={t('common.search')} onClick={() => setIsSearchOpen(true)} />
+					<MobileNavItem icon={History} label={t('sidebar.history')} href="/history" isActive={pathname === '/history'} />
+					<MobileNavItem icon={ListVideo} label={t('sidebar.playlists')} href="/playlists" isActive={pathname === '/playlists'} />
 				</div>
 			</nav>
 
@@ -88,7 +90,7 @@ export const MobileNav = () => {
 								ref={inputRef}
 								value={searchInput}
 								onChange={(e) => setSearchInput(e.target.value)}
-								placeholder="Search OpenWatch"
+								placeholder={t('navbar.search_placeholder')}
 								className="flex-1 bg-secondary/50 border-none focus-visible:ring-0 rounded-full pl-4 pr-10"
 							/>
 							{searchInput && (
@@ -114,7 +116,7 @@ export const MobileNav = () => {
 										<span className="font-medium">{searchInput}</span>
 									</div>
 									<span className="text-xs border border-muted-foreground/30 px-2 py-0.5 rounded text-muted-foreground group-active:text-white group-active:border-white">
-										In this instance's network
+										{t('navbar.search_this_instance')}
 									</span>
 								</button>
 
@@ -128,7 +130,7 @@ export const MobileNav = () => {
 											<span className="font-medium">{searchInput}</span>
 										</div>
 										<span className="text-xs border border-muted-foreground/30 px-2 py-0.5 rounded text-muted-foreground group-active:text-white group-active:border-white">
-											In the vidiverse
+											{t('navbar.search_vidiverse')}
 										</span>
 									</button>
 								)}

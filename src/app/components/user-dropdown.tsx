@@ -3,7 +3,9 @@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from './dropdown-menu';
 import { LogOut, PlaySquare, Shield, Moon, Sun } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from './avatar';
+import { LanguageSwitcherItem } from './language-switcher';
 import { authClient } from '~lib/auth-client';
+import { useTranslation } from '~lib/i18n';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
@@ -15,6 +17,7 @@ interface UserDropdownProps {
 
 const UserDropdown = ({ user }: UserDropdownProps) => {
 	const router = useRouter();
+	const { t } = useTranslation();
 	const { theme, setTheme, resolvedTheme } = useTheme();
 	const [mounted, setMounted] = useState(false);
 	const userImage = user.image || '';
@@ -45,7 +48,7 @@ const UserDropdown = ({ user }: UserDropdownProps) => {
 					<div className="flex flex-col overflow-hidden">
 						<span className="text-[16px] font-normal truncate leading-tight">{user.name}</span>
 						<Link href={`/channel/${user.handle || user.id}`} className="text-[14px] text-blue-600 dark:text-[#3ea6ff] hover:underline">
-							View your channel
+							{t('common.view_your_channel')}
 						</Link>
 					</div>
 				</div>
@@ -57,7 +60,7 @@ const UserDropdown = ({ user }: UserDropdownProps) => {
 						<Link href="/console">
 							<DropdownMenuItem className="px-4 py-2.5 cursor-pointer gap-4 rounded-none outline-none border-none focus:bg-accent focus:text-accent-foreground">
 								<Shield className="h-6 w-6 stroke-[1.5]" />
-								<span className="text-[14px] font-normal flex-1">Console</span>
+								<span className="text-[14px] font-normal flex-1">{t('sidebar.console')}</span>
 							</DropdownMenuItem>
 						</Link>
 					)}
@@ -65,9 +68,11 @@ const UserDropdown = ({ user }: UserDropdownProps) => {
 					<Link href="/studio">
 						<DropdownMenuItem className="px-4 py-2.5 cursor-pointer gap-4 rounded-none outline-none border-none focus:bg-accent focus:text-accent-foreground">
 							<PlaySquare className="h-6 w-6 stroke-[1.5]" />
-							<span className="text-[14px] font-normal flex-1">Studio</span>
+							<span className="text-[14px] font-normal flex-1">{t('sidebar.studio')}</span>
 						</DropdownMenuItem>
 					</Link>
+
+					<LanguageSwitcherItem />
 
 					{mounted && (
 						<DropdownMenuItem
@@ -75,13 +80,15 @@ const UserDropdown = ({ user }: UserDropdownProps) => {
 							className="px-4 py-2.5 cursor-pointer gap-4 rounded-none outline-none border-none focus:bg-accent focus:text-accent-foreground"
 						>
 							{resolvedTheme === 'dark' || (resolvedTheme == null && theme === 'dark') ? <Sun className="h-6 w-6 stroke-[1.5]" /> : <Moon className="h-6 w-6 stroke-[1.5]" />}
-							<span className="text-[14px] font-normal flex-1">Appearance: {resolvedTheme === 'dark' || (resolvedTheme == null && theme === 'dark') ? 'Dark' : 'Light'}</span>
+							<span className="text-[14px] font-normal flex-1">
+								{t('common.appearance')}: {resolvedTheme === 'dark' || (resolvedTheme == null && theme === 'dark') ? t('common.dark') : t('common.light')}
+							</span>
 						</DropdownMenuItem>
 					)}
 
 					<DropdownMenuItem onClick={handleSignOut} className="px-4 py-2.5 cursor-pointer gap-4 rounded-none outline-none border-none focus:bg-accent focus:text-accent-foreground">
 						<LogOut className="h-6 w-6 stroke-[1.5]" />
-						<span className="text-[14px] font-normal flex-1">Sign out</span>
+						<span className="text-[14px] font-normal flex-1">{t('navbar.sign_out')}</span>
 					</DropdownMenuItem>
 				</div>
 			</DropdownMenuContent>

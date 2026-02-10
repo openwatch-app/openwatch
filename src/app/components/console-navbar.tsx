@@ -7,8 +7,10 @@ import { useAppStore } from '~lib/store';
 import { Button } from './button';
 import { Badge } from './badge';
 import Link from 'next/link';
+import { useTranslation } from '~lib/i18n';
 
 const ConsoleNavbar = () => {
+	const { t } = useTranslation();
 	const { data: session } = authClient.useSession();
 	const { toggleSidebar } = useAppStore();
 
@@ -24,9 +26,9 @@ const ConsoleNavbar = () => {
 					<div className="bg-primary text-white p-1 rounded-lg">
 						<Shield className="h-4 w-4 fill-current" />
 					</div>
-					<span className="text-xl font-bold tracking-tighter">Console</span>
+					<span className="text-xl font-bold tracking-tighter">{t('console.title')}</span>
 					<Badge variant="secondary" className="text-[10px] px-1.5 h-5 rounded-full uppercase">
-						beta
+						{t('common.beta')}
 					</Badge>
 				</Link>
 			</div>

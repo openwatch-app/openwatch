@@ -9,8 +9,10 @@ import { useState } from 'react';
 import { Button } from './button';
 import { Badge } from './badge';
 import Link from 'next/link';
+import { useTranslation } from '~lib/i18n';
 
 const StudioNavbar = () => {
+	const { t } = useTranslation();
 	const { data: session } = authClient.useSession();
 	const { toggleSidebar } = useAppStore();
 	const [uploadOpen, setUploadOpen] = useState(false);
@@ -28,9 +30,9 @@ const StudioNavbar = () => {
 					<div className="bg-primary text-white p-1 rounded-lg">
 						<Video className="h-4 w-4 fill-current" />
 					</div>
-					<span className="text-xl font-bold tracking-tighter">Studio</span>
+					<span className="text-xl font-bold tracking-tighter">{t('studio.title')}</span>
 					<Badge variant="secondary" className="text-[10px] px-1.5 h-5 rounded-full uppercase">
-						beta
+						{t('common.beta')}
 					</Badge>
 				</Link>
 			</div>
@@ -44,7 +46,7 @@ const StudioNavbar = () => {
 						onClick={() => setUploadOpen(true)}
 					>
 						<PlusSquare className="h-4 w-4" />
-						<span className="text-xs uppercase tracking-wide">Create</span>
+						<span className="text-xs uppercase tracking-wide">{t('common.create')}</span>
 					</Button>
 				)}
 

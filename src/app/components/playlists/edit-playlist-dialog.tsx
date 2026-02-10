@@ -5,6 +5,7 @@ import { X, Loader2 } from 'lucide-react';
 import { Textarea } from '../textarea';
 import { Button } from '../button';
 import { Input } from '../input';
+import { useTranslation } from '~lib/i18n';
 import axios from 'axios';
 
 interface EditPlaylistDialogProps {
@@ -20,6 +21,7 @@ interface EditPlaylistDialogProps {
 }
 
 export const EditPlaylistDialog = ({ playlist, open, onOpenChange, onUpdate }: EditPlaylistDialogProps) => {
+	const { t } = useTranslation();
 	const [title, setTitle] = useState(playlist.title);
 	const [description, setDescription] = useState(playlist.description || '');
 	const [visibility, setVisibility] = useState(playlist.visibility);
@@ -65,7 +67,7 @@ export const EditPlaylistDialog = ({ playlist, open, onOpenChange, onUpdate }: E
 			<div className="bg-background border rounded-xl shadow-lg w-full max-w-md flex flex-col max-h-[90vh] relative animate-in fade-in zoom-in-95 duration-200">
 				{/* Header */}
 				<div className="flex items-center justify-between p-4 border-b border-border/50">
-					<h2 className="font-medium text-lg">Edit playlist</h2>
+					<h2 className="font-medium text-lg">{t('playlists.edit_dialog.title')}</h2>
 					<Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onOpenChange(false)}>
 						<X className="w-4 h-4" />
 					</Button>
@@ -74,25 +76,31 @@ export const EditPlaylistDialog = ({ playlist, open, onOpenChange, onUpdate }: E
 				{/* Form */}
 				<div className="p-6 space-y-4 overflow-y-auto">
 					<div className="space-y-2">
-						<label className="text-sm font-medium text-foreground">Title</label>
-						<Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Add a title" maxLength={150} />
+						<label className="text-sm font-medium text-foreground">{t('playlists.edit_dialog.playlist_title')}</label>
+						<Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t('playlists.edit_dialog.playlist_title_placeholder')} maxLength={150} />
 					</div>
 
 					<div className="space-y-2">
-						<label className="text-sm font-medium text-foreground">Description</label>
-						<Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Add a description" className="resize-none min-h-[100px]" maxLength={5000} />
+						<label className="text-sm font-medium text-foreground">{t('playlists.edit_dialog.description')}</label>
+						<Textarea
+							value={description}
+							onChange={(e) => setDescription(e.target.value)}
+							placeholder={t('playlists.edit_dialog.description_placeholder')}
+							className="resize-none min-h-[100px]"
+							maxLength={5000}
+						/>
 					</div>
 
 					<div className="space-y-2">
-						<label className="text-sm font-medium text-foreground">Visibility</label>
+						<label className="text-sm font-medium text-foreground">{t('playlists.edit_dialog.visibility')}</label>
 						<select
 							className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
 							value={visibility}
 							onChange={(e) => setVisibility(e.target.value as any)}
 						>
-							<option value="public">Public</option>
-							<option value="unlisted">Unlisted</option>
-							<option value="private">Private</option>
+							<option value="public">{t('common.visibility.public')}</option>
+							<option value="unlisted">{t('common.visibility.unlisted')}</option>
+							<option value="private">{t('common.visibility.private')}</option>
 						</select>
 					</div>
 
@@ -102,16 +110,16 @@ export const EditPlaylistDialog = ({ playlist, open, onOpenChange, onUpdate }: E
 				{/* Footer */}
 				<div className="flex justify-end gap-2 p-4 border-t border-border/50 bg-secondary/10 rounded-b-xl">
 					<Button variant="ghost" onClick={() => onOpenChange(false)} disabled={saving}>
-						Cancel
+						{t('common.cancel')}
 					</Button>
 					<Button onClick={handleSave} disabled={!title.trim() || saving}>
 						{saving ? (
 							<>
 								<Loader2 className="mr-2 h-4 w-4 animate-spin" />
-								Saving
+								{t('playlists.edit_dialog.saving')}
 							</>
 						) : (
-							'Save'
+							t('playlists.edit_dialog.save')
 						)}
 					</Button>
 				</div>

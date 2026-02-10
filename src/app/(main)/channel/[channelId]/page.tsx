@@ -1,21 +1,23 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import axios from 'axios';
-import { Channel, Video } from '~app/types';
-import { Button } from '~components/button';
-import { Avatar, AvatarFallback, AvatarImage } from '~components/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '~components/tabs';
-import VideoCard from '~components/video-card';
-import { Search, Loader2, MoreVertical } from 'lucide-react';
-import { cn, normalizeViewCount, formatCompactNumber } from '~lib/utils';
-import { authClient } from '~lib/auth-client';
-import Image from 'next/image';
-import { SubscribeButton } from '~components/subscribe-button';
+import { Avatar, AvatarFallback, AvatarImage } from '~components/avatar';
 import { PlaylistCard } from '~app/components/playlists/playlist-card';
+import { normalizeViewCount, formatCompactNumber } from '~lib/utils';
+import { SubscribeButton } from '~components/subscribe-button';
+import { useParams, useRouter } from 'next/navigation';
+import { authClient } from '~lib/auth-client';
+import VideoCard from '~components/video-card';
+import { Channel, Video } from '~app/types';
+import { useEffect, useState } from 'react';
+import { Button } from '~components/button';
+import { useTranslation } from '~lib/i18n';
+import { Loader2 } from 'lucide-react';
+import Image from 'next/image';
+import axios from 'axios';
 
 const ChannelPage = () => {
+	const { t, language } = useTranslation();
 	const params = useParams();
 	const router = useRouter();
 	const { data: session } = authClient.useSession();
@@ -70,9 +72,9 @@ const ChannelPage = () => {
 	if (!channel) {
 		return (
 			<div className="flex flex-col h-[50vh] items-center justify-center gap-4">
-				<p className="text-lg text-muted-foreground">Channel not found</p>
+				<p className="text-lg text-muted-foreground">{t('common.channel_not_found')}</p>
 				<Button variant="outline" onClick={() => router.push('/')}>
-					Go Home
+					{t('common.go_home')}
 				</Button>
 			</div>
 		);
@@ -111,28 +113,32 @@ const ChannelPage = () => {
 								</>
 							)}
 							<span>•</span>
-							<span>{channel.subscribers} subscribers</span>
+							<span className="lowercase">
+								{channel.subscribers} {t('common.subscribers')}
+							</span>
 							<span>•</span>
-							<span>{channel.videosCount} videos</span>
+							<span className="lowercase">
+								{channel.videosCount} {t('common.videos')}
+							</span>
 						</div>
 
 						<div className="flex items-center gap-1 text-sm text-muted-foreground max-w-2xl cursor-pointer hover:text-foreground transition-colors">
-							<p className="line-clamp-1">{channel.description || `More about this channel`}</p>
+							<p className="line-clamp-1">{channel.description || t('common.more_about_channel')}</p>
 						</div>
 
 						{/* Buttons */}
 						<div className="flex flex-wrap justify-center md:justify-start gap-2 mt-3 w-full md:w-auto">
 							{channel.isExternal ? (
 								<Button disabled variant="secondary" className="h-9 opacity-70 cursor-not-allowed">
-									Subscribing disabled
+									{t('common.subscribing_disabled')}
 								</Button>
 							) : isOwner ? (
 								<>
 									<Button variant="secondary" className="font-medium flex-1 sm:flex-none" onClick={() => router.push('/studio/customization')}>
-										Customize channel
+										{t('common.customize_channel')}
 									</Button>
 									<Button variant="secondary" className="font-medium flex-1 sm:flex-none" onClick={() => router.push('/studio')}>
-										Manage videos
+										{t('common.manage_videos')}
 									</Button>
 								</>
 							) : (
@@ -167,19 +173,19 @@ const ChannelPage = () => {
 								value="videos"
 								className="rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent px-0 py-3 font-semibold text-muted-foreground data-[state=active]:text-foreground shadow-none transition-colors text-sm tracking-wide"
 							>
-								Videos
+								{t('common.videos')}
 							</TabsTrigger>
 							<TabsTrigger
 								value="shorts"
 								className="rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent px-0 py-3 font-semibold text-muted-foreground data-[state=active]:text-foreground shadow-none transition-colors text-sm tracking-wide"
 							>
-								Shorts
+								{t('common.shorts')}
 							</TabsTrigger>
 							<TabsTrigger
 								value="playlists"
 								className="rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent px-0 py-3 font-semibold text-muted-foreground data-[state=active]:text-foreground shadow-none transition-colors text-sm tracking-wide"
 							>
-								Playlists
+								{t('common.playlists')}
 							</TabsTrigger>
 						</TabsList>
 
@@ -191,7 +197,7 @@ const ChannelPage = () => {
 							</div>
 							{regularVideos.length === 0 && (
 								<div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
-									<p className="text-lg">No videos available</p>
+									<p className="text-lg">{t('common.no_videos')}</p>
 								</div>
 							)}
 						</TabsContent>
@@ -214,7 +220,9 @@ const ChannelPage = () => {
 												<a href={`/shorts/${video.id}`}>
 													<h3 className="font-semibold text-sm line-clamp-2 leading-tight group-hover:text-primary transition-colors mb-1">{video.title}</h3>
 												</a>
-												<div className="text-xs text-muted-foreground">{formatCompactNumber(normalizeViewCount(video.views))} views</div>
+												<div className="text-xs text-muted-foreground">
+													{formatCompactNumber(normalizeViewCount(video.views), language === 'ro' ? 'ro-RO' : 'en-US')} {t('common.views')}
+												</div>
 											</div>
 										</div>
 									</div>
@@ -222,7 +230,7 @@ const ChannelPage = () => {
 							</div>
 							{shortVideos.length === 0 && (
 								<div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
-									<p className="text-lg">No shorts available</p>
+									<p className="text-lg">{t('common.no_shorts')}</p>
 								</div>
 							)}
 						</TabsContent>
@@ -235,7 +243,7 @@ const ChannelPage = () => {
 							</div>
 							{playlists.length === 0 && (
 								<div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
-									<p className="text-lg">No playlists created</p>
+									<p className="text-lg">{t('common.no_playlists')}</p>
 								</div>
 							)}
 						</TabsContent>

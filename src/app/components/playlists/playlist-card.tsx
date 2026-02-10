@@ -2,7 +2,12 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ListPlus, Lock, Globe, EyeOff, Play } from 'lucide-react';
 import { cn } from '~lib/utils';
+import { useTranslation } from '~lib/i18n';
 import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+import 'dayjs/locale/ro';
+
+dayjs.extend(relativeTime);
 
 interface PlaylistCardProps {
 	playlist: {
@@ -16,6 +21,14 @@ interface PlaylistCardProps {
 }
 
 export const PlaylistCard = ({ playlist }: PlaylistCardProps) => {
+	const { t, language } = useTranslation();
+
+	const safeFromNow = (input: string | Date) => {
+		const ts = dayjs(input).locale(language === 'ro' ? 'ro' : 'en');
+		if (!ts.isValid()) return '';
+		return ts.fromNow();
+	};
+
 	return (
 		<div className="flex flex-col gap-2 group cursor-pointer">
 			{/* Thumbnail */}
@@ -32,7 +45,7 @@ export const PlaylistCard = ({ playlist }: PlaylistCardProps) => {
 				<div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
 					<div className="flex items-center gap-2 text-white font-medium">
 						<Play className="w-4 h-4 fill-current" />
-						<span>PLAY ALL</span>
+						<span>{t('common.play_all')}</span>
 					</div>
 				</div>
 			</Link>
@@ -44,13 +57,15 @@ export const PlaylistCard = ({ playlist }: PlaylistCardProps) => {
 				</Link>
 				<div className="flex flex-col gap-0.5">
 					<div className="text-xs text-muted-foreground flex items-center gap-1">
-						<span className="capitalize">{playlist.visibility}</span>
+						<span className="capitalize">{t(`common.visibility.${playlist.visibility}`)}</span>
 						<span>•</span>
-						<span>Playlist</span>
+						<span>{t('common.playlist')}</span>
 					</div>
-					<span className="text-xs text-muted-foreground">Updated {dayjs(playlist.updatedAt).fromNow()}</span>
+					<span className="text-xs text-muted-foreground">
+						{t('common.updated')} {safeFromNow(playlist.updatedAt)}
+					</span>
 					<Link href={`/playlist/${playlist.id}`} className="text-xs font-medium text-muted-foreground hover:text-foreground mt-1">
-						View full playlist
+						{t('common.view_full_playlist')}
 					</Link>
 				</div>
 			</div>
