@@ -8,6 +8,8 @@ import { Loader2 } from 'lucide-react';
 import { cn } from '~lib/utils';
 import axios from 'axios';
 
+import { VideoCardSkeleton } from '~components/skeletons/video-card-skeleton';
+
 const Page = () => {
 	const [videos, setVideos] = useState<Video[]>([]);
 	const [categories] = useState<Category[]>([
@@ -37,8 +39,32 @@ const Page = () => {
 
 	if (loading) {
 		return (
-			<div className="flex h-[50vh] items-center justify-center">
-				<Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+			<div className="flex flex-col h-full">
+				<div className="sticky top-14 bg-background z-30 pt-3 pb-3 px-4 w-full border-b border-transparent">
+					<div className="w-full max-w-[calc(100vw-2rem)] overflow-x-auto scrollbar-hide">
+						<div className="flex w-max space-x-3 p-1">
+							{categories.map((category) => (
+								<Button
+									key={category.id}
+									variant={selectedCategory === category.id ? 'default' : 'secondary'}
+									className={cn(
+										'rounded-lg px-3 py-1 h-8 text-sm font-medium transition-colors',
+										selectedCategory === category.id ? 'bg-foreground text-background hover:bg-foreground/90' : 'bg-secondary hover:bg-secondary/80 text-foreground'
+									)}
+									onClick={() => setSelectedCategory(category.id)}
+								>
+									{category.name}
+								</Button>
+							))}
+						</div>
+					</div>
+				</div>
+
+				<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-x-5 gap-y-20 px-3 py-3">
+					{Array.from({ length: 12 }).map((_, i) => (
+						<VideoCardSkeleton key={i} />
+					))}
+				</div>
 			</div>
 		);
 	}

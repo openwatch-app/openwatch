@@ -13,6 +13,7 @@ import Image from 'next/image';
 import dayjs from 'dayjs';
 import { PlaylistVideoItem } from '~app/components/playlists/playlist-video-item';
 import { EditPlaylistDialog } from '~app/components/playlists/edit-playlist-dialog';
+import { PlaylistPageSkeleton } from '~components/skeletons/playlist-page-skeleton';
 
 interface Playlist {
 	id: string;
@@ -132,11 +133,7 @@ const PlaylistPage = () => {
 	};
 
 	if (loading) {
-		return (
-			<div className="flex h-[50vh] items-center justify-center">
-				<Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-			</div>
-		);
+		return <PlaylistPageSkeleton />;
 	}
 
 	if (error || !playlist) {
@@ -185,8 +182,8 @@ const PlaylistPage = () => {
 									{playlist.visibility === 'public'
 										? t('common.visibility.public')
 										: playlist.visibility === 'unlisted'
-											? t('common.visibility.unlisted')
-											: t('common.visibility.private')}
+										? t('common.visibility.unlisted')
+										: t('common.visibility.private')}
 								</span>
 								<span>•</span>
 								<span>{t('playlists.page.videos_count', { count: playlist.videoCount })}</span>

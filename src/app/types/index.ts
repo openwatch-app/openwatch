@@ -33,6 +33,7 @@ export interface Video {
 	isShort?: boolean;
 	likes?: string;
 	dislikes?: string;
+	commentsCount?: string;
 	userReaction?: 'LIKE' | 'DISLIKE' | null;
 	status?: 'processing' | 'ready' | 'failed';
 	visibility?: 'public' | 'private' | 'unlisted' | 'draft';

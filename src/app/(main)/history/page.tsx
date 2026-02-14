@@ -1,6 +1,6 @@
 'use client';
 
-import { Search, Trash2, PauseCircle, PlayCircle, MoreVertical, Loader2 } from 'lucide-react';
+import { Search, Trash2, PauseCircle, PlayCircle, MoreVertical } from 'lucide-react';
 import { Button } from '~components/button';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -11,6 +11,7 @@ import axios from 'axios';
 import { authClient } from '~lib/auth-client';
 import { useTranslation } from '~lib/i18n';
 import { useAppStore } from '~lib/store';
+import { VideoRowSkeleton } from '~components/skeletons/video-row-skeleton';
 
 const Page = () => {
 	const { t } = useTranslation();
@@ -87,8 +88,10 @@ const Page = () => {
 				<h1 className="text-2xl font-bold mb-6">{t('history.title')}</h1>
 
 				{loading ? (
-					<div className="flex justify-center py-10">
-						<Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+					<div className="space-y-4">
+						{Array.from({ length: 8 }).map((_, i) => (
+							<VideoRowSkeleton key={i} />
+						))}
 					</div>
 				) : filteredVideos.length === 0 ? (
 					<div className="text-muted-foreground text-center py-10">{searchQuery ? t('history.no_results') : t('history.no_history')}</div>

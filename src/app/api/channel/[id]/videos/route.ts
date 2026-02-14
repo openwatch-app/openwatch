@@ -1,6 +1,6 @@
 import { db } from '~server/db';
-import { videos, user } from '~server/db/schema';
-import { eq, desc, or } from 'drizzle-orm';
+import { videos, user, videoReactions, comments } from '~server/db/schema';
+import { eq, desc, or, inArray, sql } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
@@ -58,30 +58,68 @@ export const GET = async (req: NextRequest, { params }: { params: Promise<{ id: 
 			orderBy: [desc(videos.createdAt)]
 		});
 
+		const videoIds = channelVideos.map((v) => v.id);
+		let reactionsMap = new Map();
+		let commentsMap = new Map();
+
+		if (videoIds.length > 0) {
+			// Fetch reactions counts
+			const reactionsStats = await db
+				.select({
+					videoId: videoReactions.videoId,
+					likes: sql<number>`cast(count(case when ${videoReactions.type} = 'LIKE' then 1 end) as int)`,
+					dislikes: sql<number>`cast(count(case when ${videoReactions.type} = 'DISLIKE' then 1 end) as int)`
+				})
+				.from(videoReactions)
+				.where(inArray(videoReactions.videoId, videoIds))
+				.groupBy(videoReactions.videoId);
+
+			// Fetch comments counts
+			const commentsStats = await db
+				.select({
+					videoId: comments.videoId,
+					count: sql<number>`cast(count(${comments.id}) as int)`
+				})
+				.from(comments)
+				.where(inArray(comments.videoId, videoIds))
+				.groupBy(comments.videoId);
+
+			reactionsMap = new Map(reactionsStats.map((s) => [s.videoId, s]));
+			commentsMap = new Map(commentsStats.map((s) => [s.videoId, s.count]));
+		}
+
 		// Map to Video interface
-		const mappedVideos = channelVideos.map((v) => ({
-			id: v.id,
-			title: v.title || 'Untitled',
-			thumbnail: v.thumbnailUrl || '/images/no-thumbnail.jpg',
-			duration: v.duration ? `${Math.floor(dayjs.duration(v.duration, 'seconds').asMinutes())}:${dayjs.duration(v.duration, 'seconds').seconds().toString().padStart(2, '0')}` : '00:00',
-			views: v.views.toString(),
-			uploadedAt: v.createdAt.toISOString(),
-			channel: {
-				id: channelUser.id,
-				name: channelUser.name,
-				avatar: channelUser.image || '',
-				handle: channelUser.handle || '',
-				subscribers: '0', // Not fetching count here for performance
-				videosCount: '0',
-				verified: channelUser.verified
-			},
-			description: v.description,
-			category: 'General',
-			type: v.isShort ? 'short' : 'video',
-			visibility: v.visibility,
-			restrictions: v.restrictions,
-			isShort: v.isShort
-		}));
+		const mappedVideos = channelVideos.map((v) => {
+			const r = reactionsMap.get(v.id) || { likes: 0, dislikes: 0 };
+			const c = commentsMap.get(v.id) || 0;
+
+			return {
+				id: v.id,
+				title: v.title || 'Untitled',
+				thumbnail: v.thumbnailUrl || '/images/no-thumbnail.jpg',
+				duration: v.duration ? `${Math.floor(dayjs.duration(v.duration, 'seconds').asMinutes())}:${dayjs.duration(v.duration, 'seconds').seconds().toString().padStart(2, '0')}` : '00:00',
+				views: v.views.toString(),
+				uploadedAt: v.createdAt.toISOString(),
+				channel: {
+					id: channelUser.id,
+					name: channelUser.name,
+					avatar: channelUser.image || '',
+					handle: channelUser.handle || '',
+					subscribers: '0', // Not fetching count here for performance
+					videosCount: '0',
+					verified: channelUser.verified
+				},
+				description: v.description,
+				category: 'General',
+				type: v.isShort ? 'short' : 'video',
+				visibility: v.visibility,
+				restrictions: v.restrictions,
+				isShort: v.isShort,
+				likes: r.likes.toString(),
+				dislikes: r.dislikes.toString(),
+				commentsCount: c.toString()
+			};
+		});
 
 		return NextResponse.json(mappedVideos);
 	} catch (error) {

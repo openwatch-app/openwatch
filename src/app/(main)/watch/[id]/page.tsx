@@ -20,6 +20,7 @@ import Link from 'next/link';
 import axios from 'axios';
 import dayjs from 'dayjs';
 import '~lib/dayjs-config';
+import { WatchPageSkeleton } from '~components/skeletons/watch-page-skeleton';
 
 const Page = () => {
 	const { t, language } = useTranslation();
@@ -193,11 +194,7 @@ const Page = () => {
 	});
 
 	if (loading) {
-		return (
-			<div className="flex h-[50vh] items-center justify-center">
-				<Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-			</div>
-		);
+		return <WatchPageSkeleton />;
 	}
 
 	if (error || !video) {

@@ -5,6 +5,7 @@ import axios from 'axios';
 import { Button } from '~components/button';
 import { Loader2, Upload, Ban, Shield, ShieldAlert } from 'lucide-react';
 import { Badge } from '~components/badge';
+import { Skeleton } from '~components/skeleton';
 import { useTranslation } from '~lib/i18n';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
@@ -56,8 +57,52 @@ const Page = () => {
 
 	if (loading) {
 		return (
-			<div className="flex h-[50vh] items-center justify-center">
-				<Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+			<div className="flex flex-col gap-6">
+				<div>
+					<h1 className="text-3xl font-bold tracking-tight">{t('console.users.title')}</h1>
+					<p className="text-muted-foreground">{t('console.users.description')}</p>
+				</div>
+
+				<div className="rounded-md border">
+					<table className="w-full text-sm text-left">
+						<thead className="bg-muted/50 text-muted-foreground font-medium">
+							<tr>
+								<th className="p-4">{t('console.users.table.user')}</th>
+								<th className="p-4">{t('console.users.table.role')}</th>
+								<th className="p-4">{t('console.users.table.status')}</th>
+								<th className="p-4">{t('console.users.table.joined')}</th>
+								<th className="p-4 text-right">{t('console.users.table.actions')}</th>
+							</tr>
+						</thead>
+						<tbody className="divide-y">
+							{Array.from({ length: 5 }).map((_, i) => (
+								<tr key={i} className="hover:bg-muted/50 transition-colors">
+									<td className="p-4">
+										<div className="flex flex-col gap-1">
+											<Skeleton className="h-5 w-32" />
+											<Skeleton className="h-4 w-48" />
+										</div>
+									</td>
+									<td className="p-4">
+										<Skeleton className="h-6 w-16 rounded-full" />
+									</td>
+									<td className="p-4">
+										<Skeleton className="h-6 w-16 rounded-full" />
+									</td>
+									<td className="p-4">
+										<Skeleton className="h-4 w-24" />
+									</td>
+									<td className="p-4 text-right">
+										<div className="flex justify-end gap-2">
+											<Skeleton className="h-8 w-8 rounded-md" />
+											<Skeleton className="h-8 w-8 rounded-md" />
+										</div>
+									</td>
+								</tr>
+							))}
+						</tbody>
+					</table>
+				</div>
 			</div>
 		);
 	}

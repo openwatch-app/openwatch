@@ -39,6 +39,18 @@ export const POST = async (req: NextRequest) => {
 			return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
 		}
 
+		// Check file size limit
+		let maxSizeGB = parseFloat(process.env.NEXT_PUBLIC_MAX_VIDEO_SIZE_GB || '2');
+		if (isNaN(maxSizeGB)) maxSizeGB = 2;
+		const maxSizeBytes = maxSizeGB * 1024 * 1024 * 1024;
+
+		if (file.size > maxSizeBytes) {
+			return NextResponse.json(
+				{ error: `File size exceeds the limit of ${maxSizeGB}GB` },
+				{ status: 413 }
+			);
+		}
+
 		const title = (formData.get('title') as string) || file.name;
 
 		// Validate video file type

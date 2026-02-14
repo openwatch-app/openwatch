@@ -1,5 +1,5 @@
 import { videos, videoViews, subscription, user, watchHistory, playlists, playlistItems } from '~server/db/schema';
-import { desc, eq, and, not, sql, or, ilike, inArray, isNull } from 'drizzle-orm';
+import { desc, eq, and, not, sql, or, ilike, inArray, isNull, gte, lte } from 'drizzle-orm';
 import { db } from '~server/db';
 import axios from 'axios';
 
@@ -60,78 +60,163 @@ export class RecommendationService {
 			});
 		}
 
-		// Normal Smart Feed (for 'all' or specific category)
+		// --- Smart Feed Logic ---
 
-		// 1. If user is logged in, gather signals
+		// 1. Gather User Context
 		let subscribedChannelIds: string[] = [];
-		let recentWatchedCategory: string | null = null;
+		let topCategories: string[] = [];
+		let watchedVideoIds = new Set<string>();
 
 		if (userId) {
-			// Get subscriptions
+			// A. Subscriptions
 			const subs = await db.query.subscription.findMany({
 				where: eq(subscription.subscriberId, userId),
 				columns: { subscribedToId: true }
 			});
 			subscribedChannelIds = subs.map((s) => s.subscribedToId);
 
-			// Get last watched video to infer interest
-			const lastView = await db.query.videoViews.findFirst({
-				where: eq(videoViews.userId, userId),
-				orderBy: [desc(videoViews.createdAt)],
+			// B. Watched Video IDs (to avoid recommending recently watched stuff too aggressively)
+			const history = await db.query.watchHistory.findMany({
+				where: eq(watchHistory.userId, userId),
+				columns: { videoId: true },
+				orderBy: [desc(watchHistory.lastViewedAt)],
+				limit: 100
+			});
+			history.forEach((h) => watchedVideoIds.add(h.videoId));
+
+			// C. Top Categories (Interests)
+			// Aggregate categories from last 50 watched videos
+			const recentHistory = await db.query.watchHistory.findMany({
+				where: eq(watchHistory.userId, userId),
+				limit: 50,
+				orderBy: [desc(watchHistory.lastViewedAt)],
 				with: {
-					video: true
+					video: { columns: { category: true } }
 				}
 			});
-			if (lastView?.video) {
-				recentWatchedCategory = lastView.video.category;
-			}
+
+			const categoryCounts: Record<string, number> = {};
+			recentHistory.forEach((h) => {
+				if (h.video?.category) {
+					categoryCounts[h.video.category] = (categoryCounts[h.video.category] || 0) + 1;
+				}
+			});
+
+			topCategories = Object.entries(categoryCounts)
+				.sort(([, a], [, b]) => b - a)
+				.slice(0, 3) // Top 3 categories
+				.map(([cat]) => cat);
 		}
 
-		// 2. Fetch candidates (fetch more than limit to rank them)
-		// We mix:
-		// - Videos from subscriptions (if any)
-		// - Recent videos
-		// - Popular videos
+		// 2. Fetch Candidates from Multiple Sources
+		// We fetch more than needed to rank them effectively
+		const candidateLimit = 40;
+		const queries = [];
 
-		// For simplicity, we'll fetch a batch of recent videos and rank them in memory
-		// In a real large-scale app, we'd push this logic to the DB or a search engine
-		const candidates = await db.query.videos.findMany({
-			where: and(eq(videos.visibility, 'public'), eq(videos.isShort, false)),
-			limit: 100, // Fetch pool of 100 candidates
-			orderBy: [desc(videos.createdAt)], // Bias towards recent
-			with: {
-				user: true // For channel info
-			}
-		});
+		// Source A: Recent (Freshness)
+		queries.push(
+			db.query.videos.findMany({
+				where: and(eq(videos.visibility, 'public'), eq(videos.isShort, false)),
+				orderBy: [desc(videos.createdAt)],
+				limit: candidateLimit,
+				with: { user: true }
+			})
+		);
 
-		// 3. Rank candidates
-		const scoredCandidates = candidates.map((video) => {
+		// Source B: Popular (Views - Trends)
+		// We look for videos with high views from the last 30 days
+		const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+		queries.push(
+			db.query.videos.findMany({
+				where: and(eq(videos.visibility, 'public'), eq(videos.isShort, false), gte(videos.createdAt, thirtyDaysAgo)),
+				orderBy: [desc(videos.views)],
+				limit: candidateLimit,
+				with: { user: true }
+			})
+		);
+
+		// Source C: Subscriptions (if logged in)
+		if (subscribedChannelIds.length > 0) {
+			queries.push(
+				db.query.videos.findMany({
+					where: and(eq(videos.visibility, 'public'), eq(videos.isShort, false), inArray(videos.userId, subscribedChannelIds)),
+					orderBy: [desc(videos.createdAt)], // Recent from subs
+					limit: candidateLimit,
+					with: { user: true }
+				})
+			);
+		}
+
+		// Source D: Interest-based (if logged in and has history)
+		if (topCategories.length > 0) {
+			queries.push(
+				db.query.videos.findMany({
+					where: and(eq(videos.visibility, 'public'), eq(videos.isShort, false), inArray(videos.category, topCategories)),
+					orderBy: [desc(videos.createdAt)], // Recent in topics
+					limit: candidateLimit,
+					with: { user: true }
+				})
+			);
+		}
+
+		const results = await Promise.all(queries);
+		const allCandidates = results.flat();
+
+		// 3. Deduplicate & Score
+		const scoredCandidates = new Map<string, { video: any; score: number }>();
+
+		allCandidates.forEach((video) => {
+			if (scoredCandidates.has(video.id)) return; // Already processed
+
 			let score = 0;
+			const isWatched = watchedVideoIds.has(video.id);
 
-			// Signal 1: Recency (decay over time)
+			// --- Scoring Factors ---
+
+			// 1. Recency (0-20 points)
+			// Linear decay over 14 days
 			const daysOld = (Date.now() - video.createdAt.getTime()) / (1000 * 60 * 60 * 24);
-			score += Math.max(0, 10 - daysOld); // boost for fresh content
+			const recencyScore = Math.max(0, 20 - daysOld * 1.5);
+			score += recencyScore;
 
-			// Signal 2: Subscriptions
+			// 2. Popularity (0-20 points)
+			// Logarithmic scale for views
+			const popularityScore = Math.min(20, Math.log10(video.views + 1) * 4);
+			score += popularityScore;
+
+			// 3. Subscription Boost (30 points)
+			// We want to prioritize subs highly
 			if (subscribedChannelIds.includes(video.userId)) {
-				score += 20;
+				score += 30;
 			}
 
-			// Signal 3: Category match
-			if (recentWatchedCategory && video.category === recentWatchedCategory) {
-				score += 5;
+			// 4. Interest/Category Match (15 points)
+			if (topCategories.includes(video.category)) {
+				score += 15;
 			}
 
-			// Signal 4: Popularity (views)
-			score += Math.log10(video.views + 1) * 2;
+			// 5. Engagement Quality (Likes ratio) (0-10 points)
+			const totalReactions = video.likes + video.dislikes;
+			if (totalReactions > 5) {
+				const likeRatio = video.likes / totalReactions;
+				score += likeRatio * 10;
+			}
 
-			return { video, score };
+			// 6. Penalty for Watched (-50 points)
+			// We generally want to hide watched videos from Home, or push them to bottom.
+			if (isWatched) {
+				score -= 50;
+			}
+
+			scoredCandidates.set(video.id, { video, score });
 		});
 
-		// Sort by score
-		scoredCandidates.sort((a, b) => b.score - a.score);
+		// 4. Sort & Slice
+		const sorted = Array.from(scoredCandidates.values())
+			.sort((a, b) => b.score - a.score)
+			.map((item) => item.video);
 
-		let finalVideos = scoredCandidates.slice(offset, offset + limit).map((c) => c.video);
+		let finalVideos = sorted.slice(offset, offset + limit);
 
 		// Populate watch progress if user is logged in
 		if (userId && finalVideos.length > 0) {

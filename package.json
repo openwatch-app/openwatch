@@ -6,7 +6,7 @@
 		"type": "git",
 		"url": "https://github.com/openwatch-app/openwatch.git"
 	},
-	"version": "0.0.8",
+	"version": "0.0.9",
 	"private": true,
 	"scripts": {
 		"db:init": "npm run db:push",

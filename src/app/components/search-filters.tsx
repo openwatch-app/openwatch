@@ -2,8 +2,8 @@
 
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Button } from '~components/button';
-import { cn } from '~lib/utils';
 import { useTranslation } from '~lib/i18n';
+import { cn } from '~lib/utils';
 
 const SearchFilters = () => {
 	const { t } = useTranslation();

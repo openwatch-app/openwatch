@@ -1,17 +1,16 @@
 'use client';
 
+import { ShortsPlayerSkeleton } from '~components/skeletons/shorts-player-skeleton';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '~components/sheet';
+import { CommentSection } from '~app/components/comments/comment-section';
+import { ShortsPlayer } from '~app/components/shorts/shorts-player';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import axios from 'axios';
-import { Video } from '~app/types';
-import { ShortsPlayer } from '~app/components/shorts/shorts-player';
-import { Loader2, X } from 'lucide-react';
-import { CommentSection } from '~app/components/comments/comment-section';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '~components/sheet';
-import { Button } from '~components/button';
-import { cn } from '~lib/utils';
 import { authClient } from '~lib/auth-client';
 import { useTranslation } from '~lib/i18n';
+import { Video } from '~app/types';
+import { cn } from '~lib/utils';
+import axios from 'axios';
 
 const ShortsFeedPage = () => {
 	const { t } = useTranslation();
@@ -130,8 +129,8 @@ const ShortsFeedPage = () => {
 
 	if (loading) {
 		return (
-			<div className="flex md:h-[calc(100vh-64px)] h-[calc(100dvh-120px)] items-center justify-center">
-				<Loader2 className="h-8 w-8 animate-spin text-white" />
+			<div className="flex h-[calc(100dvh-120px)] md:h-[calc(100vh-64px)] overflow-hidden relative justify-center w-full z-0 bg-black">
+				<ShortsPlayerSkeleton />
 			</div>
 		);
 	}

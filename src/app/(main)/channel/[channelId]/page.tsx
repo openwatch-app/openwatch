@@ -15,6 +15,7 @@ import { useTranslation } from '~lib/i18n';
 import { Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import axios from 'axios';
+import { ChannelPageSkeleton } from '~components/skeletons/channel-page-skeleton';
 
 const ChannelPage = () => {
 	const { t, language } = useTranslation();
@@ -62,11 +63,7 @@ const ChannelPage = () => {
 	}, [channelId]);
 
 	if (loading) {
-		return (
-			<div className="flex h-[50vh] items-center justify-center">
-				<Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-			</div>
-		);
+		return <ChannelPageSkeleton />;
 	}
 
 	if (!channel) {
@@ -171,19 +168,19 @@ const ChannelPage = () => {
 						<TabsList className="w-full justify-start border-b border-border/40 rounded-none h-auto p-0 bg-transparent gap-4 md:gap-8 overflow-x-auto scrollbar-hide">
 							<TabsTrigger
 								value="videos"
-								className="rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent px-0 py-3 font-semibold text-muted-foreground data-[state=active]:text-foreground shadow-none transition-colors text-sm tracking-wide"
+								className="capitalize rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent px-0 py-3 font-semibold text-muted-foreground data-[state=active]:text-foreground shadow-none transition-colors text-sm tracking-wide"
 							>
 								{t('common.videos')}
 							</TabsTrigger>
 							<TabsTrigger
 								value="shorts"
-								className="rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent px-0 py-3 font-semibold text-muted-foreground data-[state=active]:text-foreground shadow-none transition-colors text-sm tracking-wide"
+								className="capitalize rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent px-0 py-3 font-semibold text-muted-foreground data-[state=active]:text-foreground shadow-none transition-colors text-sm tracking-wide"
 							>
 								{t('common.shorts')}
 							</TabsTrigger>
 							<TabsTrigger
 								value="playlists"
-								className="rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent px-0 py-3 font-semibold text-muted-foreground data-[state=active]:text-foreground shadow-none transition-colors text-sm tracking-wide"
+								className="capitalize rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent px-0 py-3 font-semibold text-muted-foreground data-[state=active]:text-foreground shadow-none transition-colors text-sm tracking-wide"
 							>
 								{t('common.playlists')}
 							</TabsTrigger>

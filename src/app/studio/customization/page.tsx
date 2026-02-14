@@ -1,14 +1,15 @@
 'use client';
 
+import { StudioCustomizationSkeleton } from '~components/skeletons/studio-customization-skeleton';
 import { Loader2, HelpCircle, Camera } from 'lucide-react';
 import { useEffect, useState, useRef } from 'react';
 import { Textarea } from '~components/textarea';
 import { authClient } from '~lib/auth-client';
 import { Button } from '~components/button';
+import { useTranslation } from '~lib/i18n';
 import { useRouter } from 'next/navigation';
 import { Input } from '~components/input';
 import axios from 'axios';
-import { useTranslation } from '~lib/i18n';
 
 const CustomizationPage = () => {
 	const { t } = useTranslation();
@@ -17,6 +18,7 @@ const CustomizationPage = () => {
 	const [loading, setLoading] = useState(true);
 	const [isUpdating, setIsUpdating] = useState(false);
 	const [hasChanges, setHasChanges] = useState(false);
+	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
 	const avatarInputRef = useRef<HTMLInputElement>(null);
 	const bannerInputRef = useRef<HTMLInputElement>(null);
@@ -166,18 +168,19 @@ const CustomizationPage = () => {
 			setInitialData(formData);
 			setHasChanges(false);
 			setIsUpdating(false);
-		} catch (err) {
+		} catch (err: any) {
 			console.error('Error updating channel:', err);
+			if (axios.isAxiosError(err) && err.response?.data?.error) {
+				setErrorMessage(err.response.data.error);
+			} else {
+				setErrorMessage('An unexpected error occurred');
+			}
 			setIsUpdating(false);
 		}
 	};
 
 	if (loading || sessionPending) {
-		return (
-			<div className="flex h-full items-center justify-center">
-				<Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-			</div>
-		);
+		return <StudioCustomizationSkeleton />;
 	}
 
 	return (
@@ -311,10 +314,14 @@ const CustomizationPage = () => {
 					<div className="space-y-2">
 						<Input
 							placeholder={t('studio.handle')}
-							className="max-w-2xl h-12 bg-[#0f0f0f] border-[#3f3f3f] text-base"
+							className={`max-w-2xl h-12 bg-[#0f0f0f] border-[#3f3f3f] text-base ${errorMessage ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
 							value={formData.handle}
-							onChange={(e) => setFormData({ ...formData, handle: e.target.value })}
+							onChange={(e) => {
+								setFormData({ ...formData, handle: e.target.value });
+								if (errorMessage) setErrorMessage(null);
+							}}
 						/>
+						{errorMessage && <p className="text-sm text-red-500">{errorMessage}</p>}
 						<p className="text-xs text-muted-foreground">
 							{origin}/{formData.handle || t('studio.handlePlaceholder')}
 						</p>

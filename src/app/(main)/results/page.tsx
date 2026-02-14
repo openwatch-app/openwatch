@@ -11,6 +11,7 @@ import { useTranslation } from '~lib/i18n';
 import { Loader2 } from 'lucide-react';
 import { Suspense } from 'react';
 import axios from 'axios';
+import { SearchResultCardSkeleton } from '~components/skeletons/search-result-card-skeleton';
 
 const Content = () => {
 	const { t } = useTranslation();
@@ -49,8 +50,10 @@ const Content = () => {
 		<div className="flex flex-col gap-4 p-4 max-w-5xl mx-auto w-full">
 			<SearchFilters />
 			{loading ? (
-				<div className="flex h-[50vh] items-center justify-center">
-					<Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+				<div className="flex flex-col gap-4">
+					{Array.from({ length: 5 }).map((_, i) => (
+						<SearchResultCardSkeleton key={i} />
+					))}
 				</div>
 			) : results.length === 0 ? (
 				<div className="text-center py-20">

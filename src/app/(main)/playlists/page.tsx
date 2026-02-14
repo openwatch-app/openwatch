@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import axios from 'axios';
 import { useTranslation } from '~lib/i18n';
+import { PlaylistCardSkeleton } from '~components/skeletons/playlist-card-skeleton';
 
 const PlaylistsPage = () => {
 	const { t } = useTranslation();
@@ -40,8 +41,14 @@ const PlaylistsPage = () => {
 
 	if (isAuthPending || loading) {
 		return (
-			<div className="flex h-[50vh] items-center justify-center">
-				<Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+			<div className="flex flex-col w-full min-h-screen bg-background p-6 md:p-8 max-w-[1600px] mx-auto">
+				<h1 className="text-2xl font-bold mb-6">{t('sidebar.playlists')}</h1>
+
+				<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+					{Array.from({ length: 10 }).map((_, i) => (
+						<PlaylistCardSkeleton key={i} />
+					))}
+				</div>
 			</div>
 		);
 	}

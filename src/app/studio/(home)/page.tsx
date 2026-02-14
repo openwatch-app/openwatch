@@ -1,7 +1,7 @@
 'use client';
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '~components/table';
-import { Eye, MessageSquare, ThumbsUp, Loader2, Pencil } from 'lucide-react';
+import { Eye, MessageSquare, ThumbsUp, Loader2, Pencil, Lock, Link as LinkIcon, EyeOff } from 'lucide-react';
 import { authClient } from '~lib/auth-client';
 import { Button } from '~components/button';
 import { useEffect, useState } from 'react';
@@ -55,7 +55,6 @@ const Page = () => {
 						<TableRow>
 							<TableHead className="w-[400px]">{t('studio.video')}</TableHead>
 							<TableHead>{t('studio.visibility')}</TableHead>
-							<TableHead>{t('studio.restrictions')}</TableHead>
 							<TableHead>{t('studio.date')}</TableHead>
 							<TableHead className="text-right">{t('studio.views')}</TableHead>
 							<TableHead className="text-right">{t('studio.comments')}</TableHead>
@@ -65,7 +64,7 @@ const Page = () => {
 					<TableBody>
 						{videos.length === 0 ? (
 							<TableRow>
-								<TableCell colSpan={7} className="h-24 text-center">
+								<TableCell colSpan={6} className="h-24 text-center">
 									{t('studio.no_videos_found')}
 								</TableCell>
 							</TableRow>
@@ -99,23 +98,19 @@ const Page = () => {
 															<Eye className="h-4 w-4" />
 														</Button>
 													</Link>
-													<Button variant="ghost" size="icon" className="h-6 w-6">
-														<MessageSquare className="h-4 w-4" />
-													</Button>
-													<Button variant="ghost" size="icon" className="h-6 w-6">
-														<ThumbsUp className="h-4 w-4" />
-													</Button>
 												</div>
 											</div>
 										</div>
 									</TableCell>
 									<TableCell>
-										<div className="flex items-center gap-1">
-											{video.visibility === 'draft' ? <Eye className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4 text-green-500" />}
+										<div className="flex items-center gap-2">
+											{(!video.visibility || video.visibility === 'public') && <Eye className="h-4 w-4 text-green-500" />}
+											{video.visibility === 'private' && <Lock className="h-4 w-4 text-red-500" />}
+											{video.visibility === 'unlisted' && <LinkIcon className="h-4 w-4 text-gray-500" />}
+											{video.visibility === 'draft' && <EyeOff className="h-4 w-4 text-muted-foreground" />}
 											<span className="capitalize">{video.visibility || 'Public'}</span>
 										</div>
 									</TableCell>
-									<TableCell>{video.restrictions || 'None'}</TableCell>
 									<TableCell>
 										<div className="flex flex-col text-xs">
 											<span>{video.uploadedAt}</span>
@@ -123,8 +118,16 @@ const Page = () => {
 										</div>
 									</TableCell>
 									<TableCell className="text-right">{video.views}</TableCell>
-									<TableCell className="text-right">0</TableCell>
-									<TableCell className="text-right">100%</TableCell>
+									<TableCell className="text-right">{video.commentsCount || '0'}</TableCell>
+									<TableCell className="text-right">
+										{(() => {
+											const likes = parseInt(video.likes || '0');
+											const dislikes = parseInt(video.dislikes || '0');
+											const total = likes + dislikes;
+											if (total === 0) return '-';
+											return `${Math.round((likes / total) * 100)}%`;
+										})()}
+									</TableCell>
 								</TableRow>
 							))
 						)}

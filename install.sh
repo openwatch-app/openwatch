@@ -80,6 +80,12 @@ case "$FED_REPLY" in
 esac
 printf "${YELLOW}You can enable/disable federation anytime from $INSTALL_DIR/compose.yml${NC}\n"
 
+# Max Video Size Configuration
+printf "Set max video upload size in GB (Default: 2): "
+read MAX_SIZE_REPLY
+MAX_VIDEO_SIZE=${MAX_SIZE_REPLY:-2}
+printf "${YELLOW}You can change this limit anytime in $INSTALL_DIR/compose.yml${NC}\n"
+
 # Generate Secrets
 printf "${GREEN}Generating secure credentials...${NC}\n"
 DB_PASSWORD=$(generate_secret 24)
@@ -100,6 +106,7 @@ services:
             - DATABASE_URL=postgres://postgres:${DB_PASSWORD}@db:5432/openwatch
             - NEXT_PUBLIC_BASE_URL=http://localhost:8634
             - NEXT_PUBLIC_ENABLE_FEDERATION=${ENABLE_FEDERATION}
+            - NEXT_PUBLIC_MAX_VIDEO_SIZE_GB=${MAX_VIDEO_SIZE}
             - AUTH_SECRET=${AUTH_SECRET}
         volumes:
             - ./data/.storage:/app/.storage
