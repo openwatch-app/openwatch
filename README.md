@@ -9,7 +9,7 @@ An open-source alternative to YouTube, perfect for anyone wanting to store video
 ### Quick Start
 
 ```bash
-curl -fsSL https://openwatch.ge0rg3e.rest/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/openwatch-app/openwatch/refs/heads/main/install.sh | sudo sh
 ```
 
 <details>
