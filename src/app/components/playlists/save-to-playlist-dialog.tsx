@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from '~lib/i18n';
 import { Button } from '../button';
 import { Input } from '../input';
+import { EmojiPicker } from '~components/emoji-picker';
 import axios from 'axios';
 
 interface Playlist {
@@ -120,9 +121,7 @@ export const SaveToPlaylist = ({ videoId, children }: SaveToPlaylistProps) => {
 						</div>
 					) : (
 						<div className="space-y-0.5">
-							{playlists.length === 0 && !loading && (
-								<div className="text-center py-6 text-xs text-muted-foreground italic">{t('playlists.dialog.no_playlists')}</div>
-							)}
+							{playlists.length === 0 && !loading && <div className="text-center py-6 text-xs text-muted-foreground italic">{t('playlists.dialog.no_playlists')}</div>}
 							{playlists.map((playlist) => (
 								<label key={playlist.id} className="flex items-center gap-2.5 p-2 rounded-md hover:bg-secondary/60 cursor-pointer transition-all active:scale-[0.98] group">
 									<div className="relative flex items-center justify-center">
@@ -143,7 +142,7 @@ export const SaveToPlaylist = ({ videoId, children }: SaveToPlaylistProps) => {
 								</label>
 							))}
 						</div>
-					) }
+					)}
 				</div>
 
 				{/* Create New Form */}
@@ -158,7 +157,10 @@ export const SaveToPlaylist = ({ videoId, children }: SaveToPlaylistProps) => {
 					<div className="p-3 border-t border-border/50 bg-secondary/10 space-y-3 animate-in slide-in-from-bottom-2 duration-200">
 						<div className="space-y-2.5">
 							<div>
-								<label className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground/70 mb-1 block px-1">{t('playlists.dialog.name')}</label>
+								<div className="flex justify-between items-center mb-1">
+									<label className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground/70 block px-1">{t('playlists.dialog.name')}</label>
+									<EmojiPicker onEmojiClick={(emoji) => setNewPlaylistTitle((prev) => prev + emoji)} />
+								</div>
 								<Input
 									value={newPlaylistTitle}
 									onChange={(e) => setNewPlaylistTitle(e.target.value)}

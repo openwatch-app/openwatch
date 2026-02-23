@@ -6,6 +6,7 @@ import { Textarea } from '../textarea';
 import { Button } from '../button';
 import { Input } from '../input';
 import { useTranslation } from '~lib/i18n';
+import { EmojiPicker } from '~components/emoji-picker';
 import axios from 'axios';
 
 interface EditPlaylistDialogProps {
@@ -76,12 +77,18 @@ export const EditPlaylistDialog = ({ playlist, open, onOpenChange, onUpdate }: E
 				{/* Form */}
 				<div className="p-6 space-y-4 overflow-y-auto">
 					<div className="space-y-2">
-						<label className="text-sm font-medium text-foreground">{t('playlists.edit_dialog.playlist_title')}</label>
+						<div className="flex justify-between items-center">
+							<label className="text-sm font-medium text-foreground">{t('playlists.edit_dialog.playlist_title')}</label>
+							<EmojiPicker onEmojiClick={(emoji) => setTitle((prev) => prev + emoji)} />
+						</div>
 						<Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t('playlists.edit_dialog.playlist_title_placeholder')} maxLength={150} />
 					</div>
 
 					<div className="space-y-2">
-						<label className="text-sm font-medium text-foreground">{t('playlists.edit_dialog.description')}</label>
+						<div className="flex justify-between items-center">
+							<label className="text-sm font-medium text-foreground">{t('playlists.edit_dialog.description')}</label>
+							<EmojiPicker onEmojiClick={(emoji) => setDescription((prev) => prev + emoji)} />
+						</div>
 						<Textarea
 							value={description}
 							onChange={(e) => setDescription(e.target.value)}

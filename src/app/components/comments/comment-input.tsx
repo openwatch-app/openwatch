@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import axios from 'axios';
 import { Avatar, AvatarFallback, AvatarImage } from '~components/avatar';
 import { Button } from '~components/button';
 import { authClient } from '~lib/auth-client';
-import { Smile } from 'lucide-react';
+import { EmojiPicker } from '~components/emoji-picker';
 import { useTranslation } from '~lib/i18n';
 
 interface CommentInputProps {
@@ -22,6 +22,7 @@ export const CommentInput = ({ videoId, parentId, onCommentAdded, onCancel, auto
 	const [content, setContent] = useState('');
 	const [loading, setLoading] = useState(false);
 	const [isFocused, setIsFocused] = useState(false);
+	const inputRef = useRef<HTMLInputElement>(null);
 
 	const handleSubmit = async () => {
 		if (!content.trim()) return;
@@ -40,6 +41,22 @@ export const CommentInput = ({ videoId, parentId, onCommentAdded, onCancel, auto
 		}
 	};
 
+	const handleEmojiClick = (emoji: string) => {
+		const input = inputRef.current;
+		if (input) {
+			const start = input.selectionStart || 0;
+			const end = input.selectionEnd || 0;
+			const newContent = content.substring(0, start) + emoji + content.substring(end);
+			setContent(newContent);
+			setTimeout(() => {
+				input.focus();
+				input.setSelectionRange(start + emoji.length, start + emoji.length);
+			}, 0);
+		} else {
+			setContent((prev) => prev + emoji);
+		}
+	};
+
 	if (!session) {
 		return <div className="flex items-center gap-4 p-4 text-sm text-muted-foreground">{t('comments.sign_in_to_comment')}</div>;
 	}
@@ -53,6 +70,7 @@ export const CommentInput = ({ videoId, parentId, onCommentAdded, onCancel, auto
 			<div className="flex-1">
 				<div className="relative">
 					<input
+						ref={inputRef}
 						type="text"
 						placeholder={t('comments.placeholder')}
 						value={content}
@@ -64,9 +82,7 @@ export const CommentInput = ({ videoId, parentId, onCommentAdded, onCancel, auto
 				</div>
 				{(isFocused || content || parentId) && (
 					<div className="flex justify-between items-center mt-2">
-						<Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
-							<Smile className="h-5 w-5" />
-						</Button>
+						<EmojiPicker onEmojiClick={handleEmojiClick} />
 						<div className="flex gap-2">
 							<Button
 								variant="ghost"

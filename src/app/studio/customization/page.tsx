@@ -4,6 +4,7 @@ import { StudioCustomizationSkeleton } from '~components/skeletons/studio-custom
 import { Loader2, HelpCircle, Camera } from 'lucide-react';
 import { useEffect, useState, useRef } from 'react';
 import { Textarea } from '~components/textarea';
+import { EmojiPicker } from '~components/emoji-picker';
 import { authClient } from '~lib/auth-client';
 import { Button } from '~components/button';
 import { useTranslation } from '~lib/i18n';
@@ -330,9 +331,12 @@ const CustomizationPage = () => {
 
 				{/* Description */}
 				<section className="space-y-4">
-					<div className="space-y-1">
-						<h3 className="font-semibold text-base">{t('studio.description')}</h3>
-						<p className="text-xs text-muted-foreground max-w-2xl">{t('studio.description_hint')}</p>
+					<div className="flex justify-between items-end max-w-2xl">
+						<div className="space-y-1">
+							<h3 className="font-semibold text-base">{t('studio.description')}</h3>
+							<p className="text-xs text-muted-foreground max-w-2xl">{t('studio.description_hint')}</p>
+						</div>
+						<EmojiPicker onEmojiClick={(emoji) => setFormData((prev) => ({ ...prev, description: prev.description + emoji }))} />
 					</div>
 					<Textarea
 						placeholder={t('studio.description')}

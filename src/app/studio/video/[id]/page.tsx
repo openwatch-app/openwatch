@@ -8,6 +8,7 @@ import React, { useEffect, useState } from 'react';
 import { Textarea } from '~components/textarea';
 import { Button } from '~components/button';
 import { useRouter } from 'next/navigation';
+import { EmojiPicker } from '~components/emoji-picker';
 import { Label } from '~components/label';
 import { Input } from '~components/input';
 import { Video } from '~app/types';
@@ -232,12 +233,18 @@ const Page = ({ params }: { params: Promise<{ id: string }> }) => {
 				<div className="lg:col-span-2 space-y-6">
 					<div className="space-y-4">
 						<div className="space-y-2">
-							<Label htmlFor="title">Title (required)</Label>
+							<div className="flex justify-between items-center">
+								<Label htmlFor="title">Title (required)</Label>
+								<EmojiPicker onEmojiClick={(emoji) => setTitle((prev) => prev + emoji)} />
+							</div>
 							<Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Add a title that describes your video" />
 						</div>
 
 						<div className="space-y-2">
-							<Label htmlFor="description">Description</Label>
+							<div className="flex justify-between items-center">
+								<Label htmlFor="description">Description</Label>
+								<EmojiPicker onEmojiClick={(emoji) => setDescription((prev) => prev + emoji)} />
+							</div>
 							<Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Tell viewers about your video" className="h-32 resize-none" />
 						</div>
 					</div>
