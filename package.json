@@ -1,7 +1,7 @@
 {
 	"name": "open-watch",
 	"author": "Ge0rg3e",
-	"license": "MIT",
+	"license": "AGPL-3.0",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/openwatch-app/openwatch.git"
